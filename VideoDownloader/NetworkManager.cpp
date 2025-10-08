@@ -1,0 +1,422 @@
+#include "NetworkManager.h"
+#include "ConfigManager.h"
+#include "LogSystem.h"
+#include "EventBus.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QUrlQuery>
+#include <QStandardPaths>
+#include <QSslError>
+#include <QFutureInterface>
+#include <QRandomGenerator>
+
+NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
+	: QObject(parent)
+	, m_configManager(configManager)
+	, m_networkManager(new QNetworkAccessManager(this))
+	, m_cookieJar(new QNetworkCookieJar(this))
+{
+	m_networkManager->setCookieJar(m_cookieJar);
+
+	// 从配置加载网络设置
+	m_timeoutMs = m_configManager->getValue("network/timeout", 30000).toInt();
+	m_defaultRetryCount = m_configManager->getValue("network/retryCount", 3).toInt();
+	m_userAgent = m_configManager->getValue("network/userAgent",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").toString();
+
+	// 加载代理设置
+	QVariantMap proxyConfig = m_configManager->getValue("network/proxy", QVariantMap()).toMap();
+	if (proxyConfig.value("enabled", false).toBool()) {
+		NetworkProxy proxy;
+		proxy.enabled = true;
+		proxy.type = proxyConfig.value("type", "http").toString();
+		proxy.host = proxyConfig.value("host").toString();
+		proxy.port = proxyConfig.value("port", 0).toInt();
+		proxy.username = proxyConfig.value("username").toString();
+		proxy.password = proxyConfig.value("password").toString();
+		setProxy(proxy);
+	}
+
+	// 连接信号
+	connect(m_networkManager, &QNetworkAccessManager::authenticationRequired,
+		this, &NetworkManager::onAuthenticationRequired);
+	connect(m_networkManager, &QNetworkAccessManager::proxyAuthenticationRequired,
+		this, &NetworkManager::onProxyAuthenticationRequired);
+
+	LOG_INFO("Network", "Network manager initialized");
+}
+
+NetworkManager::~NetworkManager()
+{
+	// 取消所有活跃请求
+	QMutexLocker locker(&m_requestsMutex);
+	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it) {
+		if (it.value()->timeoutTimer) {
+			it.value()->timeoutTimer->stop();
+			delete it.value()->timeoutTimer;
+		}
+		if (!it.value()->finished) {
+			NetworkResponse response;
+			response.success = false;
+			response.errorString = "Request cancelled";
+			completeRequest(it.value(), response);
+		}
+	}
+	m_activeRequests.clear();
+}
+
+QFuture<NetworkResponse> NetworkManager::get(const QString& url, const QVariantMap& headers)
+{
+	QFutureInterface<NetworkResponse> futureInterface;
+	futureInterface.reportStarted();
+	QFuture<NetworkResponse> future = futureInterface.future();
+
+	if (m_activeRequests.size() >= MAX_CONCURRENT_REQUESTS) {
+		NetworkResponse response;
+		response.success = false;
+		response.errorString = "Too many concurrent requests";
+		futureInterface.reportResult(response);
+		futureInterface.reportFinished();
+		return future;
+	}
+
+	auto context = std::make_shared<RequestContext>();
+	context->id = generateRequestId();
+	context->request = QNetworkRequest(QUrl(url));
+	context->maxRetries = m_defaultRetryCount;
+	context->futureInterface = futureInterface;
+	context->finished = false;
+
+	// 设置请求头
+	context->request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+	context->request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+	// 设置自定义头
+	for (auto it = headers.begin(); it != headers.end(); ++it) {
+		context->request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
+	}
+
+	// 设置超时定时器
+	context->timeoutTimer = new QTimer(this);
+	context->timeoutTimer->setSingleShot(true);
+	connect(context->timeoutTimer, &QTimer::timeout, this, [this, context]() {
+		NetworkResponse response;
+		response.success = false;
+		response.errorString = "Request timeout";
+		completeRequest(context, response);
+		});
+	context->timeoutTimer->start(m_timeoutMs);
+
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests[context->id] = context;
+	}
+
+	LOG_DEBUG("Network", QString("GET request started: %1").arg(url));
+
+	QNetworkReply* reply = m_networkManager->get(context->request);
+	handleReply(reply, context);
+
+	return future;
+}
+
+QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QVariantMap& data, const QVariantMap& headers)
+{
+	QJsonDocument doc(QJsonObject::fromVariantMap(data));
+	return post(url, doc.toJson(), headers);
+}
+
+QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QByteArray& data, const QVariantMap& headers)
+{
+	QFutureInterface<NetworkResponse> futureInterface;
+	futureInterface.reportStarted();
+	QFuture<NetworkResponse> future = futureInterface.future();
+
+	if (m_activeRequests.size() >= MAX_CONCURRENT_REQUESTS) {
+		NetworkResponse response;
+		response.success = false;
+		response.errorString = "Too many concurrent requests";
+		futureInterface.reportResult(response);
+		futureInterface.reportFinished();
+		return future;
+	}
+
+	auto context = std::make_shared<RequestContext>();
+	context->id = generateRequestId();
+	context->request = QNetworkRequest(QUrl(url));
+	context->data = data;
+	context->maxRetries = m_defaultRetryCount;
+	context->futureInterface = futureInterface;
+	context->finished = false;
+
+	// 设置请求头
+	context->request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+	context->request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+	// 设置自定义头
+	for (auto it = headers.begin(); it != headers.end(); ++it) {
+		context->request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
+	}
+
+	// 设置超时定时器
+	context->timeoutTimer = new QTimer(this);
+	context->timeoutTimer->setSingleShot(true);
+	connect(context->timeoutTimer, &QTimer::timeout, this, [this, context]() {
+		NetworkResponse response;
+		response.success = false;
+		response.errorString = "Request timeout";
+		completeRequest(context, response);
+		});
+	context->timeoutTimer->start(m_timeoutMs);
+
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests[context->id] = context;
+	}
+
+	LOG_DEBUG("Network", QString("POST request started: %1, data size: %2").arg(url).arg(data.size()));
+
+	QNetworkReply* reply = m_networkManager->post(context->request, data);
+	handleReply(reply, context);
+
+	return future;
+}
+
+void NetworkManager::setProxy(const NetworkProxy& proxy)
+{
+	m_proxy = proxy;
+
+	if (proxy.enabled) {
+		QNetworkProxy networkProxy;
+
+		if (proxy.type == "http") {
+			networkProxy.setType(QNetworkProxy::HttpProxy);
+		}
+		else if (proxy.type == "socks5") {
+			networkProxy.setType(QNetworkProxy::Socks5Proxy);
+		}
+		else {
+			networkProxy.setType(QNetworkProxy::DefaultProxy);
+		}
+
+		networkProxy.setHostName(proxy.host);
+		networkProxy.setPort(proxy.port);
+
+		if (!proxy.username.isEmpty()) {
+			networkProxy.setUser(proxy.username);
+			networkProxy.setPassword(proxy.password);
+		}
+
+		m_networkManager->setProxy(networkProxy);
+		LOG_INFO("Network", QString("Proxy set: %1:%2").arg(proxy.host).arg(proxy.port));
+	}
+	else {
+		m_networkManager->setProxy(QNetworkProxy::NoProxy);
+		LOG_INFO("Network", "Proxy disabled");
+	}
+
+	// 保存到配置
+	QVariantMap proxyConfig;
+	proxyConfig["enabled"] = proxy.enabled;
+	proxyConfig["type"] = proxy.type;
+	proxyConfig["host"] = proxy.host;
+	proxyConfig["port"] = proxy.port;
+	proxyConfig["username"] = proxy.username;
+	proxyConfig["password"] = proxy.password;
+
+	m_configManager->setValue("network/proxy", proxyConfig);
+}
+
+void NetworkManager::setTimeout(int milliseconds)
+{
+	m_timeoutMs = milliseconds;
+	m_configManager->setValue("network/timeout", milliseconds);
+	LOG_DEBUG("Network", QString("Timeout set to: %1 ms").arg(milliseconds));
+}
+
+void NetworkManager::setRetryCount(int count)
+{
+	m_defaultRetryCount = count;
+	m_configManager->setValue("network/retryCount", count);
+	LOG_DEBUG("Network", QString("Retry count set to: %1").arg(count));
+}
+
+void NetworkManager::setCookies(const QString& domain, const QList<QNetworkCookie>& cookies)
+{
+	// 使用 QNetworkCookieJar 的现有方法设置 cookies
+	for (const QNetworkCookie& cookie : cookies) {
+		m_cookieJar->insertCookie(cookie);
+	}
+	LOG_DEBUG("Network", QString("Cookies set for domain: %1, count: %2").arg(domain).arg(cookies.size()));
+}
+
+QList<QNetworkCookie> NetworkManager::getCookies(const QString& domain) const
+{
+	return m_cookieJar->cookiesForUrl(QUrl(domain));
+}
+
+void NetworkManager::clearCookies()
+{
+	// 创建一个空的 cookie jar 来替换当前的
+	QNetworkCookieJar* newCookieJar = new QNetworkCookieJar(this);
+	m_networkManager->setCookieJar(newCookieJar);
+	delete m_cookieJar;
+	m_cookieJar = newCookieJar;
+	LOG_INFO("Network", "All cookies cleared");
+}
+
+void NetworkManager::setUserAgent(const QString& userAgent)
+{
+	m_userAgent = userAgent;
+	m_configManager->setValue("network/userAgent", userAgent);
+	LOG_DEBUG("Network", QString("User agent set: %1").arg(userAgent));
+}
+
+QString NetworkManager::userAgent() const
+{
+	return m_userAgent;
+}
+
+void NetworkManager::onAuthenticationRequired(QNetworkReply* reply, QAuthenticator* authenticator)
+{
+	Q_UNUSED(reply)
+		Q_UNUSED(authenticator)
+		LOG_WARN("Network", "Authentication required");
+}
+
+void NetworkManager::onProxyAuthenticationRequired(const QNetworkProxy& proxy, QAuthenticator* authenticator)
+{
+	if (!m_proxy.username.isEmpty()) {
+		authenticator->setUser(m_proxy.username);
+		authenticator->setPassword(m_proxy.password);
+		LOG_DEBUG("Network", "Proxy authentication provided");
+	}
+	else {
+		LOG_WARN("Network", "Proxy authentication required but no credentials provided");
+	}
+}
+
+void NetworkManager::onSslErrors(QNetworkReply* reply, const QList<QSslError>& errors)
+{
+	QStringList errorStrings;
+	for (const QSslError& error : errors) {
+		errorStrings << error.errorString();
+	}
+
+	LOG_ERROR("Network", QString("SSL errors: %1").arg(errorStrings.join("; ")));
+	reply->ignoreSslErrors(); // 忽略SSL错误（在生产环境中应该更谨慎）
+}
+
+void NetworkManager::handleReply(QNetworkReply* reply, std::shared_ptr<RequestContext> context)
+{
+	// 连接完成信号
+	connect(reply, &QNetworkReply::finished, this, [this, reply, context]() {
+		NetworkResponse response;
+
+		if (reply->error() == QNetworkReply::NoError) {
+			response.success = true;
+			response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+			response.data = reply->readAll();
+
+			// 获取响应头
+			QList<QByteArray> headerList = reply->rawHeaderList();
+			for (const QByteArray& header : headerList) {
+				response.headers[QString::fromUtf8(header)] = QString::fromUtf8(reply->rawHeader(header));
+			}
+
+			LOG_DEBUG("Network", QString("Request succeeded: %1, status: %2, size: %3")
+				.arg(context->request.url().toString())
+				.arg(response.statusCode)
+				.arg(response.data.size()));
+
+			completeRequest(context, response);
+		}
+		else {
+			response.success = false;
+			response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+			response.errorString = reply->errorString();
+
+			LOG_WARN("Network", QString("Request failed: %1, error: %2, status: %3")
+				.arg(context->request.url().toString())
+				.arg(response.errorString)
+				.arg(response.statusCode));
+
+			// 检查是否应该重试
+			if (context->retryCount < context->maxRetries &&
+				(reply->error() == QNetworkReply::TimeoutError ||
+					reply->error() == QNetworkReply::ConnectionRefusedError ||
+					reply->error() == QNetworkReply::RemoteHostClosedError)) {
+
+				context->retryCount++;
+				LOG_INFO("Network", QString("Retrying request (%1/%2): %3")
+					.arg(context->retryCount)
+					.arg(context->maxRetries)
+					.arg(context->request.url().toString()));
+
+				// 取消超时定时器
+				if (context->timeoutTimer) {
+					context->timeoutTimer->stop();
+				}
+
+				// 延迟后重试
+				QTimer::singleShot(1000 * context->retryCount, this, [this, context]() {
+					retryRequest(context);
+					});
+			}
+			else {
+				completeRequest(context, response);
+			}
+		}
+
+		reply->deleteLater();
+		});
+}
+
+void NetworkManager::retryRequest(std::shared_ptr<RequestContext> context)
+{
+	// 重新启动超时定时器
+	if (context->timeoutTimer) {
+		context->timeoutTimer->start(m_timeoutMs);
+	}
+
+	QNetworkReply* reply;
+	if (context->data.isEmpty()) {
+		reply = m_networkManager->get(context->request);
+	}
+	else {
+		reply = m_networkManager->post(context->request, context->data);
+	}
+
+	handleReply(reply, context);
+}
+
+void NetworkManager::completeRequest(std::shared_ptr<RequestContext> context, const NetworkResponse& response)
+{
+	if (context->finished) {
+		return; // 避免重复完成
+	}
+	context->finished = true;
+
+	// 停止并清理超时定时器
+	if (context->timeoutTimer) {
+		context->timeoutTimer->stop();
+		context->timeoutTimer->deleteLater();
+		context->timeoutTimer = nullptr;
+	}
+
+	// 从活跃请求中移除
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests.remove(context->id);
+	}
+
+	// 报告结果
+	context->futureInterface.reportResult(response);
+	context->futureInterface.reportFinished();
+}
+
+QString NetworkManager::generateRequestId() const
+{
+	return QString::number(QDateTime::currentMSecsSinceEpoch()) +
+		QString::number(QRandomGenerator::global()->generate64());
+}

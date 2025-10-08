@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B6F406C4-BBE9-4F4C-B7A7-3B7025347F7D}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>6.8.1</QtInstall>
+    <QtModules>core;gui;network;widgets;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>6.8.1</QtInstall>
+    <QtModules>core;gui;network;widgets;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\QR-Code-generator-master;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\FastGaussianBlur-main;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\QR-Code-generator-master;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\FastGaussianBlur-main;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ConfigManager.cpp" />
+    <ClCompile Include="DownloadRecordRepository.cpp" />
+    <ClCompile Include="EventBus.cpp" />
+    <ClCompile Include="INetworkManager.cpp" />
+    <ClCompile Include="LogSystem.cpp" />
+    <ClCompile Include="NetworkManager.cpp" />
+    <QtRcc Include="QtAntDesign.qrc" />
+    <QtRcc Include="VideoDownloader.qrc" />
+    <QtUic Include="QtAntDesign.ui" />
+    <QtUic Include="VideoDownloader.ui" />
+    <QtMoc Include="VideoDownloader.h" />
+    <ClCompile Include="ApplicationController.cpp" />
+    <ClCompile Include="DownloadedWidget.cpp" />
+    <ClCompile Include="DownloadingWidget.cpp" />
+    <ClCompile Include="DownloadManager.cpp" />
+    <ClCompile Include="DownloadPage.cpp" />
+    <ClCompile Include="DownloadQueuePage.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
+    <ClCompile Include="HomePage.cpp" />
+    <ClCompile Include="MaterialTabBar.cpp" />
+    <ClCompile Include="MaterialTabWidget.cpp" />
+    <ClCompile Include="ModManagerPage.cpp" />
+    <ClCompile Include="SettingsPage.cpp" />
+    <ClCompile Include="ThirdParty\AboutPage.cpp" />
+    <ClCompile Include="ThirdParty\AnimatedNumber.cpp" />
+    <ClCompile Include="ThirdParty\AntBaseDoubleSpinBox.cpp" />
+    <ClCompile Include="ThirdParty\AntBaseInput.cpp" />
+    <ClCompile Include="ThirdParty\AntBaseListView.cpp" />
+    <ClCompile Include="ThirdParty\AntBaseSpinBox.cpp" />
+    <ClCompile Include="ThirdParty\AntBaseTableView.cpp" />
+    <ClCompile Include="ThirdParty\AntButton.cpp" />
+    <ClCompile Include="ThirdParty\AntCellWidget.cpp" />
+    <ClCompile Include="ThirdParty\AntChatListView.cpp" />
+    <ClCompile Include="ThirdParty\AntComboBox.cpp" />
+    <ClCompile Include="ThirdParty\AntDoubleNumberInput.cpp" />
+    <ClCompile Include="ThirdParty\AntInput.cpp" />
+    <ClCompile Include="ThirdParty\AntMessage.cpp" />
+    <ClCompile Include="ThirdParty\AntMessageManager.cpp" />
+    <ClCompile Include="ThirdParty\AntNumberInput.cpp" />
+    <ClCompile Include="ThirdParty\AntProfileItemDelegate.cpp" />
+    <ClCompile Include="ThirdParty\AntProfileTable.cpp" />
+    <ClCompile Include="ThirdParty\AntRadioButton.cpp" />
+    <ClCompile Include="ThirdParty\AntScrollArea.cpp" />
+    <ClCompile Include="ThirdParty\AntSlider.cpp" />
+    <ClCompile Include="ThirdParty\AntTabBarWidget.cpp" />
+    <ClCompile Include="ThirdParty\AntTabWidget.cpp" />
+    <ClCompile Include="ThirdParty\AntTabWidgetContainer.cpp" />
+    <ClCompile Include="ThirdParty\AntToggleButton.cpp" />
+    <ClCompile Include="ThirdParty\AntTooltip.cpp" />
+    <ClCompile Include="ThirdParty\AntTooltipManager.cpp" />
+    <ClCompile Include="ThirdParty\AntTooltipViewController.cpp" />
+    <ClCompile Include="ThirdParty\AntTreeView.cpp" />
+    <ClCompile Include="ThirdParty\BadgeWidget.cpp" />
+    <ClCompile Include="ThirdParty\BubbleViewController.cpp" />
+    <ClCompile Include="ThirdParty\CardWidget.cpp" />
+    <ClCompile Include="ThirdParty\CarouselCard.cpp" />
+    <ClCompile Include="ThirdParty\CarouselWidget.cpp" />
+    <ClCompile Include="ThirdParty\CircularAvatar.cpp" />
+    <ClCompile Include="ThirdParty\CustomToolButton.cpp" />
+    <ClCompile Include="ThirdParty\DesignSystem.cpp" />
+    <ClCompile Include="ThirdParty\DialogViewController.cpp" />
+    <ClCompile Include="ThirdParty\DrawerWidget.cpp" />
+    <ClCompile Include="ThirdParty\ErrorTipLabel.cpp" />
+    <ClCompile Include="ThirdParty\FlowLayout.cpp" />
+    <ClCompile Include="ThirdParty\FramelessVideoWindow.cpp" />
+    <ClCompile Include="ThirdParty\GaussianBlur.cpp" />
+    <ClCompile Include="ThirdParty\GlassWidget.cpp" />
+    <ClCompile Include="ThirdParty\LoadingArc.cpp" />
+    <ClCompile Include="ThirdParty\LoginPageWidget.cpp" />
+    <ClCompile Include="ThirdParty\LogoWidget.cpp" />
+    <ClCompile Include="ThirdParty\MaskWidget.cpp" />
+    <ClCompile Include="ThirdParty\MaterialDialog.cpp" />
+    <ClCompile Include="ThirdParty\MaterialLineEdit.cpp" />
+    <ClCompile Include="ThirdParty\MaterialProgressBar.cpp" />
+    <ClCompile Include="ThirdParty\MaterialSpinner.cpp" />
+    <ClCompile Include="ThirdParty\NoDataWidget.cpp" />
+    <ClCompile Include="ThirdParty\NotificationManager.cpp" />
+    <ClCompile Include="ThirdParty\NotificationWidget.cpp" />
+    <ClCompile Include="ThirdParty\PaginationWidget.cpp" />
+    <ClCompile Include="ThirdParty\PopupViewController.cpp" />
+    <ClCompile Include="ThirdParty\PopupWidget.cpp" />
+    <ClCompile Include="ThirdParty\ProfilePage.cpp" />
+    <ClCompile Include="ThirdParty\QR-Code-generator-master\qrcodegen.cpp" />
+    <ClCompile Include="ThirdParty\QrCodeWidget.cpp" />
+    <ClCompile Include="ThirdParty\RegisterPageWidget.cpp" />
+    <ClCompile Include="ThirdParty\Ripple.cpp" />
+    <ClCompile Include="ThirdParty\SkeletonWidget.cpp" />
+    <ClCompile Include="ThirdParty\SlideStackedWidget.cpp" />
+    <ClCompile Include="ThirdParty\StandardDialogPage.cpp" />
+    <ClCompile Include="ThirdParty\TabContentWidget.cpp" />
+    <ClCompile Include="ThirdParty\TagWidget.cpp" />
+    <ClCompile Include="ThirdParty\ThemeSwitcher.cpp" />
+    <ClCompile Include="ThirdParty\TransparentMask.cpp" />
+    <ClCompile Include="ThirdParty\UserInfoBubble.cpp" />
+    <ClCompile Include="ThirdParty\Win11CheckButton.cpp" />
+    <ClCompile Include="VideoDownloader.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AboutPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AnimatedNumber.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntBaseDoubleSpinBox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntBaseInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntBaseListView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntBaseSpinBox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntBaseTableView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntButton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntCellWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntChatListView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntComboBox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntDoubleNumberInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntMessage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntMessageManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntNumberInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntProfileItemDelegate.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntProfileTable.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntRadioButton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntScrollArea.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntSlider.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTabBarWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTabWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTabWidgetContainer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntToggleButton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTooltip.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTooltipManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTooltipViewController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\AntTreeView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\BadgeWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\BubbleViewController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\CardWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\CarouselCard.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\CarouselWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\CircularAvatar.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\CustomToolButton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\DesignSystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\DialogViewController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\DrawerWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\ErrorTipLabel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\FlowLayout.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ThirdParty\FramelessVideoWindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="DownloadRecordRepository.h" />
+    <QtMoc Include="ConfigManager.h" />
+    <QtMoc Include="EventBus.h" />
+    <ClInclude Include="ApplicationState.h" />
+    <ClInclude Include="DownloadRecord.h" />
+    <ClInclude Include="DownloadTaskInfo.h" />
+    <ClInclude Include="EventTypes.h" />
+    <QtMoc Include="LogSystem.h" />
+    <QtMoc Include="IDownloadEngine.h" />
+    <QtMoc Include="IMediaProcessor.h" />
+    <ClInclude Include="INetworkManager.h" />
+    <QtMoc Include="NetworkManager.h" />
+    <ClInclude Include="MediaInfo.h" />
+    <ClInclude Include="SearchResult.h" />
+    <ClInclude Include="VideoDownloadRequest.h" />
+    <ClInclude Include="VideoInfo.h" />
+    <QtMoc Include="ModManagerPage.h" />
+    <QtMoc Include="DownloadPage.h" />
+    <QtMoc Include="HomePage.h" />
+    <QtMoc Include="SettingsPage.h" />
+    <QtMoc Include="MaterialTabBar.h" />
+    <QtMoc Include="MaterialTabWidget.h" />
+    <ClInclude Include="DownloadedWidget.h" />
+    <ClInclude Include="DownloadingWidget.h" />
+    <ClInclude Include="DownloadQueuePage.h" />
+    <ClInclude Include="ApplicationController.h" />
+    <ClInclude Include="DownloadManager.h" />
+    <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h" />
+    <ClInclude Include="ThirdParty\GaussianBlur.h" />
+    <ClInclude Include="ThirdParty\QR-Code-generator-master\qrcodegen.hpp" />
+    <ClInclude Include="ThirdParty\StyleSheet.h" />
+    <QtMoc Include="ThirdParty\Win11CheckButton.h" />
+    <QtMoc Include="ThirdParty\UserInfoBubble.h" />
+    <QtMoc Include="ThirdParty\TransparentMask.h" />
+    <QtMoc Include="ThirdParty\ThemeSwitcher.h" />
+    <QtMoc Include="ThirdParty\TagWidget.h" />
+    <QtMoc Include="ThirdParty\TabContentWidget.h" />
+    <QtMoc Include="ThirdParty\StandardDialogPage.h" />
+    <QtMoc Include="ThirdParty\SlideStackedWidget.h" />
+    <QtMoc Include="ThirdParty\SkeletonWidget.h" />
+    <QtMoc Include="ThirdParty\Ripple.h" />
+    <QtMoc Include="ThirdParty\RegisterPageWidget.h" />
+    <QtMoc Include="ThirdParty\QrCodeWidget.h" />
+    <QtMoc Include="ThirdParty\ProfilePage.h" />
+    <QtMoc Include="ThirdParty\PopupWidget.h" />
+    <QtMoc Include="ThirdParty\PopupViewController.h" />
+    <QtMoc Include="ThirdParty\PaginationWidget.h" />
+    <QtMoc Include="ThirdParty\NotificationWidget.h" />
+    <QtMoc Include="ThirdParty\NotificationManager.h" />
+    <QtMoc Include="ThirdParty\NoDataWidget.h" />
+    <QtMoc Include="ThirdParty\MaterialSpinner.h" />
+    <QtMoc Include="ThirdParty\MaterialProgressBar.h" />
+    <QtMoc Include="ThirdParty\MaterialLineEdit.h" />
+    <QtMoc Include="ThirdParty\MaterialDialog.h" />
+    <QtMoc Include="ThirdParty\MaskWidget.h" />
+    <QtMoc Include="ThirdParty\LogoWidget.h" />
+    <QtMoc Include="ThirdParty\LoginPageWidget.h" />
+    <QtMoc Include="ThirdParty\LoadingArc.h" />
+    <QtMoc Include="ThirdParty\GlassWidget.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

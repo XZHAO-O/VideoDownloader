@@ -1,0 +1,677 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="Ui">
+      <UniqueIdentifier>{e2358ee7-f3d9-4fcf-a3de-b74aa48253e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ui\Styles">
+      <UniqueIdentifier>{e07ecb8c-7c77-42df-b818-d0a9ad5d560b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ui\Widgets">
+      <UniqueIdentifier>{c17ea4ce-89ad-4244-b7d5-8c5e519fc7bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Ui\Pages">
+      <UniqueIdentifier>{47fbe0a9-8c65-4a88-993f-451b2b6608b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Storage">
+      <UniqueIdentifier>{714015af-5663-46cc-9b62-539166a5f46e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{9614c07c-4a07-46e9-bfac-37678ea133da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Business">
+      <UniqueIdentifier>{607bccd7-607b-4689-9b5f-8998dca76ac7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Services">
+      <UniqueIdentifier>{ff8020a1-f287-4abe-a1a7-f7477660f904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{8dd2dac6-5147-4b27-b7ab-e2bf311c4a6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Log">
+      <UniqueIdentifier>{b3488eeb-b2cc-41d1-996c-196435256fe5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Config">
+      <UniqueIdentifier>{aa9f2469-1c90-4815-bb5a-e707b97e87ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Mod">
+      <UniqueIdentifier>{16163dcf-20aa-4de4-b4d8-30c4c1563530}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Event">
+      <UniqueIdentifier>{f1ea61c7-2f5a-4762-b57a-fc26ef2a64d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Network">
+      <UniqueIdentifier>{5f9fcaf2-b20a-41d6-93bc-1716e2b4b2ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Utils">
+      <UniqueIdentifier>{b725e7d9-b021-41d8-bb54-8be0a3b13752}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="app">
+      <UniqueIdentifier>{11468a3c-0a28-4384-952b-b18c06575047}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\models">
+      <UniqueIdentifier>{b1b5b8e6-a4e2-4c9e-9dc4-605272d48e24}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="VideoDownloader.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+    <QtUic Include="VideoDownloader.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtRcc Include="QtAntDesign.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDownloader.cpp">
+      <Filter>Ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AboutPage.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AnimatedNumber.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntBaseDoubleSpinBox.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntBaseInput.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntBaseListView.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntBaseSpinBox.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntBaseTableView.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntButton.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntCellWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntChatListView.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntComboBox.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntDoubleNumberInput.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntInput.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntMessage.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntMessageManager.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntNumberInput.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntProfileItemDelegate.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntProfileTable.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntRadioButton.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntScrollArea.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntSlider.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTabBarWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTabWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTabWidgetContainer.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntToggleButton.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTooltip.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTooltipManager.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTooltipViewController.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\AntTreeView.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\BadgeWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\BubbleViewController.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\CardWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\CarouselCard.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\CarouselWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\CircularAvatar.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\CustomToolButton.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\DesignSystem.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\DialogViewController.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\DrawerWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\ErrorTipLabel.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\FlowLayout.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\FramelessVideoWindow.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\GaussianBlur.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\GlassWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\LoadingArc.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\LoginPageWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\LogoWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\MaskWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\MaterialDialog.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\MaterialLineEdit.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\MaterialProgressBar.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\MaterialSpinner.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\NoDataWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\NotificationManager.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\NotificationWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\PaginationWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\PopupViewController.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\PopupWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\ProfilePage.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\QrCodeWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\RegisterPageWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Ripple.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\SkeletonWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\SlideStackedWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\StandardDialogPage.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\TabContentWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\TagWidget.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\ThemeSwitcher.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\TransparentMask.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\UserInfoBubble.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Win11CheckButton.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\QR-Code-generator-master\qrcodegen.cpp">
+      <Filter>ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="ModManagerPage.cpp">
+      <Filter>Ui\Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadPage.cpp">
+      <Filter>Ui\Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="HomePage.cpp">
+      <Filter>Ui\Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingsPage.cpp">
+      <Filter>Ui\Pages</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialTabBar.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialTabWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadingWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadedWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="ApplicationController.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadManager.cpp">
+      <Filter>Business</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadRecordRepository.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadQueuePage.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigManager.cpp">
+      <Filter>Core\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="EventBus.cpp">
+      <Filter>Core\Event</Filter>
+    </ClCompile>
+    <ClCompile Include="LogSystem.cpp">
+      <Filter>Core\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="INetworkManager.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkManager.cpp">
+      <Filter>Core\Network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="VideoDownloader.h">
+      <Filter>Ui</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AboutPage.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AnimatedNumber.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntBaseDoubleSpinBox.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntBaseInput.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntBaseListView.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntBaseSpinBox.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntBaseTableView.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntButton.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntCellWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntChatListView.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntComboBox.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntDoubleNumberInput.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntInput.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntMessage.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntMessageManager.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntNumberInput.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntProfileItemDelegate.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntProfileTable.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntRadioButton.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntScrollArea.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntSlider.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTabBarWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTabWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTabWidgetContainer.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntToggleButton.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTooltip.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTooltipManager.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTooltipViewController.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\AntTreeView.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\BadgeWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\BubbleViewController.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\CardWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\CarouselCard.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\CarouselWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\CircularAvatar.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\CustomToolButton.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\DesignSystem.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\DialogViewController.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\DrawerWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\ErrorTipLabel.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\FlowLayout.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\FramelessVideoWindow.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\GlassWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\LoadingArc.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\LoginPageWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\LogoWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\MaskWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\MaterialDialog.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\MaterialLineEdit.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\MaterialProgressBar.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\MaterialSpinner.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\NoDataWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\NotificationManager.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\NotificationWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\PaginationWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\PopupViewController.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\PopupWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\ProfilePage.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\QrCodeWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\RegisterPageWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\Ripple.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\SkeletonWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\SlideStackedWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\StandardDialogPage.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\TabContentWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\TagWidget.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\ThemeSwitcher.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\TransparentMask.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\UserInfoBubble.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ThirdParty\Win11CheckButton.h">
+      <Filter>ThirdParty</Filter>
+    </QtMoc>
+    <QtMoc Include="ModManagerPage.h">
+      <Filter>Ui\Pages</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadPage.h">
+      <Filter>Ui\Pages</Filter>
+    </QtMoc>
+    <QtMoc Include="HomePage.h">
+      <Filter>Ui\Pages</Filter>
+    </QtMoc>
+    <QtMoc Include="SettingsPage.h">
+      <Filter>Ui\Pages</Filter>
+    </QtMoc>
+    <QtMoc Include="MaterialTabBar.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="MaterialTabWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadRecordRepository.h">
+      <Filter>Storage</Filter>
+    </QtMoc>
+    <QtMoc Include="ConfigManager.h">
+      <Filter>Core\Config</Filter>
+    </QtMoc>
+    <QtMoc Include="EventBus.h">
+      <Filter>Core\Event</Filter>
+    </QtMoc>
+    <QtMoc Include="LogSystem.h">
+      <Filter>Core\Log</Filter>
+    </QtMoc>
+    <QtMoc Include="NetworkManager.h">
+      <Filter>Core\Network</Filter>
+    </QtMoc>
+    <QtMoc Include="IDownloadEngine.h">
+      <Filter>Core\models</Filter>
+    </QtMoc>
+    <QtMoc Include="IMediaProcessor.h">
+      <Filter>Core\models</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="QtAntDesign.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ThirdParty\GaussianBlur.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\StyleSheet.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\QR-Code-generator-master\qrcodegen.hpp">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoInfo.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadedWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadingWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadQueuePage.h">
+      <Filter>Ui\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadManager.h">
+      <Filter>Business</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationController.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="EventTypes.h">
+      <Filter>Core\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="INetworkManager.h">
+      <Filter>Core\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadRecord.h">
+      <Filter>Storage</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationState.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoDownloadRequest.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadTaskInfo.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchResult.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="MediaInfo.h">
+      <Filter>Core\models</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
