@@ -11,6 +11,8 @@ class IMediaProcessor : public QObject
 	Q_OBJECT
 
 public:
+	// 添加带参数的构造函数
+	explicit IMediaProcessor(QObject* parent = nullptr) : QObject(parent) {}
 	virtual ~IMediaProcessor() = default;
 
 	// 基本媒体处理

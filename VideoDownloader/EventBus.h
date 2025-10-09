@@ -13,7 +13,9 @@ class EventBus : public QObject
 {
 	Q_OBJECT
 public:
-	static EventBus& instance();
+	// 改为公共的静态方法获取实例
+	static QSharedPointer<EventBus> instance();
+	static void destroyInstance();
 
 	template<typename EventType>
 	void publish(const EventType& event) {
@@ -47,7 +49,13 @@ signals:
 
 private:
 	explicit EventBus(QObject* parent = nullptr);
+
+	// 将析构函数改为public
+public:
 	~EventBus() = default;
+
+private:
+	static QSharedPointer<EventBus> s_instance;
 
 	QMap<QString, QList<QObject*>> m_receivers;
 };

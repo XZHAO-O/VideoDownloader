@@ -3,6 +3,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QJsonObject>
+#include <QUuid>
 
 struct DownloadRecord {
 	QString id;
@@ -18,6 +19,13 @@ struct DownloadRecord {
 	QString format;
 	bool success;
 	QString errorMessage;
+
+	// 生成唯一记录ID
+	static QString generateRecordId() {
+		return QString("record_%1_%2")
+			.arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz"))
+			.arg(QUuid::createUuid().toString().mid(1, 8));
+	}
 
 	// 序列化方法
 	QJsonObject toJson() const {

@@ -1,18 +1,28 @@
 #include "EventBus.h"
 
-EventBus& EventBus::instance()
+QSharedPointer<EventBus> EventBus::s_instance = nullptr;
+
+QSharedPointer<EventBus> EventBus::instance()
 {
-	static EventBus instance;
-	return instance;
+	if (!s_instance) {
+		s_instance = QSharedPointer<EventBus>(new EventBus());
+	}
+	return s_instance;
 }
 
-EventBus::EventBus(QObject* parent) : QObject(parent)
+void EventBus::destroyInstance()
+{
+	s_instance.clear();
+}
+
+EventBus::EventBus(QObject* parent)
+	: QObject(parent)
 {
 }
 
 void EventBus::unsubscribe(QObject* receiver)
 {
-	for (auto it = m_receivers.begin(); it != m_receivers.end(); ++it) {
-		it.value().removeAll(receiver);
+	for (auto& receivers : m_receivers) {
+		receivers.removeAll(receiver);
 	}
 }

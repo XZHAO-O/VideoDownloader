@@ -104,11 +104,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseVideoPlatformMod.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
+    <ClCompile Include="DownloadOrchestrationService.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="EventBus.cpp" />
     <ClCompile Include="INetworkManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
+    <ClCompile Include="MediaProcessingService.cpp" />
+    <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
     <QtRcc Include="VideoDownloader.qrc" />
@@ -130,6 +134,7 @@
     <ClCompile Include="MaterialTabBar.cpp" />
     <ClCompile Include="MaterialTabWidget.cpp" />
     <ClCompile Include="ModManagerPage.cpp" />
+    <ClCompile Include="PlatformAggregatorService.cpp" />
     <ClCompile Include="SettingsPage.cpp" />
     <ClCompile Include="ThirdParty\AboutPage.cpp" />
     <ClCompile Include="ThirdParty\AnimatedNumber.cpp" />
@@ -337,15 +342,22 @@
     <QtMoc Include="ConfigManager.h" />
     <QtMoc Include="EventBus.h" />
     <ClInclude Include="ApplicationState.h" />
+    <QtMoc Include="BaseVideoPlatformMod.h" />
+    <QtMoc Include="DownloadOrchestrationService.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
     <ClInclude Include="EventTypes.h" />
     <QtMoc Include="LogSystem.h" />
     <QtMoc Include="IDownloadEngine.h" />
     <QtMoc Include="IMediaProcessor.h" />
+    <QtMoc Include="IMod.h" />
     <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
+    <QtMoc Include="IVideoPlatformMod.h" />
     <ClInclude Include="MediaInfo.h" />
+    <QtMoc Include="ModManager.h" />
+    <QtMoc Include="MediaProcessingService.h" />
+    <QtMoc Include="PlatformAggregatorService.h" />
     <ClInclude Include="SearchResult.h" />
     <ClInclude Include="VideoDownloadRequest.h" />
     <ClInclude Include="VideoInfo.h" />
@@ -358,8 +370,8 @@
     <ClInclude Include="DownloadedWidget.h" />
     <ClInclude Include="DownloadingWidget.h" />
     <ClInclude Include="DownloadQueuePage.h" />
-    <ClInclude Include="ApplicationController.h" />
-    <ClInclude Include="DownloadManager.h" />
+    <QtMoc Include="ApplicationController.h" />
+    <QtMoc Include="DownloadManager.h" />
     <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h" />
     <ClInclude Include="ThirdParty\GaussianBlur.h" />
     <ClInclude Include="ThirdParty\QR-Code-generator-master\qrcodegen.hpp" />

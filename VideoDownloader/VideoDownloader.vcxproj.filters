@@ -358,6 +358,21 @@
     <ClCompile Include="NetworkManager.cpp">
       <Filter>Core\Network</Filter>
     </ClCompile>
+    <ClCompile Include="BaseVideoPlatformMod.cpp">
+      <Filter>Core\Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="ModManager.cpp">
+      <Filter>Core\Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadOrchestrationService.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="MediaProcessingService.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformAggregatorService.cpp">
+      <Filter>Services</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -612,6 +627,33 @@
     <QtMoc Include="IMediaProcessor.h">
       <Filter>Core\models</Filter>
     </QtMoc>
+    <QtMoc Include="IMod.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="IVideoPlatformMod.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="BaseVideoPlatformMod.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="ModManager.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadOrchestrationService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="MediaProcessingService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="PlatformAggregatorService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadManager.h">
+      <Filter>Business</Filter>
+    </QtMoc>
+    <QtMoc Include="ApplicationController.h">
+      <Filter>app</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtAntDesign.ui">
@@ -642,12 +684,6 @@
     </ClInclude>
     <ClInclude Include="DownloadQueuePage.h">
       <Filter>Ui\Widgets</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadManager.h">
-      <Filter>Business</Filter>
-    </ClInclude>
-    <ClInclude Include="ApplicationController.h">
-      <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="EventTypes.h">
       <Filter>Core\Event</Filter>
