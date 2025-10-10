@@ -8,7 +8,10 @@
 #include <QLabel>
 #include <QTimer>
 #include <QEvent>
+#include <QSharedPointer>
+#include "ApplicationController.h"
 #include "AntInput.h"
+#include "DownloadManager.h"
 
 // 判断是否在windows平台
 #ifdef Q_OS_WIN
@@ -117,4 +120,8 @@ private:
 	int m_titleBarHeightPhysicalPixels = 0;
 
 	AntInput* antInput = nullptr;
+
+	//downloadmanager
+	QSharedPointer<ApplicationController> appController;
+	QSharedPointer<DownloadManager> downloadManager;
 };

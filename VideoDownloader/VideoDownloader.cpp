@@ -23,6 +23,8 @@
 
 VideoDownloader::VideoDownloader(QWidget* parent)
 	: QWidget(parent)
+	, appController(QSharedPointer<ApplicationController>::create())
+	, downloadManager(QSharedPointer<DownloadManager>::create(appController))
 {
 	ui.setupUi(this);
 
@@ -87,7 +89,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	QFont font;
 	font.setPointSizeF(16);
 	font.setBold(true);
-	QLabel* title = new QLabel("TITLE", ui.titleBar);
+	QLabel* title = new QLabel("视频下载器", ui.titleBar);
 	title->setFont(font);
 	// 创建按钮
 	btnMin = new QToolButton(ui.titleBar);
@@ -139,7 +141,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	contentLay->addWidget(stackedWidget);
 	// 添加页面
 	HomePage* homePage = new HomePage(stackedWidget);
-	DownloadPage* downloadPage = new DownloadPage(stackedWidget);
+	DownloadPage* downloadPage = new DownloadPage(downloadManager, stackedWidget);
 	ModManagerPage* modManagerPage = new ModManagerPage(stackedWidget);
 	SettingsPage* settingsPage = new SettingsPage(stackedWidget);
 

@@ -24,6 +24,10 @@ public:
 	void resumeDownload(const QString& taskId);
 	void cancelDownload(const QString& taskId);
 
+	void calculateAndEmitDownloadSpeed();
+
+	void updateDownloadSpeed(qint64 bytesPerSecond);
+
 	// 批量操作
 	QList<QString> downloadBatch(const QList<VideoDownloadRequest>& requests);
 	void pauseAll();
@@ -51,6 +55,10 @@ signals:
 	void downloadResumed(const QString& taskId);
 	void downloadCancelled(const QString& taskId);
 
+	// 添加缺失的信号
+	void downloadStatusChanged(const QString& taskId);
+	void downloadSpeedUpdated(qint64 bytesPerSecond);
+
 private slots:
 	void onOrchestrationProgress(const QString& taskId, qint64 downloaded, qint64 total);
 	void onOrchestrationCompleted(const QString& taskId, const QString& filePath);
@@ -70,4 +78,5 @@ private:
 	int m_maxConcurrentDownloads = 3;
 	int m_currentDownloads = 0;
 	QString m_defaultDownloadPath;
+	QTimer* m_speedTimer;
 };

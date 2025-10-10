@@ -32,8 +32,9 @@
 #include "AntTreeView.h"
 #include "DownloadCard.h"
 
-DownloadPage::DownloadPage(QWidget* parent)
+DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
 	: QWidget(parent)
+	, m_downloadManager(downloadManager)
 {
 	setObjectName("DownloadPage");
 	setFocusPolicy(Qt::ClickFocus);  // 设置焦点策略 点击空白处可以获取焦点
@@ -64,35 +65,19 @@ DownloadPage::DownloadPage(QWidget* parent)
 
 	// 暂无数据
 	NoDataWidget* noData = new NoDataWidget(this);
-	NoDataWidget* noData1 = new NoDataWidget(this);
-	NoDataWidget* noData2 = new NoDataWidget(this);
-	NoDataWidget* noData3 = new NoDataWidget(this);
-	NoDataWidget* noData4 = new NoDataWidget(this);
-	NoDataWidget* noData5 = new NoDataWidget(this);
-	NoDataWidget* noData6 = new NoDataWidget(this);
-	NoDataWidget* noData7 = new NoDataWidget(this);
-	NoDataWidget* noData8 = new NoDataWidget(this);
 
-	//downloadQueuePage = new DownloadQueuePage();
-	//downloadingWidget = new DownloadingWidget();
-	//downloadedWidget = new DownloadedWidget();
+	downloadQueuePage = new DownloadQueuePage(m_downloadManager, this);  // 传递参数
+	downloadingWidget = new DownloadingWidget(m_downloadManager, this);  // 传递参数
+	downloadedWidget = new DownloadedWidget(m_downloadManager, this);    // 传递参数
 
 	// 添加标签项
-	//tabWidget->addTab(downloadQueuePage, "待下载");
-	//tabWidget->addTab(downloadingWidget, "下载中");
-	//tabWidget->addTab(downloadedWidget, "已下载");
+	tabWidget->addTab(downloadQueuePage, "待下载");
+	tabWidget->addTab(downloadingWidget, "下载中");
+	tabWidget->addTab(downloadedWidget, "已下载");
 	tabWidget->addTab(scrollArea1, "常用控件");
 	tabWidget->addTab(scrollArea2, "视图控件");
 	tabWidget->addTab(w3, "流式布局");
 	tabWidget->addTab(noData, "暂无数据");
-	tabWidget->addTab(noData1, "暂无数据");
-	tabWidget->addTab(noData2, "暂无数据");
-	tabWidget->addTab(noData3, "暂无数据");
-	tabWidget->addTab(noData4, "暂无数据");
-	tabWidget->addTab(noData5, "暂无数据");
-	tabWidget->addTab(noData6, "暂无数据");
-	tabWidget->addTab(noData7, "暂无数据");
-	tabWidget->addTab(noData8, "暂无数据");
 
 	// 主布局
 	QVBoxLayout* layout = new QVBoxLayout(this);

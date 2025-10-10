@@ -678,6 +678,15 @@
     <QtMoc Include="VideoPreviewWindow.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
+    <QtMoc Include="DownloadQueuePage.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadingWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadedWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtAntDesign.ui">
@@ -699,15 +708,6 @@
     </ClInclude>
     <ClInclude Include="VideoInfo.h">
       <Filter>Core\models</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadedWidget.h">
-      <Filter>Ui\Widgets</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadingWidget.h">
-      <Filter>Ui\Widgets</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadQueuePage.h">
-      <Filter>Ui\Widgets</Filter>
     </ClInclude>
     <ClInclude Include="EventTypes.h">
       <Filter>Core\Event</Filter>

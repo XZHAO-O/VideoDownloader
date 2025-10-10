@@ -376,9 +376,9 @@
     <QtMoc Include="SettingsPage.h" />
     <QtMoc Include="MaterialTabBar.h" />
     <QtMoc Include="MaterialTabWidget.h" />
-    <ClInclude Include="DownloadedWidget.h" />
-    <ClInclude Include="DownloadingWidget.h" />
-    <ClInclude Include="DownloadQueuePage.h" />
+    <QtMoc Include="DownloadedWidget.h" />
+    <QtMoc Include="DownloadingWidget.h" />
+    <QtMoc Include="DownloadQueuePage.h" />
     <QtMoc Include="ApplicationController.h" />
     <QtMoc Include="DownloadManager.h" />
     <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h" />
