@@ -30,6 +30,7 @@
 #include "StyleSheet.h"
 #include "PaginationWidget.h"
 #include "AntTreeView.h"
+#include "DownloadCard.h"
 
 DownloadPage::DownloadPage(QWidget* parent)
 	: QWidget(parent)
@@ -429,6 +430,40 @@ DownloadPage::DownloadPage(QWidget* parent)
 	row7Layout->addWidget(qrCode);
 	row7Layout->addStretch();
 
+	QHBoxLayout* row8Layout = new QHBoxLayout();
+	row8Layout->setSpacing(1);
+	row8Layout->setContentsMargins(0, 0, 0, 0);
+	// 创建卡片模型
+	auto cardModel = QSharedPointer<DownloadCardModel>::create();
+	cardModel->setTitle("示例视频标题");
+	cardModel->setCoverUrl(QUrl("https://example.com/cover.jpg"));
+	cardModel->setDuration("12:34");
+	cardModel->setPublishTime(QDateTime::currentDateTime().addDays(-2));
+	cardModel->setPublisher("视频发布者");
+	cardModel->setVideoSize(1024 * 1024 * 150); // 150MB
+	cardModel->setAudioSize(1024 * 1024 * 20);  // 20MB
+	cardModel->setState(DownloadCardState::Pending);
+
+	// 创建卡片
+	auto downloadCard = new DownloadCard(cardModel, this);
+
+	// 连接信号
+	connect(downloadCard, &DownloadCard::downloadClicked, this, [this, cardModel]() {
+		// 开始下载逻辑
+		// VideoDownloadRequest request = ...;
+		// m_downloadManager->downloadVideo(request);
+		});
+
+	// 连接删除信号
+	connect(downloadCard, &DownloadCard::deleteClicked, this, [this, downloadCard, row8Layout]() {
+		// 从布局中移除并删除卡片
+		row8Layout->removeWidget(downloadCard);
+		downloadCard->deleteLater();
+		});
+
+	// 添加到布局中
+	row8Layout->addWidget(downloadCard);
+
 	// 添加到页面布局
 	pageLay->addLayout(carouselLayout);
 	pageLay->addLayout(row1Layout);
@@ -439,6 +474,7 @@ DownloadPage::DownloadPage(QWidget* parent)
 	pageLay->addLayout(row5Layout);
 	pageLay->addLayout(row6Layout);
 	pageLay->addLayout(row7Layout);
+	pageLay->addLayout(row8Layout);
 	pageLay->addLayout(row9Layout);
 	pageLay->addWidget(container);
 	pageLay->addStretch();
@@ -459,6 +495,7 @@ void DownloadPage::initViewPage()
 	scrollArea2 = new AntScrollArea(AntScrollArea::ScrollVertical, this);
 	QWidget* w2 = new QWidget(this);
 	scrollArea2->addWidget(w2);
+
 	// 创建聊天项数据
 	QVector<AntChatListView::ChatItem> chatItems = {
 	{":/Imgs/bee.png", "张三", "你好，最近怎么样？", "10:30 AM", false},

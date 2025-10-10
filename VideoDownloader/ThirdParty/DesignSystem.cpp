@@ -80,6 +80,11 @@ void DesignSystem::loadThemes()
 	m_lightTheme.onTabBtnHoverColor = QColor(200, 200, 200);
 	m_lightTheme.tabContainerColor = QColor(200, 200, 200);
 	m_lightTheme.notifBgColor = QColor(255, 255, 255);
+	// 添加新的颜色定义
+	m_lightTheme.cardBackgroundColor = QColor(255, 255, 255);
+	m_lightTheme.primaryTextColor = QColor(0, 0, 0);
+	m_lightTheme.secondaryTextColor = QColor(100, 100, 100);
+	m_lightTheme.tertiaryTextColor = QColor(150, 150, 150);
 
 	m_lightTheme.vipGradientStartColor = QColor("#a8c0ff");  // 浅蓝色，渐变起点，明亮且柔和
 	m_lightTheme.vipGradientMidColor = QColor("#c6d1ff");    // 浅淡紫蓝，渐变过渡，自然
@@ -155,6 +160,12 @@ void DesignSystem::loadThemes()
 	m_darkTheme.tabContainerColor = QColor(120, 120, 120);
 
 	m_darkTheme.notifBgColor = QColor(100, 100, 100);
+
+	// 添加新的颜色定义
+	m_darkTheme.cardBackgroundColor = QColor(60, 60, 60);
+	m_darkTheme.primaryTextColor = QColor(255, 255, 255);
+	m_darkTheme.secondaryTextColor = QColor(200, 200, 200);
+	m_darkTheme.tertiaryTextColor = QColor(150, 150, 150);
 
 	m_darkTheme.vipGradientStartColor = QColor("#2a2e48");   // 深蓝紫，渐变起点，稳重且暗
 	m_darkTheme.vipGradientMidColor = QColor("#3f4268");     // 中间蓝灰，过渡自然

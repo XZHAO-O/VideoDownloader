@@ -141,6 +141,7 @@ void AntComboBox::setCurrentText(const QString& text)
 	if (m_text != text) {
 		m_text = text;
 		update();
+		emit currentTextChanged(text);  // 添加这行
 	}
 }
 

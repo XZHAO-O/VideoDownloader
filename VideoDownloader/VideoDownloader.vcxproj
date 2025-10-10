@@ -106,6 +106,9 @@
   <ItemGroup>
     <ClCompile Include="BaseVideoPlatformMod.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
+    <ClCompile Include="DownloadCard.cpp" />
+    <ClCompile Include="DownloadCardModel.cpp" />
+    <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadOrchestrationService.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="EventBus.cpp" />
@@ -114,6 +117,7 @@
     <ClCompile Include="MediaProcessingService.cpp" />
     <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
+    <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
     <QtRcc Include="VideoDownloader.qrc" />
     <QtUic Include="QtAntDesign.ui" />
@@ -338,12 +342,17 @@
     <QtMoc Include="ThirdParty\FramelessVideoWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="VideoPreviewWindow.h" />
     <QtMoc Include="DownloadRecordRepository.h" />
     <QtMoc Include="ConfigManager.h" />
     <QtMoc Include="EventBus.h" />
     <ClInclude Include="ApplicationState.h" />
     <QtMoc Include="BaseVideoPlatformMod.h" />
     <QtMoc Include="DownloadOrchestrationService.h" />
+    <QtMoc Include="DownloadEngine.h" />
+    <QtMoc Include="DownloadCardModel.h" />
+    <QtMoc Include="DownloadCard.h" />
+    <ClInclude Include="DownloadCardState.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
     <ClInclude Include="EventTypes.h" />

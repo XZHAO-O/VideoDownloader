@@ -8,6 +8,11 @@
 
 struct Theme
 {
+	// 添加缺失的颜色定义
+	QColor cardBackgroundColor;
+	QColor primaryTextColor;
+	QColor secondaryTextColor;
+	QColor tertiaryTextColor;
 	// 样式颜色
 	QColor primaryColor;
 	QColor primaryHoverColor;
@@ -129,6 +134,12 @@ public:
 	QColor borderColor() const;
 	QColor borderColorHover() const;
 	QColor disabledColor() const;
+
+	// 添加快捷获取新颜色的方法
+	QColor cardBackgroundColor() const { return m_currentTheme.cardBackgroundColor; }
+	QColor primaryTextColor() const { return m_currentTheme.primaryTextColor; }
+	QColor secondaryTextColor() const { return m_currentTheme.secondaryTextColor; }
+	QColor tertiaryTextColor() const { return m_currentTheme.tertiaryTextColor; }
 
 	// 设置主题
 	void setThemeMode(ThemeMode mode);

@@ -373,6 +373,18 @@
     <ClCompile Include="PlatformAggregatorService.cpp">
       <Filter>Services</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadEngine.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadCardModel.cpp">
+      <Filter>Core\models</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadCard.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoPreviewWindow.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -654,6 +666,18 @@
     <QtMoc Include="ApplicationController.h">
       <Filter>app</Filter>
     </QtMoc>
+    <QtMoc Include="DownloadEngine.h">
+      <Filter>Core</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadCardModel.h">
+      <Filter>Core\models</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadCard.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="VideoPreviewWindow.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtAntDesign.ui">
@@ -708,6 +732,9 @@
     </ClInclude>
     <ClInclude Include="MediaInfo.h">
       <Filter>Core\models</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadCardState.h">
+      <Filter>Ui\Widgets</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

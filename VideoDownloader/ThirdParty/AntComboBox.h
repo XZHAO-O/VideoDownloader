@@ -35,6 +35,7 @@ private:
 	void resetState();
 signals:
 	void resized(int width, int height);
+	void currentTextChanged(const QString& text);  // 添加这个信号
 private:
 	QList<PopupViewController*> m_popups; // 用于存储所有弹出框
 	QString m_text;

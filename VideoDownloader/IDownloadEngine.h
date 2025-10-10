@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QUrl>
 #include <QFuture>
 #include "ApplicationState.h"
 
@@ -10,9 +11,12 @@ class IDownloadEngine : public QObject
 	Q_OBJECT
 
 public:
+	// 添加构造函数声明
+	explicit IDownloadEngine(QObject* parent = nullptr) : QObject(parent) {}
+
 	struct DownloadTask {
 		QString taskId;
-		QString url;
+		QUrl url;  // 修改为 QUrl 类型
 		QString savePath;
 		QVariantMap headers;
 		qint64 startByte = 0;
