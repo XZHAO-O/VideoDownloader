@@ -1,4 +1,4 @@
-﻿#include "DownloadPage.h"
+#include "DownloadPage.h"
 #include <QVBoxLayout>
 #include <QLabel>
 #include "AntToggleButton.h"
