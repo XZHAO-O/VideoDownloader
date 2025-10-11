@@ -117,6 +117,7 @@
     <ClCompile Include="MediaProcessingService.cpp" />
     <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
+    <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
     <QtRcc Include="VideoDownloader.qrc" />
@@ -368,6 +369,7 @@
     <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
     <ClInclude Include="SearchResult.h" />
+    <QtMoc Include="SearchResultsWidget.h" />
     <ClInclude Include="VideoDownloadRequest.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />

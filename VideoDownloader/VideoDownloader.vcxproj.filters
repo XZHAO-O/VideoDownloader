@@ -385,6 +385,9 @@
     <ClCompile Include="VideoPreviewWindow.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="SearchResultsWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -685,6 +688,9 @@
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
     <QtMoc Include="DownloadedWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="SearchResultsWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
   </ItemGroup>
