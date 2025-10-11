@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QApplication>
 #include <QScreen>
+#include <QMouseEvent>
 #include "DesignSystem.h"
 #include "StyleSheet.h"
 #include "AntButton.h"
@@ -12,6 +13,14 @@
 HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
+	, videoWindow(nullptr)
+	, antInput(nullptr)
+	, m_searchResultsContainer(nullptr)
+	, m_selectedCountLabel(nullptr)
+	, m_searchResultsList(nullptr)
+	, m_selectAllCheckBox(nullptr)
+	, m_nextButton(nullptr)
+	, m_totalItems(0)
 {
 	setObjectName("HomePage");
 	setupUI();
@@ -85,8 +94,12 @@ void HomePage::setupSearchResultsContainer()
 	bottomLayout->setContentsMargins(0, 0, 0, 0);
 	bottomLayout->setSpacing(12);
 
-	// 全选复选框
+	// 全选复选框 - 设置为三态
 	m_selectAllCheckBox = new QCheckBox("全选", m_searchResultsContainer);
+	m_selectAllCheckBox->setTristate(true); // 启用三态模式
+
+	// 安装事件过滤器来处理鼠标点击
+	m_selectAllCheckBox->installEventFilter(this);
 
 	// 下一步按钮
 	m_nextButton = new AntButton("下一步", 12, m_searchResultsContainer);
@@ -109,6 +122,70 @@ void HomePage::setupSearchResultsContainer()
 
 	// 初始化样式
 	updateSearchResultsStyle();
+}
+
+// 事件过滤器处理全选框的鼠标点击
+bool HomePage::eventFilter(QObject* obj, QEvent* event)
+{
+	if (obj == m_selectAllCheckBox && event->type() == QEvent::MouseButtonRelease) {
+		QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+		if (mouseEvent->button() == Qt::LeftButton) {
+			// 手动处理全选框的点击逻辑
+			handleSelectAllClick();
+			return true; // 事件已处理
+		}
+	}
+	return QWidget::eventFilter(obj, event);
+}
+
+// 处理全选框点击的核心逻辑
+void HomePage::handleSelectAllClick()
+{
+	// 阻塞列表项的信号，避免触发单个项的状态改变
+	blockItemSignals(true);
+
+	Qt::CheckState currentState = m_selectAllCheckBox->checkState();
+	Qt::CheckState newState;
+
+	// 根据当前状态决定新状态
+	if (currentState == Qt::Checked) {
+		// 当前是全选，点击后变为全未选中
+		newState = Qt::Unchecked;
+	}
+	else {
+		// 当前是未选中或部分选中，点击后变为全选
+		newState = Qt::Checked;
+	}
+
+	// 设置全选框的新状态（阻塞信号避免递归调用）
+	m_selectAllCheckBox->blockSignals(true);
+	m_selectAllCheckBox->setCheckState(newState);
+	m_selectAllCheckBox->blockSignals(false);
+
+	// 遍历所有列表项，更新复选框状态
+	for (int i = 0; i < m_searchResultsList->count(); ++i) {
+		QListWidgetItem* item = m_searchResultsList->item(i);
+		QWidget* itemWidget = m_searchResultsList->itemWidget(item);
+		if (itemWidget) {
+			QCheckBox* checkbox = itemWidget->findChild<QCheckBox*>();
+			if (checkbox) {
+				checkbox->setCheckState(newState);
+			}
+		}
+	}
+
+	// 更新选择索引
+	m_selectedIndexes.clear();
+	if (newState == Qt::Checked) {
+		for (int i = 0; i < m_totalItems; i++) {
+			m_selectedIndexes.append(i);
+		}
+	}
+
+	updateSelectedCount();
+
+	// 解除阻塞
+	blockItemSignals(false);
 }
 
 void HomePage::onSearchTextChanged(const QString& text)
@@ -143,33 +220,9 @@ void HomePage::onSearchClicked()
 
 void HomePage::onSelectAllStateChanged(int state)
 {
-	// 阻塞列表项的信号，避免触发单个项的状态改变
-	blockItemSignals(true);
-
-	// 遍历所有列表项，更新复选框状态
-	for (int i = 0; i < m_searchResultsList->count(); ++i) {
-		QListWidgetItem* item = m_searchResultsList->item(i);
-		QWidget* itemWidget = m_searchResultsList->itemWidget(item);
-		if (itemWidget) {
-			QCheckBox* checkbox = itemWidget->findChild<QCheckBox*>();
-			if (checkbox) {
-				checkbox->setCheckState(static_cast<Qt::CheckState>(state));
-			}
-		}
-	}
-
-	// 更新选择计数
-	m_selectedIndexes.clear();
-	if (state == Qt::Checked) {
-		for (int i = 0; i < m_totalItems; i++) {
-			m_selectedIndexes.append(i);
-		}
-	}
-
-	updateSelectedCount();
-
-	// 解除阻塞
-	blockItemSignals(false);
+	// 这个函数现在只用于响应程序化的状态改变
+	// 实际的点击逻辑在 handleSelectAllClick() 中处理
+	Q_UNUSED(state);
 }
 
 void HomePage::onItemCheckboxStateChanged(int state)
@@ -192,20 +245,7 @@ void HomePage::onItemCheckboxStateChanged(int state)
 	updateSelectedCount();
 
 	// 更新全选框状态
-	bool allSelected = (m_selectedIndexes.count() == m_totalItems);
-	bool anySelected = !m_selectedIndexes.isEmpty();
-
-	m_selectAllCheckBox->blockSignals(true);
-	if (allSelected) {
-		m_selectAllCheckBox->setCheckState(Qt::Checked);
-	}
-	else if (anySelected) {
-		m_selectAllCheckBox->setCheckState(Qt::PartiallyChecked);
-	}
-	else {
-		m_selectAllCheckBox->setCheckState(Qt::Unchecked);
-	}
-	m_selectAllCheckBox->blockSignals(false);
+	updateSelectAllCheckboxState();
 }
 
 void HomePage::onNextButtonClicked()
@@ -227,6 +267,32 @@ void HomePage::updateSelectedCount()
 	m_nextButton->setEnabled(selectedCount > 0);
 }
 
+// 更新全选框状态
+void HomePage::updateSelectAllCheckboxState()
+{
+	if (m_totalItems == 0) {
+		m_selectAllCheckBox->setCheckState(Qt::Unchecked);
+		return;
+	}
+
+	int selectedCount = m_selectedIndexes.size();
+
+	// 阻塞信号避免递归调用
+	m_selectAllCheckBox->blockSignals(true);
+
+	if (selectedCount == 0) {
+		m_selectAllCheckBox->setCheckState(Qt::Unchecked);
+	}
+	else if (selectedCount == m_totalItems) {
+		m_selectAllCheckBox->setCheckState(Qt::Checked);
+	}
+	else {
+		m_selectAllCheckBox->setCheckState(Qt::PartiallyChecked);
+	}
+
+	m_selectAllCheckBox->blockSignals(false);
+}
+
 void HomePage::addSearchResultItem(const QString& title, const QString& duration, const QString& author)
 {
 	QListWidgetItem* item = new QListWidgetItem(m_searchResultsList);
@@ -238,10 +304,11 @@ void HomePage::addSearchResultItem(const QString& title, const QString& duration
 	itemLayout->setContentsMargins(12, 8, 12, 8);
 	itemLayout->setSpacing(12);
 
-	// 复选框
+	// 复选框 - 只有选中和不选两种状态
 	QCheckBox* checkbox = new QCheckBox();
 	checkbox->setFixedSize(16, 16);
 	checkbox->setProperty("itemIndex", m_totalItems);
+	// 使用 checkStateChanged 而不是 stateChanged
 	connect(checkbox, &QCheckBox::checkStateChanged, this, &HomePage::onItemCheckboxStateChanged);
 
 	// 视频信息
@@ -361,7 +428,7 @@ void HomePage::updateSearchResultsStyle()
 			"outline: none;"
 			"}"));
 
-	// 更新全选复选框样式
+	// 更新全选复选框样式（支持三态）
 	m_selectAllCheckBox->setStyleSheet(
 		QString("QCheckBox{"
 			"font-size: 13px;"
@@ -402,7 +469,7 @@ void HomePage::updateItemStyle(QWidget* itemWidget)
 {
 	if (!itemWidget) return;
 
-	// 更新复选框样式
+	// 更新复选框样式（列表项复选框只有两种状态）
 	QCheckBox* checkbox = itemWidget->findChild<QCheckBox*>();
 	if (checkbox) {
 		checkbox->setStyleSheet(

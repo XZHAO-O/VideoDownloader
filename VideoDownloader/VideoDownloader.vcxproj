@@ -104,7 +104,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AntCheckBox.cpp" />
     <ClCompile Include="BaseVideoPlatformMod.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
@@ -347,7 +346,6 @@
     <QtMoc Include="DownloadRecordRepository.h" />
     <QtMoc Include="ConfigManager.h" />
     <QtMoc Include="EventBus.h" />
-    <QtMoc Include="AntCheckBox.h" />
     <ClInclude Include="ApplicationState.h" />
     <QtMoc Include="BaseVideoPlatformMod.h" />
     <QtMoc Include="DownloadOrchestrationService.h" />

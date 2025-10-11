@@ -26,6 +26,7 @@ public:
 protected:
 	void showEvent(QShowEvent* event) override;
 	void resizeEvent(QResizeEvent* event) override;
+	bool eventFilter(QObject* obj, QEvent* event) override; // 添加事件过滤器
 
 private slots:
 	void onSearchTextChanged(const QString& text);
@@ -48,6 +49,8 @@ private:
 	void updateSearchResultsStyle();
 	void updateItemStyle(QWidget* itemWidget);
 	void blockItemSignals(bool block);
+	void updateSelectAllCheckboxState();
+	void handleSelectAllClick(); // 添加这个声明
 
 	// 模拟搜索数据
 	void loadMockSearchData();
