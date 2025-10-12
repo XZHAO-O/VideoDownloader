@@ -7,6 +7,7 @@
 ApplicationController::ApplicationController(QObject* parent)
 	: QObject(parent)
 {
+	initialize();
 }
 
 ApplicationController::~ApplicationController()
@@ -57,13 +58,13 @@ void ApplicationController::shutdown()
 	}
 
 	m_state = ShuttingDown;
+	LogSystem::instance().info("ApplicationController shuttingdown", "Application");
 
 	cleanup();
 
 	m_initialized = false;
 	m_state = Uninitialized;
 
-	LogSystem::instance().info("ApplicationController shutdown complete", "Application");
 	emit shutdownComplete();
 }
 

@@ -26,6 +26,9 @@ public:
 	bool initialize();
 	void shutdown();
 
+	//configmanager
+	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
+
 	// 获取服务实例
 	QSharedPointer<ModManager> getModManager() const { return m_modManager; }
 	QSharedPointer<DownloadManager> getDownloadManager() const { return m_downloadManager; }

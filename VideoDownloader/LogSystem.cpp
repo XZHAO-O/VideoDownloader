@@ -23,32 +23,35 @@ LogSystem::~LogSystem()
 
 void LogSystem::initialize(const QString& logDir, LogLevel level)
 {
-	QMutexLocker locker(&m_mutex);
 
-	if (m_initialized) {
-		return;
+	{
+		QMutexLocker locker(&m_mutex);
+
+		if (m_initialized) {
+			return;
+		}
+
+		m_logDir = logDir;
+		m_globalLevel = level;
+
+		// 确保日志目录存在
+		QDir dir(logDir);
+		if (!dir.exists()) {
+			dir.mkpath(".");
+		}
+
+		// 创建日志文件
+		QString logFilePath = dir.absoluteFilePath("application.log");
+		m_logFile.setFileName(logFilePath);
+
+		if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+			qWarning() << "Failed to open log file:" << logFilePath;
+			return;
+		}
+
+		m_stream.setDevice(&m_logFile);
+		m_initialized = true;
 	}
-
-	m_logDir = logDir;
-	m_globalLevel = level;
-
-	// 确保日志目录存在
-	QDir dir(logDir);
-	if (!dir.exists()) {
-		dir.mkpath(".");
-	}
-
-	// 创建日志文件
-	QString logFilePath = dir.absoluteFilePath("application.log");
-	m_logFile.setFileName(logFilePath);
-
-	if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-		qWarning() << "Failed to open log file:" << logFilePath;
-		return;
-	}
-
-	m_stream.setDevice(&m_logFile);
-	m_initialized = true;
 
 	// 记录初始化信息
 	info("Log system initialized", "LogSystem");
@@ -59,7 +62,7 @@ void LogSystem::shutdown()
 	QMutexLocker locker(&m_mutex);
 
 	if (m_initialized) {
-		info("Log system shutting down", "LogSystem");
+		//info("Log system shutting down", "LogSystem");
 		m_stream.flush();
 		m_logFile.close();
 		m_initialized = false;
