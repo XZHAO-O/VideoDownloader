@@ -114,3 +114,11 @@ void MaterialDialog::showIndexPage(PageIndex index)
 		break;
 	}
 }
+
+// 新增：设置标准对话框确认函数
+void MaterialDialog::setStandardConfirmFunction(std::function<void()> func)
+{
+	if (standardPage) {
+		standardPage->setConfirmFunction(func);
+	}
+}

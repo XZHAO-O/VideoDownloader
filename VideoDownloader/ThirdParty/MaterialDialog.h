@@ -28,9 +28,14 @@ public:
 public:
 	void showIndexPage(PageIndex index);
 	StandardDialogPage* standardDialog() { return standardPage; };
+
+	// 新增：设置标准对话框确认函数
+	void setStandardConfirmFunction(std::function<void()> func);
+
 signals:
 	void setStandardDialogText(QString title, QString text);
 	void successLogin(bool loginState);
+
 public:
 	LoginPageWidget* loginPage;
 	RegisterPageWidget* registerPage;

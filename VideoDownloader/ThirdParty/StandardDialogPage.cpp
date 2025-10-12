@@ -61,8 +61,21 @@ StandardDialogPage::StandardDialogPage(QWidget* parent)
 	mainLay->addWidget(contentLabel);
 	mainLay->addLayout(buttonLayout);
 
-	// ===== 连接信号和槽：点击“确定”退出程序 =====
-	connect(confirmBtn, &QPushButton::clicked, qApp, &QApplication::quit);
+	// ===== 修改：连接信号和槽 =====
+	// 先连接到自定义函数，然后发射信号
+	connect(confirmBtn, &QPushButton::clicked, this, [this]() {
+		// 如果设置了自定义函数，执行它
+		if (m_confirmFunction) {
+			m_confirmFunction();
+		}
+		// 发射信号供外部连接
+		emit confirmClicked();
+
+		// 保持原来的退出逻辑
+		exitDialog();
+		});
+
+	// 保持原来的退出逻辑
 	connect(cancelBtn, &QPushButton::clicked, this, &StandardDialogPage::exitDialog);
 
 	adjustSize();
@@ -88,4 +101,10 @@ void StandardDialogPage::updateTheme()
 {
 	cancelBtn->setStyleSheet(StyleSheet::standardDialogBtnQss(DesignSystem::instance()->primaryColor(), DesignSystem::instance()->backgroundColor()));
 	confirmBtn->setStyleSheet(StyleSheet::standardDialogBtnQss(DesignSystem::instance()->primaryColor(), DesignSystem::instance()->backgroundColor()));
+}
+
+// 新增：设置确认按钮的自定义函数
+void StandardDialogPage::setConfirmFunction(std::function<void()> func)
+{
+	m_confirmFunction = func;
 }

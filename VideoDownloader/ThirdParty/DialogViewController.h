@@ -15,6 +15,10 @@ class DialogViewController : public QGraphicsView
 public:
 	DialogViewController(bool loginState, QWidget* parent);
 	~DialogViewController();
+
+	// 新增：设置标准对话框确认函数
+	void setStandardConfirmFunction(std::function<void()> func);
+
 signals:
 	void playMask(bool isAddMask);
 	void successLogin(bool loginState);

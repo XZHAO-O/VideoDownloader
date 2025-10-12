@@ -18,8 +18,6 @@ DialogViewController::DialogViewController(bool loginState, QWidget* parent)
 	setCacheMode(QGraphicsView::CacheBackground);
 
 	// 创建对话框
-	// 一旦你打算把一个 QWidget 放到场景中包装成 QGraphicsItem（比如通过 QGraphicsProxyWidget），那么这个 QWidget 就不能有父对象（parent），必须传 nullptr。
-	// Qt 大坑
 	dialog = new MaterialDialog(loginState,
 		[this](MaterialDialog::PageIndex index)
 		{
@@ -178,5 +176,13 @@ void DialogViewController::buildStandardDialog(QString title, QString text)
 	{
 		emit dialog->setStandardDialogText(title, text);
 		showAnim(MaterialDialog::PageIndex::Standard);
+	}
+}
+
+// 新增：设置标准对话框确认函数
+void DialogViewController::setStandardConfirmFunction(std::function<void()> func)
+{
+	if (dialog) {
+		dialog->setStandardConfirmFunction(func);
 	}
 }

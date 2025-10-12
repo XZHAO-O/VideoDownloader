@@ -102,11 +102,11 @@ void SettingsPage::setupGeneralSettings()
 
 	// 重置按钮
 	QHBoxLayout* resetLayout = new QHBoxLayout();
-	m_resetButton = new AntButton("重置设置", 12, m_generalTab);
+	m_resetButton = new AntButton("重置设置", 11, m_generalTab);
 	m_resetButton->setFixedSize(120, 40);
 
-	resetLayout->addStretch();
 	resetLayout->addWidget(m_resetButton);
+	resetLayout->addStretch();
 	m_generalLayout->addLayout(resetLayout);
 
 	m_generalLayout->addStretch();
@@ -124,8 +124,8 @@ void SettingsPage::setupDownloadSettings()
 	m_downloadPathLayout = new QHBoxLayout();
 	m_downloadPathLabel = new QLabel("下载路径", m_downloadTab);
 	m_downloadPathInput = new QLineEdit(m_downloadTab);
-	m_browsePathButton = new AntButton("浏览", 10, m_downloadTab);
-	m_browsePathButton->setFixedSize(60, 35);
+	m_browsePathButton = new AntButton("浏览", 11, m_downloadTab);
+	m_browsePathButton->setFixedSize(80, 40);
 
 	m_downloadPathLayout->addWidget(m_downloadPathLabel);
 	m_downloadPathLayout->addWidget(m_downloadPathInput);
@@ -385,8 +385,8 @@ void SettingsPage::setupAdvancedSettings()
 	m_logPathLayout = new QHBoxLayout();
 	m_logPathLabel = new QLabel("日志路径", m_advancedTab);
 	m_logPathInput = new QLineEdit(m_advancedTab);
-	m_browseLogPathButton = new AntButton("浏览", 10, m_advancedTab);
-	m_browseLogPathButton->setFixedSize(60, 35);
+	m_browseLogPathButton = new AntButton("浏览", 11, m_advancedTab);
+	m_browseLogPathButton->setFixedSize(80, 40);
 
 	m_logPathLayout->addWidget(m_logPathLabel);
 	m_logPathLayout->addWidget(m_logPathInput);
@@ -396,8 +396,10 @@ void SettingsPage::setupAdvancedSettings()
 
 	// 日志操作按钮
 	m_logButtonsLayout = new QHBoxLayout();
-	m_viewLogsButton = new AntButton("查看日志", 10, m_advancedTab);
-	m_clearLogsButton = new AntButton("清空日志", 10, m_advancedTab);
+	m_viewLogsButton = new AntButton("查看日志", 11, m_advancedTab);
+	m_viewLogsButton->setFixedSize(120, 40);
+	m_clearLogsButton = new AntButton("清空日志", 11, m_advancedTab);
+	m_clearLogsButton->setFixedSize(120, 40);
 
 	m_logButtonsLayout->addWidget(m_viewLogsButton);
 	m_logButtonsLayout->addWidget(m_clearLogsButton);
@@ -412,7 +414,7 @@ void SettingsPage::setupConnections()
 {
 	// 重置按钮连接
 	connect(m_resetButton, &AntButton::clicked, this, [this]() {
-		emit showStandardDialog("确认重置", "确定要重置当前选项卡的设置吗？");
+		emit showResetDialog("重置设置", "确定要重置设置为默认状态吗？");
 		});
 
 	// 常规设置自动保存
@@ -475,7 +477,7 @@ void SettingsPage::setupConnections()
 		});
 
 	connect(m_clearLogsButton, &AntButton::clicked, this, [this]() {
-		emit showStandardDialog("确认清空", "确定要清空所有日志文件吗？此操作不可撤销。");
+		emit showLogClearDialog("清空日志", "确认清空日志文件？");
 		});
 }
 
@@ -483,7 +485,7 @@ void SettingsPage::loadCurrentSettings()
 {
 	// 常规设置
 	m_autoStartToggle->setChecked(m_configManager->getValue("app/autoStart", false).toBool());
-	m_checkUpdatesToggle->setChecked(m_configManager->getValue("app/checkForUpdates", true).toBool());
+	m_checkUpdatesToggle->setChecked(m_configManager->getValue("app/checkForUpdates", false).toBool());
 
 	bool minimizeToTray = m_configManager->getValue("ui/minimizeToTray", false).toBool();
 	if (minimizeToTray) {
@@ -646,8 +648,15 @@ void SettingsPage::autoSaveSettings()
 	saveCurrentSettings();
 }
 
-void SettingsPage::onResetSettings()
+
+void SettingsPage::clearLog()
 {
+
+}
+
+void SettingsPage::resetSettings()
+{
+	//重置尚未实现
 	loadCurrentSettings();
 }
 
@@ -676,10 +685,4 @@ void SettingsPage::onProxySettingsChanged()
 	m_proxyPortInput->setEnabled(enabled);
 	m_proxyUserInput->setEnabled(enabled);
 	m_proxyPassInput->setEnabled(enabled);
-}
-
-void SettingsPage::showStandardDialog(const QString& title, const QString& message)
-{
-	// 发射信号，让主窗口处理对话框显示
-	emit requestStandardDialog(title, message);
 }

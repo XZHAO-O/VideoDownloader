@@ -27,15 +27,17 @@ public:
 	SettingsPage(QSharedPointer<ApplicationController> appController, QWidget* parent = nullptr);
 	~SettingsPage();
 
+	void resetSettings();
+	void clearLog();
+
 signals:
-	void requestStandardDialog(const QString& title, const QString& message);
+	void showResetDialog(const QString& title, const QString& message);
+	void showLogClearDialog(const QString& title, const QString& message);
 
 private slots:
-	void onResetSettings();
 	void onDownloadPathBrowse();
 	void onExitBehaviorChanged();
 	void onProxySettingsChanged();
-	void showStandardDialog(const QString& title, const QString& message);
 
 private:
 	void setupUI();

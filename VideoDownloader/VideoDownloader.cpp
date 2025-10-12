@@ -319,12 +319,36 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 			#endif
 		});
 
-	connect(btnClose, &QToolButton::clicked, this, [this, w, h]()
+	connect(btnClose, &QToolButton::clicked, this, [this, w, h, mDialog]()
 		{
-			emit showStandardDialog("TITLE", "是否关闭应用程序?");
+			mDialog->setStandardConfirmFunction([this]() {
+				// 执行自定义逻辑
+				QApplication::quit();
+				});
+			emit showStandardDialog("退出", "是否关闭应用程序?");
 		});
 
 	connect(this, &VideoDownloader::showStandardDialog, mDialog, &DialogViewController::buildStandardDialog);
+
+	//重置设置和日志清空
+	connect(settingsPage, &SettingsPage::showResetDialog, this, [this, mDialog, settingsPage](const QString& title, const QString& message)
+		{
+			mDialog->setStandardConfirmFunction([this, settingsPage]() {
+				// 执行自定义逻辑
+				settingsPage->resetSettings();
+				qDebug() << "666";
+				});
+			emit showStandardDialog(title, message);
+		});
+
+	connect(settingsPage, &SettingsPage::showLogClearDialog, this, [this, mDialog, settingsPage](const QString& title, const QString& message)
+		{
+			mDialog->setStandardConfirmFunction([this, settingsPage]() {
+				// 执行自定义逻辑
+				settingsPage->clearLog();
+				});
+			emit showStandardDialog(title, message);
+		});
 
 	// 页面的信号连接
 	connect(this, &VideoDownloader::resized, downloadPage, &DownloadPage::resized);
