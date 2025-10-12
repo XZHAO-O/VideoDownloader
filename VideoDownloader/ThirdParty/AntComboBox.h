@@ -19,6 +19,7 @@ public:
 
 	~AntComboBox() override;
 
+	QString currentText() const { return m_text; }
 	void setCurrentText(const QString& text);
 	// 设置是否启用多级列表
 	void setEnableMultiLevel(bool enable);
