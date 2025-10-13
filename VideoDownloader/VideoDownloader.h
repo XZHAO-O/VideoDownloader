@@ -121,7 +121,6 @@ private:
 
 	AntInput* antInput = nullptr;
 
-	//downloadmanager
+	//ApplicationController
 	QSharedPointer<ApplicationController> appController;
-	QSharedPointer<DownloadManager> downloadManager;
 };

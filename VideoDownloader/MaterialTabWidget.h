@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <QWidget>
 #include <QTimer>
@@ -17,6 +17,9 @@ public:
 
 	void setCurrentIndex(int index);
 	int currentIndex() const { return m_currentIndex; }
+
+	int count() const;
+	void removeTab(int index);
 
 	void addTab(QWidget* wid, QString tabName);
 	QWidget* getWidget(int index);

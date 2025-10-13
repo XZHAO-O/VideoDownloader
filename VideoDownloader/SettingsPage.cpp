@@ -1,4 +1,4 @@
-﻿#include "SettingsPage.h"
+#include "SettingsPage.h"
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QDir>

@@ -24,7 +24,6 @@
 VideoDownloader::VideoDownloader(QWidget* parent)
 	: QWidget(parent)
 	, appController(QSharedPointer<ApplicationController>::create())
-	, downloadManager(QSharedPointer<DownloadManager>::create(appController))
 {
 	ui.setupUi(this);
 
@@ -141,7 +140,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	contentLay->addWidget(stackedWidget);
 	// 添加页面
 	HomePage* homePage = new HomePage(appController, stackedWidget);
-	DownloadPage* downloadPage = new DownloadPage(downloadManager, stackedWidget);
+	DownloadPage* downloadPage = new DownloadPage(appController->getDownloadManager(), stackedWidget);
 
 	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage]() {
 		// 切换到下载页面
@@ -167,7 +166,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 		});
 
 
-	ModManagerPage* modManagerPage = new ModManagerPage(stackedWidget);
+	ModManagerPage* modManagerPage = new ModManagerPage(appController->getModManager(), stackedWidget);
 	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
 	stackedWidget->addWidget(homePage);

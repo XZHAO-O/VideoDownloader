@@ -1,4 +1,5 @@
-﻿#include "AntToggleButton.h"
+﻿// AntToggleButton.cpp
+#include "AntToggleButton.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include "DesignSystem.h"
@@ -29,9 +30,19 @@ AntToggleButton::AntToggleButton(QSize size, QWidget* parent)
 
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]()
 		{
-			m_bgColor = DesignSystem::instance()->currentTheme().toggleButtonBgColor;
+			// 修复：根据当前状态设置正确的颜色
+			if (m_checked) {
+				m_bgColor = DesignSystem::instance()->primaryColor();
+			}
+			else {
+				m_bgColor = DesignSystem::instance()->currentTheme().noCheckedColor;
+			}
 			m_toggleButtonColor = DesignSystem::instance()->currentTheme().toggleButtonColor;
 			m_textColor = DesignSystem::instance()->currentTheme().textColor;
+
+			// 更新滑块位置
+			m_circleX = m_checked ? width() - height() + 3 : 3;
+
 			update();
 		});
 }
@@ -108,6 +119,15 @@ void AntToggleButton::resizeEvent(QResizeEvent* event)
 	QWidget::resizeEvent(event);
 	m_circleWidth = height() - 6;
 	m_circleX = m_checked ? width() - height() + 3 : 3;
+
+	// 修复：调整大小时也要更新背景颜色
+	if (m_checked) {
+		m_bgColor = DesignSystem::instance()->primaryColor();
+	}
+	else {
+		m_bgColor = DesignSystem::instance()->currentTheme().noCheckedColor;
+	}
+	update();
 }
 
 void AntToggleButton::setChecked(bool checked)
@@ -121,8 +141,16 @@ void AntToggleButton::setChecked(bool checked)
 
 		colorAnim->stop();
 		colorAnim->setStartValue(m_bgColor);
-		colorAnim->setEndValue(m_checked ? DesignSystem::instance()->primaryColor()
-			: DesignSystem::instance()->currentTheme().noCheckedColor);
+
+		// 修复：使用正确的主题颜色
+		QColor targetColor;
+		if (m_checked) {
+			targetColor = DesignSystem::instance()->primaryColor();
+		}
+		else {
+			targetColor = DesignSystem::instance()->currentTheme().noCheckedColor;
+		}
+		colorAnim->setEndValue(targetColor);
 
 		groupAnim->start();
 

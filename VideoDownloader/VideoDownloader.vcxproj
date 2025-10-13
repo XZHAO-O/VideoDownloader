@@ -112,9 +112,10 @@
     <ClCompile Include="DownloadOrchestrationService.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="EventBus.cpp" />
-    <ClCompile Include="INetworkManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
     <ClCompile Include="MediaProcessingService.cpp" />
+    <ClCompile Include="ModCardModel.cpp" />
+    <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
@@ -368,6 +369,8 @@
     <QtMoc Include="ModManager.h" />
     <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
+    <QtMoc Include="ModCardModel.h" />
+    <QtMoc Include="ModCardWidget.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <ClInclude Include="VideoDownloadRequest.h" />

@@ -1,4 +1,3 @@
-﻿// MaterialTabWidget.cpp
 #include "MaterialTabWidget.h"
 #include "MaterialTabBar.h"
 #include "SlideStackedWidget.h"
@@ -200,5 +199,41 @@ void MaterialTabWidget::jumpToTargetIndex()
 		m_stackedWidget->setCurrentIndex(m_targetIndex);
 		emit itemIndexChanged(m_targetIndex);
 		m_targetIndex = -1;
+	}
+}
+
+int MaterialTabWidget::count() const
+{
+	// 返回标签页的数量，假设 m_stackedWidget 和 m_tabBar 的数量是同步的
+	if (m_stackedWidget) {
+		return m_stackedWidget->count();
+	}
+	return 0;
+}
+
+void MaterialTabWidget::removeTab(int index)
+{
+	if (index < 0 || index >= count()) {
+		return;
+	}
+
+	// 从 stacked widget 中移除页面
+	QWidget* widget = m_stackedWidget->widget(index);
+	if (widget) {
+		m_stackedWidget->removeWidget(widget);
+		widget->deleteLater();
+	}
+
+	// 从 tab bar 中移除标签
+	m_tabBar->removeTab(index);
+
+	// 如果移除了当前标签页，需要更新当前索引
+	if (m_currentIndex >= index && m_currentIndex > 0) {
+		m_currentIndex--;
+	}
+
+	// 如果没有标签页了，重置当前索引
+	if (count() == 0) {
+		m_currentIndex = 0;
 	}
 }

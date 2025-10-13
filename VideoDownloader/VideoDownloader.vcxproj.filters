@@ -352,9 +352,6 @@
     <ClCompile Include="LogSystem.cpp">
       <Filter>Core\Log</Filter>
     </ClCompile>
-    <ClCompile Include="INetworkManager.cpp">
-      <Filter>Core\Network</Filter>
-    </ClCompile>
     <ClCompile Include="NetworkManager.cpp">
       <Filter>Core\Network</Filter>
     </ClCompile>
@@ -386,6 +383,12 @@
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="SearchResultsWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="ModCardModel.cpp">
+      <Filter>Core\Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="ModCardWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
@@ -691,6 +694,12 @@
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
     <QtMoc Include="SearchResultsWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="ModCardModel.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="ModCardWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
   </ItemGroup>
