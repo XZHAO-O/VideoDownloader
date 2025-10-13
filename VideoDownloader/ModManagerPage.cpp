@@ -36,7 +36,10 @@ void ModManagerPage::showEvent(QShowEvent* event)
 	QWidget::showEvent(event);
 	// 每次显示页面时刷新模组列表
 	if (m_modManager && m_modManager->isInitialized()) {
-		loadMods();
+		// 只在需要时重新加载
+		if (m_modTabs.isEmpty()) {
+			loadMods();
+		}
 	}
 }
 
@@ -52,7 +55,7 @@ void ModManagerPage::createExampleMod()
 	// 创建示例元数据
 	QJsonObject metadata;
 	metadata["modId"] = "example_mod";
-	metadata["name"] = "⚡示例模组";
+	metadata["name"] = "示例";
 	metadata["author"] = "系统示例";
 	metadata["version"] = "1.0.0";
 	metadata["description"] = "这是一个示例模组，用于展示模组卡片的外观和功能。您可以通过这个示例了解模组管理界面的使用方法。";
@@ -256,6 +259,8 @@ void ModManagerPage::loadMods()
 	// 清空现有模组
 	m_modModels.clear();
 	m_modTabs.clear();
+	m_modTabIndexes.clear();
+	m_tabIndexMods.clear();
 
 	// 获取所有已加载的模组
 	QList<QString> modIds = m_modManager->getLoadedMods();
@@ -285,8 +290,13 @@ void ModManagerPage::refreshTabs()
 		m_tabWidget->removeTab(0);
 	}
 
+	// 清空映射
+	m_modTabIndexes.clear();
+	m_tabIndexMods.clear();
+
 	// 如果有模组，添加模组标签页
 	if (!m_modTabs.isEmpty()) {
+		int tabIndex = 0;
 		for (auto it = m_modTabs.begin(); it != m_modTabs.end(); ++it) {
 			const QString& modId = it.key();
 			ModCardWidget* cardWidget = it.value();
@@ -308,6 +318,11 @@ void ModManagerPage::refreshTabs()
 
 				scrollArea->addWidget(scrollContent);
 				m_tabWidget->addTab(scrollArea, tabName);
+
+				// 记录映射关系
+				m_modTabIndexes[modId] = tabIndex;
+				m_tabIndexMods[tabIndex] = modId;
+				tabIndex++;
 			}
 		}
 	}
@@ -324,6 +339,9 @@ void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardMo
 	if (m_modTabs.contains(modId)) {
 		// 如果已存在，更新现有卡片
 		m_modTabs[modId]->setModel(model);
+
+		// 更新标签页名称
+		updateTabName(modId);
 	}
 	else {
 		// 创建新的卡片组件
@@ -338,9 +356,8 @@ void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardMo
 			this, &ModManagerPage::onUninstallClicked);
 
 		m_modTabs[modId] = cardWidget;
+		m_modModels[modId] = model;
 	}
-
-	m_modModels[modId] = model;
 }
 
 void ModManagerPage::removeModTab(const QString& modId)
@@ -353,6 +370,30 @@ void ModManagerPage::removeModTab(const QString& modId)
 	if (m_modModels.contains(modId)) {
 		m_modModels.remove(modId);
 	}
+
+	// 从映射中移除
+	if (m_modTabIndexes.contains(modId)) {
+		int tabIndex = m_modTabIndexes[modId];
+		m_modTabIndexes.remove(modId);
+		m_tabIndexMods.remove(tabIndex);
+	}
+}
+
+void ModManagerPage::updateTabName(const QString& modId)
+{
+	if (!m_modModels.contains(modId) || !m_modTabIndexes.contains(modId)) {
+		return;
+	}
+
+	QString newName = m_modModels[modId]->name();
+	if (newName.isEmpty()) {
+		newName = modId;
+	}
+
+	int tabIndex = m_modTabIndexes[modId];
+	// 这里我们需要找到对应标签页并更新名称
+	// 由于MaterialTabWidget没有提供直接更新标签名称的方法，
+	// 我们需要在refreshTabs中处理
 }
 
 void ModManagerPage::updateModTab(const QString& modId)

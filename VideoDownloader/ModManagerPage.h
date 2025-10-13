@@ -44,6 +44,7 @@ private:
 	void refreshTabs();
 	void createModTab(const QString& modId, QSharedPointer<ModCardModel> model);
 	void removeModTab(const QString& modId);
+	void updateTabName(const QString& modId);
 	void updateModTab(const QString& modId);
 
 	QSharedPointer<ModManager> m_modManager;
@@ -53,4 +54,8 @@ private:
 
 	QMap<QString, QSharedPointer<ModCardModel>> m_modModels;
 	QMap<QString, ModCardWidget*> m_modTabs;
+
+	// 添加映射来跟踪标签页和模组的关联
+	QMap<QString, int> m_modTabIndexes; // modId -> tab index
+	QMap<int, QString> m_tabIndexMods;  // tab index -> modId
 };
