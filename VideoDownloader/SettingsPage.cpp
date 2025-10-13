@@ -5,6 +5,43 @@
 #include <QFormLayout>
 #include <QButtonGroup>
 
+// 定义默认配置常量
+const QMap<QString, QVariant> SettingsPage::DEFAULT_SETTINGS = {
+	// 常规设置
+	{"app/autoStart", false},
+	{"app/checkForUpdates", false},
+	{"ui/minimizeToTray", false},
+	{"ui/language", "简体中文"},
+	{"ui/theme", "dark"},
+	{"ui/startupPage", "home"},
+	{"ui/showTrayIcon", true},
+	{"ui/closeToTray", false},
+
+	// 下载设置
+	{"download/defaultVideoQuality", "最高质量"},
+	{"download/defaultAudioQuality", "最高质量"},
+	{"download/defaultFormat", "视频+音频(合并)"},
+	{"download/maxConcurrentDownloads", 3},
+	{"download/autoMerge", true},
+	{"download/autoDeleteTempFiles", true},
+
+	// 网络设置
+	{"network/timeout", 30000},
+	{"network/retryCount", 3},
+	{"network/userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+	{"network/proxy/enabled", false},
+	{"network/proxy/type", "HTTP"},
+	{"network/proxy/host", ""},
+	{"network/proxy/port", ""},
+	{"network/proxy/username", ""},
+	{"network/proxy/password", ""},
+
+	// 高级设置
+	{"log/level", "Info"},
+	{"log/maxSize", 10485760}, // 10MB
+	{"log/maxFiles", 5}
+};
+
 SettingsPage::SettingsPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
@@ -651,13 +688,227 @@ void SettingsPage::autoSaveSettings()
 
 void SettingsPage::clearLog()
 {
+	//QString logPath = m_logPathInput->text();
 
+	//// 如果日志路径为空，使用默认路径
+	//if (logPath.isEmpty()) {
+	//	logPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	//	if (logPath.isEmpty()) {
+	//		logPath = QCoreApplication::applicationDirPath() + "/logs";
+	//	}
+	//	else {
+	//		logPath += "/logs";
+	//	}
+	//}
+
+	//QDir logDir(logPath);
+
+	//// 检查日志目录是否存在
+	//if (!logDir.exists()) {
+	//	//info
+	//	return;
+	//}
+
+	//// 获取所有日志文件
+	//QStringList logFilters;
+	//logFilters << "*.log" << "*.txt" << "log_*" << "*.log.*";
+	//QStringList logFiles = logDir.entryList(logFilters, QDir::Files | QDir::NoDotAndDotDot);
+
+	//if (logFiles.isEmpty()) {
+	//	//QMessageBox::information(
+	//	//	this,
+	//	//	"无需清空",
+	//	//	"没有找到可清除的日志文件。"
+	//	//);
+	//	qDebug() << "没有找到可清除的日志文件。";
+	//	return;
+	//}
+
+	//int deletedCount = 0;
+	//int failedCount = 0;
+	//qint64 totalFreedSpace = 0;
+
+	//// 删除每个日志文件
+	//for (const QString& fileName : logFiles) {
+	//	QString filePath = logDir.absoluteFilePath(fileName);
+	//	QFileInfo fileInfo(filePath);
+
+	//	// 记录文件大小
+	//	qint64 fileSize = fileInfo.size();
+
+	//	if (QFile::remove(filePath)) {
+	//		deletedCount++;
+	//		totalFreedSpace += fileSize;
+	//		LOG_DEBUG("Settings", "Deleted log file: %s", fileName.toUtf8().constData());
+	//	}
+	//	else {
+	//		failedCount++;
+	//		LOG_ERROR("Settings", "Failed to delete log file: %s", fileName.toUtf8().constData());
+	//	}
+	//}
+
+	//// 显示结果
+	//QString resultMessage;
+	//if (deletedCount > 0) {
+	//	QString sizeText;
+	//	if (totalFreedSpace < 1024) {
+	//		sizeText = QString("%1 字节").arg(totalFreedSpace);
+	//	}
+	//	else if (totalFreedSpace < 1024 * 1024) {
+	//		sizeText = QString("%1 KB").arg(totalFreedSpace / 1024.0, 0, 'f', 2);
+	//	}
+	//	else {
+	//		sizeText = QString("%1 MB").arg(totalFreedSpace / (1024.0 * 1024.0), 0, 'f', 2);
+	//	}
+
+	//	resultMessage = QString("成功清空 %1 个日志文件，释放 %2 空间。").arg(deletedCount).arg(sizeText);
+
+	//	if (failedCount > 0) {
+	//		resultMessage += QString("\n%1 个文件删除失败。").arg(failedCount);
+	//	}
+	//}
+	//else {
+	//	resultMessage = "没有成功删除任何日志文件。";
+	//}
+
+	////QMessageBox::information(this, "清空完成", resultMessage);
+
+	//// 记录操作结果
+	//if (deletedCount > 0) {
+	//	LOG_INFO("Settings", "Cleared %d log files, freed %lld bytes", deletedCount, totalFreedSpace);
+	//}
+	//if (failedCount > 0) {
+	//	LOG_WARN("Settings", "Failed to delete %d log files", failedCount);
+	//}
 }
 
+// 获取默认设置
+QVariantMap SettingsPage::getDefaultSettings() const
+{
+	QVariantMap defaultSettings;
+
+	// 将常量映射转换为 QVariantMap
+	for (auto it = DEFAULT_SETTINGS.begin(); it != DEFAULT_SETTINGS.end(); ++it) {
+		defaultSettings[it.key()] = it.value();
+	}
+
+	// 动态设置路径（不能硬编码）
+	QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+	if (defaultDownloadPath.isEmpty()) {
+		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+	}
+	defaultSettings["download/defaultSavePath"] = defaultDownloadPath;
+
+	QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	if (defaultLogPath.isEmpty()) {
+		defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
+	}
+	else {
+		defaultLogPath += "/logs";
+	}
+	defaultSettings["log/path"] = defaultLogPath;
+
+	return defaultSettings;
+}
+
+// 应用默认设置
+void SettingsPage::applyDefaultSettings()
+{
+	QVariantMap defaultSettings = getDefaultSettings();
+
+	// 应用所有默认设置
+	for (auto it = defaultSettings.begin(); it != defaultSettings.end(); ++it) {
+		m_configManager->setValue(it.key(), it.value());
+	}
+
+	// 保存配置
+	m_configManager->save();
+
+	// 记录日志
+	LOG_INFO("Settings", "All settings have been reset to default values");
+}
+
+// 重置常规设置
+void SettingsPage::resetGeneralSettings()
+{
+	m_configManager->setValue("app/autoStart", DEFAULT_SETTINGS["app/autoStart"]);
+	m_configManager->setValue("app/checkForUpdates", DEFAULT_SETTINGS["app/checkForUpdates"]);
+	m_configManager->setValue("ui/minimizeToTray", DEFAULT_SETTINGS["ui/minimizeToTray"]);
+	m_configManager->setValue("ui/language", DEFAULT_SETTINGS["ui/language"]);
+	m_configManager->setValue("ui/theme", DEFAULT_SETTINGS["ui/theme"]);
+
+	LOG_INFO("Settings", "General settings have been reset to defaults");
+}
+
+// 重置下载设置
+void SettingsPage::resetDownloadSettings()
+{
+	// 设置默认下载路径
+	QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+	if (defaultDownloadPath.isEmpty()) {
+		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+	}
+
+	m_configManager->setValue("download/defaultSavePath", defaultDownloadPath);
+	m_configManager->setValue("download/defaultVideoQuality", DEFAULT_SETTINGS["download/defaultVideoQuality"]);
+	m_configManager->setValue("download/defaultAudioQuality", DEFAULT_SETTINGS["download/defaultAudioQuality"]);
+	m_configManager->setValue("download/defaultFormat", DEFAULT_SETTINGS["download/defaultFormat"]);
+	m_configManager->setValue("download/maxConcurrentDownloads", DEFAULT_SETTINGS["download/maxConcurrentDownloads"]);
+	m_configManager->setValue("download/autoMerge", DEFAULT_SETTINGS["download/autoMerge"]);
+	m_configManager->setValue("download/autoDeleteTempFiles", DEFAULT_SETTINGS["download/autoDeleteTempFiles"]);
+
+	LOG_INFO("Settings", "Download settings have been reset to defaults");
+}
+
+// 重置网络设置
+void SettingsPage::resetNetworkSettings()
+{
+	m_configManager->setValue("network/timeout", DEFAULT_SETTINGS["network/timeout"]);
+	m_configManager->setValue("network/retryCount", DEFAULT_SETTINGS["network/retryCount"]);
+	m_configManager->setValue("network/userAgent", DEFAULT_SETTINGS["network/userAgent"]);
+
+	// 重置代理设置
+	QVariantMap proxyConfig;
+	proxyConfig["enabled"] = DEFAULT_SETTINGS["network/proxy/enabled"];
+	proxyConfig["type"] = DEFAULT_SETTINGS["network/proxy/type"];
+	proxyConfig["host"] = DEFAULT_SETTINGS["network/proxy/host"];
+	proxyConfig["port"] = DEFAULT_SETTINGS["network/proxy/port"];
+	proxyConfig["username"] = DEFAULT_SETTINGS["network/proxy/username"];
+	proxyConfig["password"] = DEFAULT_SETTINGS["network/proxy/password"];
+	m_configManager->setValue("network/proxy", proxyConfig);
+
+	LOG_INFO("Settings", "Network settings have been reset to defaults");
+}
+
+// 重置高级设置
+void SettingsPage::resetAdvancedSettings()
+{
+	// 设置默认日志路径
+	QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	if (defaultLogPath.isEmpty()) {
+		defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
+	}
+	else {
+		defaultLogPath += "/logs";
+	}
+
+	m_configManager->setValue("log/path", defaultLogPath);
+	m_configManager->setValue("log/level", DEFAULT_SETTINGS["log/level"]);
+	m_configManager->setValue("log/maxSize", DEFAULT_SETTINGS["log/maxSize"]);
+	m_configManager->setValue("log/maxFiles", DEFAULT_SETTINGS["log/maxFiles"]);
+
+	LOG_INFO("Settings", "Advanced settings have been reset to defaults");
+}
+
+// 完整的重置设置实现
 void SettingsPage::resetSettings()
 {
-	//重置尚未实现
+	applyDefaultSettings();
+
+	// 重新加载界面显示新设置
 	loadCurrentSettings();
+
+	LOG_INFO("Settings", "All settings have been reset to default values by user");
 }
 
 void SettingsPage::onDownloadPathBrowse()
