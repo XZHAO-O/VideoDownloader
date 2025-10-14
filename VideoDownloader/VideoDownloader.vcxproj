@@ -104,7 +104,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BaseVideoPlatformMod.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
@@ -119,7 +118,6 @@
     <ClCompile Include="ModCardModel.cpp" />
     <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModInfo.cpp" />
-    <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
@@ -352,7 +350,6 @@
     <QtMoc Include="ConfigManager.h" />
     <QtMoc Include="EventBus.h" />
     <ClInclude Include="ApplicationState.h" />
-    <QtMoc Include="BaseVideoPlatformMod.h" />
     <QtMoc Include="DownloadOrchestrationService.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadCardModel.h" />
@@ -366,12 +363,9 @@
     <QtMoc Include="LogSystem.h" />
     <QtMoc Include="IDownloadEngine.h" />
     <QtMoc Include="IMediaProcessor.h" />
-    <QtMoc Include="IMod.h" />
     <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
-    <QtMoc Include="IVideoPlatformMod.h" />
     <ClInclude Include="MediaInfo.h" />
-    <QtMoc Include="ModManager.h" />
     <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
     <QtMoc Include="ModCardModel.h" />
