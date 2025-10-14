@@ -1,3 +1,4 @@
+// ConfigModManager.h
 #pragma once
 
 #include <QObject>
@@ -33,6 +34,7 @@ public:
 	bool enableMod(const QString& modId);
 	bool disableMod(const QString& modId);
 	bool refreshMod(const QString& modId);
+	bool unloadMod(const QString& modId);  // 添加这个方法
 
 	// URL 匹配和平台获取
 	QString findModForUrl(const QString& url) const;
@@ -40,22 +42,31 @@ public:
 	QSharedPointer<ConfigVideoPlatform> getPlatformForMod(const QString& modId);
 	QList<QString> getAvailablePlatforms() const;
 
+	// 获取已加载的 Mod ID 列表
+	QList<QString> getLoadedMods() const;  // 添加这个方法
+
+	// 获取 Mod 信息
+	ModInfo getModInfo(const QString& modId) const;  // 添加这个方法
+
 	// 平台操作
 	QFuture<VideoInfo> getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, const QString& platformId = "", int page = 1);
 
+	// 系统状态
+	bool isInitialized() const { return m_initialized; }
+	QString getLastError() const { return m_lastError; }
+
 signals:
 	void modsChanged();
-	void modLoaded(const QString& modId);
+	void modLoaded(const ModInfo& info);
 	void modUnloaded(const QString& modId);
 	void modEnabled(const QString& modId);
 	void modDisabled(const QString& modId);
 
 private:
 	bool loadMod(const QString& configPath);
-	bool unloadMod(const QString& modId);
 	bool validateModConfig(const QJsonObject& config);
 	void buildUrlPatterns();
 
@@ -65,4 +76,5 @@ private:
 	QMap<QString, QSharedPointer<ConfigVideoPlatform>> m_platforms;
 	QMap<QString, QString> m_urlPatterns; // 正则表达式字符串 -> modId
 	bool m_initialized = false;
+	QString m_lastError;  // 添加错误信息成员
 };

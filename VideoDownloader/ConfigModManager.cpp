@@ -141,21 +141,6 @@ bool ConfigModManager::loadMod(const QString& configPath)
 	return true;
 }
 
-bool ConfigModManager::unloadMod(const QString& modId)
-{
-	if (!m_mods.contains(modId)) {
-		return false;
-	}
-
-	m_platforms.remove(modId);
-	m_mods.remove(modId);
-
-	LOG_INFO("ModManager", "Unloaded mod: %s", modId.toUtf8().constData());
-	emit modUnloaded(modId);
-
-	return true;
-}
-
 bool ConfigModManager::validateModConfig(const QJsonObject& config)
 {
 	// 必填字段验证
@@ -413,4 +398,30 @@ QFuture<SearchResult> ConfigModManager::searchVideos(const QString& keyword, con
 
 		return combinedResult;
 		});
+}
+
+// 添加缺失的方法实现
+QList<QString> ConfigModManager::getLoadedMods() const
+{
+	return m_mods.keys();
+}
+
+// 修改 unloadMod 方法为 public
+bool ConfigModManager::unloadMod(const QString& modId)
+{
+	if (!m_mods.contains(modId)) {
+		m_lastError = "Mod not found";
+		return false;
+	}
+
+	m_platforms.remove(modId);
+	m_mods.remove(modId);
+
+	LOG_INFO("ModManager", "Unloaded mod: %s", modId.toUtf8().constData());
+	emit modUnloaded(modId);
+
+	// 重新构建 URL 模式
+	buildUrlPatterns();
+
+	return true;
 }

@@ -4,8 +4,8 @@
 #include <QSharedPointer>
 #include "ConfigManager.h"
 #include "LogSystem.h"
-#include "EventBus.h"  // 包含修改后的EventBus
-#include "ModManager.h"
+#include "EventBus.h"
+#include "ConfigModManager.h"  // 替换 ModManager.h
 #include "NetworkManager.h"
 #include "DownloadOrchestrationService.h"
 #include "PlatformAggregatorService.h"
@@ -30,7 +30,7 @@ public:
 	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
 
 	// 获取服务实例
-	QSharedPointer<ModManager> getModManager() const { return m_modManager; }
+	QSharedPointer<ConfigModManager> getModManager() const { return m_modManager; }  // 修改返回类型
 	QSharedPointer<DownloadManager> getDownloadManager() const { return m_downloadManager; }
 	QSharedPointer<DownloadOrchestrationService> getDownloadService() const { return m_downloadService; }
 	QSharedPointer<PlatformAggregatorService> getPlatformService() const { return m_platformService; }
@@ -57,10 +57,10 @@ private:
 	// 核心系统
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<LogSystem> m_logSystem;
-	QSharedPointer<EventBus> m_eventBus;  // 使用修改后的EventBus
+	QSharedPointer<EventBus> m_eventBus;
 
 	// 服务
-	QSharedPointer<ModManager> m_modManager;
+	QSharedPointer<ConfigModManager> m_modManager;  // 修改类型
 	QSharedPointer<NetworkManager> m_networkManager;
 	QSharedPointer<MediaProcessingService> m_mediaService;
 	QSharedPointer<DownloadOrchestrationService> m_downloadService;

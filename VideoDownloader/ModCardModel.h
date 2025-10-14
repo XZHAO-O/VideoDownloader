@@ -5,7 +5,7 @@
 #include <QUrl>
 #include <QDateTime>
 #include <QVersionNumber>
-#include "ModManager.h"
+#include "ModInfo.h"
 
 class ModCardModel : public QObject
 {
@@ -25,7 +25,7 @@ class ModCardModel : public QObject
 
 public:
 	explicit ModCardModel(QObject* parent = nullptr);
-	explicit ModCardModel(const ModManager::ModInfo& modInfo, QObject* parent = nullptr);
+	explicit ModCardModel(const ModInfo& modInfo, QObject* parent = nullptr);
 
 	// Getters
 	QString modId() const { return m_modId; }
@@ -59,7 +59,7 @@ public:
 	bool hasUpdate() const;
 
 	// 从ModInfo转换
-	void fromModInfo(const ModManager::ModInfo& modInfo);
+	void fromModInfo(const ModInfo& modInfo);
 
 signals:
 	void modIdChanged();

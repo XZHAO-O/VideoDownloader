@@ -84,7 +84,7 @@ void ApplicationController::initializeCoreSystems()
 	// 初始化配置管理器
 	m_configManager = QSharedPointer<ConfigManager>::create(appDataDir);
 
-	// 初始化事件总线 - 使用新的单例模式
+	// 初始化事件总线
 	m_eventBus = EventBus::instance();
 
 	LogSystem::instance().info("Core systems initialized", "Application");
@@ -98,8 +98,8 @@ void ApplicationController::initializeServices()
 	// 初始化媒体处理服务
 	m_mediaService = QSharedPointer<MediaProcessingService>::create(m_configManager);
 
-	// 初始化Mod管理器
-	m_modManager = QSharedPointer<ModManager>::create(m_configManager, m_networkManager);
+	// 初始化Mod管理器 - 使用新的ConfigModManager
+	m_modManager = QSharedPointer<ConfigModManager>::create(m_configManager, m_networkManager);
 
 	// 初始化下载记录仓库
 	m_recordRepository = QSharedPointer<DownloadRecordRepository>::create(
@@ -126,7 +126,7 @@ void ApplicationController::initializeMods()
 		throw std::runtime_error("Failed to initialize mod manager");
 	}
 
-	int modCount = m_modManager->getLoadedMods().size();
+	int modCount = m_modManager->getAllMods().size();
 	LogSystem::instance().info(QString("Loaded %1 mods").arg(modCount), "Application");
 }
 

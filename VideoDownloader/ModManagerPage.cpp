@@ -13,7 +13,7 @@
 #include "NoDataWidget.h"
 #include "NotificationManager.h"
 
-ModManagerPage::ModManagerPage(QSharedPointer<ModManager> modManager, QWidget* parent)
+ModManagerPage::ModManagerPage(QSharedPointer<ConfigModManager> modManager, QWidget* parent)
 	: QWidget(parent)
 	, m_modManager(modManager)
 {
@@ -47,22 +47,24 @@ void ModManagerPage::showEvent(QShowEvent* event)
 void ModManagerPage::createExampleMod()
 {
 	// 创建示例模组信息
-	ModManager::ModInfo exampleInfo;
+	ModInfo exampleInfo;
 	exampleInfo.modId = "example_mod";
-	exampleInfo.modPath = QCoreApplication::applicationDirPath() + "/mods/example_mod";
+	exampleInfo.name = "示例模组";
+	exampleInfo.version = "1.0.0";
+	exampleInfo.author = "系统示例";
+	exampleInfo.description = "这是一个示例模组，用于展示模组卡片的外观和功能。您可以通过这个示例了解模组管理界面的使用方法。";
 	exampleInfo.enabled = true;
+	exampleInfo.priority = 1;
+	exampleInfo.loadTime = QDateTime::currentDateTime();
+	exampleInfo.modPath = QCoreApplication::applicationDirPath() + "/mods/example_mod";
 
-	// 创建示例元数据
-	QJsonObject metadata;
-	metadata["modId"] = "example_mod";
-	metadata["name"] = "示例";
-	metadata["author"] = "系统示例";
-	metadata["version"] = "1.0.0";
-	metadata["description"] = "这是一个示例模组，用于展示模组卡片的外观和功能。您可以通过这个示例了解模组管理界面的使用方法。";
-	metadata["platformId"] = "example_platform";
-	metadata["icon"] = "icon.png";
+	// 设置URL模式
+	exampleInfo.urlPatterns = QStringList() << "https://example.com/video/.*";
 
-	exampleInfo.metadata = metadata;
+	// 创建配置
+	QJsonObject config;
+	config["apiEndpoint"] = "https://api.example.com/video";
+	exampleInfo.config = config;
 
 	// 创建模组卡片模型
 	QSharedPointer<ModCardModel> exampleModel = QSharedPointer<ModCardModel>::create(exampleInfo);
@@ -71,9 +73,9 @@ void ModManagerPage::createExampleMod()
 	createModTab("example_mod", exampleModel);
 }
 
-void ModManagerPage::onModLoaded(const QString& modId, const ModManager::ModInfo& info)
+void ModManagerPage::onModLoaded(const ModInfo& info)
 {
-	createModTab(modId, QSharedPointer<ModCardModel>::create(info));
+	createModTab(info.modId, QSharedPointer<ModCardModel>::create(info));
 	refreshTabs();
 }
 
@@ -188,6 +190,12 @@ void ModManagerPage::onUpdateClicked()
 
 	// TODO: 实现模组更新逻辑
 	// 这里可以添加实际的模组更新代码
+	if (m_modManager->refreshMod(modId)) {
+		NotificationManager::instance()->showNotification("模组更新成功: " + senderWidget->model()->name());
+	}
+	else {
+		NotificationManager::instance()->showNotification("模组更新失败");
+	}
 }
 
 void ModManagerPage::onUninstallClicked()
@@ -239,16 +247,11 @@ void ModManagerPage::initUI()
 void ModManagerPage::initConnections()
 {
 	if (m_modManager) {
-		connect(m_modManager.get(), &ModManager::modLoaded,
-			this, &ModManagerPage::onModLoaded);
-		connect(m_modManager.get(), &ModManager::modUnloaded,
-			this, &ModManagerPage::onModUnloaded);
-		connect(m_modManager.get(), &ModManager::modEnabled,
-			this, &ModManagerPage::onModEnabled);
-		connect(m_modManager.get(), &ModManager::modDisabled,
-			this, &ModManagerPage::onModDisabled);
-		connect(m_modManager.get(), &ModManager::allModsLoaded,
-			this, &ModManagerPage::onAllModsLoaded);
+		connect(m_modManager.get(), &ConfigModManager::modLoaded, this, &ModManagerPage::onModLoaded);
+		connect(m_modManager.get(), &ConfigModManager::modUnloaded, this, &ModManagerPage::onModUnloaded);
+		connect(m_modManager.get(), &ConfigModManager::modEnabled, this, &ModManagerPage::onModEnabled);
+		connect(m_modManager.get(), &ConfigModManager::modDisabled, this, &ModManagerPage::onModDisabled);
+		//connect(m_modManager.get(), &ConfigModManager::allModsLoaded, this, &ModManagerPage::onAllModsLoaded);
 	}
 }
 
@@ -271,7 +274,7 @@ void ModManagerPage::loadMods()
 	}
 	else {
 		for (const QString& modId : modIds) {
-			ModManager::ModInfo modInfo = m_modManager->getModInfo(modId);
+			ModInfo modInfo = m_modManager->getModInfo(modId);
 			if (modInfo.isValid()) {
 				createModTab(modId, QSharedPointer<ModCardModel>::create(modInfo));
 			}
@@ -400,7 +403,7 @@ void ModManagerPage::updateModTab(const QString& modId)
 {
 	if (m_modModels.contains(modId) && m_modTabs.contains(modId)) {
 		// 更新模型数据
-		ModManager::ModInfo modInfo = m_modManager->getModInfo(modId);
+		ModInfo modInfo = m_modManager->getModInfo(modId);
 		if (modInfo.isValid()) {
 			m_modModels[modId]->fromModInfo(modInfo);
 		}

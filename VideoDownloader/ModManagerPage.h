@@ -4,11 +4,12 @@
 #include <QSharedPointer>
 #include <QMap>
 #include "MaterialTabWidget.h"
-#include "ModManager.h"
+#include "ConfigModManager.h"
 #include "ModCardModel.h"
 #include "ModCardWidget.h"
 #include "AntScrollArea.h"
 #include "NoDataWidget.h"
+#include "ModInfo.h"
 
 class QVBoxLayout;
 
@@ -17,7 +18,7 @@ class ModManagerPage : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ModManagerPage(QSharedPointer<ModManager> modManager, QWidget* parent = nullptr);
+	explicit ModManagerPage(QSharedPointer<ConfigModManager> modManager, QWidget* parent = nullptr);
 	~ModManagerPage();
 
 protected:
@@ -26,7 +27,7 @@ protected:
 	void createExampleMod();
 
 private slots:
-	void onModLoaded(const QString& modId, const ModManager::ModInfo& info);
+	void onModLoaded(const ModInfo& info);
 	void onModUnloaded(const QString& modId);
 	void onModEnabled(const QString& modId);
 	void onModDisabled(const QString& modId);
@@ -47,7 +48,7 @@ private:
 	void updateTabName(const QString& modId);
 	void updateModTab(const QString& modId);
 
-	QSharedPointer<ModManager> m_modManager;
+	QSharedPointer<ConfigModManager> m_modManager;
 	MaterialTabWidget* m_tabWidget = nullptr;
 	NoDataWidget* m_noDataWidget = nullptr;
 	QVBoxLayout* m_mainLayout = nullptr;

@@ -1,13 +1,14 @@
 #include "ModCardModel.h"
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonObject>
 
 ModCardModel::ModCardModel(QObject* parent)
 	: QObject(parent)
 {
 }
 
-ModCardModel::ModCardModel(const ModManager::ModInfo& modInfo, QObject* parent)
+ModCardModel::ModCardModel(const ModInfo& modInfo, QObject* parent)
 	: QObject(parent)
 {
 	fromModInfo(modInfo);
@@ -131,40 +132,53 @@ bool ModCardModel::hasUpdate() const
 	return false;
 }
 
-void ModCardModel::fromModInfo(const ModManager::ModInfo& modInfo)
+void ModCardModel::fromModInfo(const ModInfo& modInfo)
 {
 	m_modId = modInfo.modId;
 	m_modPath = modInfo.modPath;
 	m_enabled = modInfo.enabled;
 
-	// 从元数据中提取信息
-	if (!modInfo.metadata.isEmpty()) {
-		m_name = modInfo.metadata.value("name").toString();
-		m_author = modInfo.metadata.value("author").toString();
-		m_version = modInfo.metadata.value("version").toString();
-		m_description = modInfo.metadata.value("description").toString();
-		m_platformId = modInfo.metadata.value("platformId").toString();
+	// 直接从 ModInfo 结构体中获取信息
+	m_name = modInfo.name;
+	m_author = modInfo.author;
+	m_version = modInfo.version;
+	m_description = modInfo.description;
 
-		// 图标路径
-		QString iconFile = modInfo.metadata.value("icon").toString();
-		if (!iconFile.isEmpty()) {
-			m_iconPath = modInfo.modPath + "/" + iconFile;
+	// 设置平台ID为modId（因为配置式Mod系统中，modId就是平台ID）
+	m_platformId = modInfo.modId;
+
+	// 图标路径处理
+	QString iconFile = modInfo.getConfigValue("icon").toString();
+	if (iconFile.isEmpty()) {
+		// 尝试常见的图标文件名
+		QStringList possibleIcons = { "icon.png", "icon.jpg", "mod.png", "logo.png" };
+		for (const QString& iconName : possibleIcons) {
+			QString iconPath = modInfo.modPath + "/" + iconName;
+			if (QFile::exists(iconPath)) {
+				iconFile = iconName;
+				break;
+			}
 		}
+	}
+
+	if (!iconFile.isEmpty()) {
+		m_iconPath = modInfo.modPath + "/" + iconFile;
 	}
 
 	// 计算模组大小
 	QDir modDir(modInfo.modPath);
 	if (modDir.exists()) {
 		qint64 totalSize = 0;
-		QFileInfoList files = modDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+		QFileInfoList files = modDir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot | QDir::Hidden);
 		for (const QFileInfo& file : files) {
 			totalSize += file.size();
 		}
 		m_size = totalSize;
 	}
 
-	// 检查是否为视频平台模组
-	m_isVideoPlatformMod = modInfo.isVideoPlatformMod();
+	// 检查是否为视频平台模组 - 配置式Mod系统默认都是视频平台模组
+	// 或者通过检查是否有urlPatterns来判断
+	m_isVideoPlatformMod = !modInfo.urlPatterns.isEmpty();
 
 	// 触发所有信号
 	emit modIdChanged();
