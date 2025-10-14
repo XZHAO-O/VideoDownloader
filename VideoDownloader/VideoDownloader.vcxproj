@@ -106,6 +106,8 @@
   <ItemGroup>
     <ClCompile Include="BaseVideoPlatformMod.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
+    <ClCompile Include="ConfigModManager.cpp" />
+    <ClCompile Include="ConfigVideoPlatform.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
@@ -116,6 +118,7 @@
     <ClCompile Include="MediaProcessingService.cpp" />
     <ClCompile Include="ModCardModel.cpp" />
     <ClCompile Include="ModCardWidget.cpp" />
+    <ClCompile Include="ModInfo.cpp" />
     <ClCompile Include="ModManager.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
@@ -354,6 +357,8 @@
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadCardModel.h" />
     <QtMoc Include="DownloadCard.h" />
+    <QtMoc Include="ConfigModManager.h" />
+    <QtMoc Include="ConfigVideoPlatform.h" />
     <ClInclude Include="DownloadCardState.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
@@ -371,6 +376,7 @@
     <QtMoc Include="PlatformAggregatorService.h" />
     <QtMoc Include="ModCardModel.h" />
     <QtMoc Include="ModCardWidget.h" />
+    <ClInclude Include="ModInfo.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <ClInclude Include="VideoDownloadRequest.h" />

@@ -1,12 +1,11 @@
-// DownloadOrchestrationService.h
 #pragma once
 
 #include <QObject>
 #include <QSharedPointer>
 #include <QFuture>
-#include "ModManager.h"
-#include "INetworkManager.h"
-#include "IMediaProcessor.h"
+#include "ConfigModManager.h"  // 替换 ModManager.h
+#include "NetworkManager.h"    // 替换 INetworkManager.h
+#include "MediaProcessingService.h"
 #include "DownloadRecordRepository.h"
 #include "VideoDownloadRequest.h"
 
@@ -15,9 +14,9 @@ class DownloadOrchestrationService : public QObject
 	Q_OBJECT
 
 public:
-	explicit DownloadOrchestrationService(QSharedPointer<ModManager> modManager,
-		QSharedPointer<INetworkManager> networkManager,
-		QSharedPointer<IMediaProcessor> mediaProcessor,
+	explicit DownloadOrchestrationService(QSharedPointer<ConfigModManager> modManager,  // 修改参数类型
+		QSharedPointer<NetworkManager> networkManager,  // 修改参数类型
+		QSharedPointer<MediaProcessingService> mediaProcessor,
 		QSharedPointer<DownloadRecordRepository> recordRepository,
 		QObject* parent = nullptr);
 
@@ -58,11 +57,10 @@ private:
 	void onDownloadFailed(const QString& taskId, const QString& error);
 	void cleanupDownload(const QString& taskId);
 
-	QSharedPointer<ModManager> m_modManager;
-	QSharedPointer<INetworkManager> m_networkManager;
-	QSharedPointer<IMediaProcessor> m_mediaProcessor;
+	QSharedPointer<ConfigModManager> m_modManager;  // 修改类型
+	QSharedPointer<NetworkManager> m_networkManager;  // 修改类型
+	QSharedPointer<MediaProcessingService> m_mediaProcessor;
 	QSharedPointer<DownloadRecordRepository> m_recordRepository;
 
 	QMap<QString, DownloadContext> m_activeDownloads;
-	QMap<QString, QSharedPointer<IVideoPlatformMod>> m_platformMods;
 };

@@ -130,7 +130,7 @@ bool ConfigModManager::loadMod(const QString& configPath)
 		LOG_INFO("ModManager", "Loaded mod: %s v%s",
 			modInfo.name.toUtf8().constData(),
 			modInfo.version.toUtf8().constData());
-		emit modLoaded(modInfo.modId);
+		emit modLoaded(modInfo);
 	}
 	else {
 		LOG_INFO("ModManager", "Loaded disabled mod: %s v%s",

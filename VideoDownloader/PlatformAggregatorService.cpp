@@ -1,8 +1,9 @@
-// PlatformAggregatorService.cpp
 #include "PlatformAggregatorService.h"
 #include <QtConcurrent\QtConcurrent>
+#include "LogSystem.h"
+#include "ModInfo.h"
 
-PlatformAggregatorService::PlatformAggregatorService(QSharedPointer<ModManager> modManager,
+PlatformAggregatorService::PlatformAggregatorService(QSharedPointer<ConfigModManager> modManager,
 	QObject* parent)
 	: QObject(parent)
 	, m_modManager(modManager)
@@ -11,17 +12,17 @@ PlatformAggregatorService::PlatformAggregatorService(QSharedPointer<ModManager> 
 
 QList<QString> PlatformAggregatorService::getAvailablePlatforms() const
 {
-	return m_modManager ? m_modManager->getVideoPlatformMods() : QList<QString>();
+	return m_modManager ? m_modManager->getAvailablePlatforms() : QList<QString>();
 }
 
-QSharedPointer<IVideoPlatformMod> PlatformAggregatorService::getPlatform(const QString& platformId) const
+QSharedPointer<ConfigVideoPlatform> PlatformAggregatorService::getPlatform(const QString& platformId) const
 {
-	return m_modManager ? m_modManager->getVideoPlatformMod(platformId) : nullptr;
+	return m_modManager ? m_modManager->getPlatformForMod(platformId) : nullptr;
 }
 
-QSharedPointer<IVideoPlatformMod> PlatformAggregatorService::getPlatformForUrl(const QUrl& url) const
+QSharedPointer<ConfigVideoPlatform> PlatformAggregatorService::getPlatformForUrl(const QUrl& url) const
 {
-	return m_modManager ? m_modManager->getVideoPlatformModForUrl(url) : nullptr;
+	return m_modManager ? m_modManager->getPlatformForUrl(url.toString()) : nullptr;
 }
 
 QFuture<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
@@ -36,7 +37,7 @@ QFuture<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 		}
 
 		try {
-			auto future = platform->getVideoInfo(videoUrl);
+			auto future = platform->getVideoInfo(videoUrl.toString());
 			future.waitForFinished();
 			return future.result();
 		}
@@ -63,7 +64,17 @@ QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QStr
 		}
 
 		try {
-			auto future = platform->getVideoStreams(videoId, quality);
+			// 创建StreamRequest - 使用正确的结构
+			StreamRequest request;
+			request.quality = quality.id;
+			request.type = StreamType::Video;
+
+			// 需要先获取VideoInfo
+			VideoInfo videoInfo;
+			videoInfo.videoId = videoId;
+			videoInfo.platformId = platformId;
+
+			auto future = platform->getVideoStreams(videoInfo, request);
 			future.waitForFinished();
 			return future.result();
 		}
@@ -90,7 +101,17 @@ QFuture<QList<StreamInfo>> PlatformAggregatorService::getAudioStreams(const QStr
 		}
 
 		try {
-			auto future = platform->getAudioStreams(videoId, quality);
+			// 创建StreamRequest - 使用正确的结构
+			StreamRequest request;
+			request.quality = quality.id;
+			request.type = StreamType::Audio;
+
+			// 需要先获取VideoInfo
+			VideoInfo videoInfo;
+			videoInfo.videoId = videoId;
+			videoInfo.platformId = platformId;
+
+			auto future = platform->getAudioStreams(videoInfo, request);
 			future.waitForFinished();
 			return future.result();
 		}
@@ -109,14 +130,16 @@ QFuture<SearchResult> PlatformAggregatorService::searchVideos(const QString& que
 {
 	return QtConcurrent::run([this, query, platformId, page, resultsPerPage]() -> SearchResult {
 		if (platformId.isEmpty()) {
-			// 在所有平台上搜索（简化实现，只搜索第一个平台）
+			// 在所有平台上搜索
 			auto platforms = getAvailablePlatforms();
 			if (platforms.isEmpty()) {
 				return SearchResult();
 			}
+
+			// 尝试使用第一个平台进行搜索
 			auto platform = getPlatform(platforms.first());
 			if (platform) {
-				auto future = platform->searchVideos(query, page, resultsPerPage);
+				auto future = platform->searchVideos(query, page);
 				future.waitForFinished();
 				return future.result();
 			}
@@ -124,7 +147,7 @@ QFuture<SearchResult> PlatformAggregatorService::searchVideos(const QString& que
 		else {
 			auto platform = getPlatform(platformId);
 			if (platform) {
-				auto future = platform->searchVideos(query, page, resultsPerPage);
+				auto future = platform->searchVideos(query, page);
 				future.waitForFinished();
 				return future.result();
 			}
@@ -144,7 +167,9 @@ QFuture<SearchResult> PlatformAggregatorService::searchVideosByChannel(const QSt
 		}
 
 		try {
-			auto future = platform->searchVideosByChannel(channelId, page, resultsPerPage);
+			// 注意：ConfigVideoPlatform目前没有searchVideosByChannel方法
+			// 暂时使用普通搜索
+			auto future = platform->searchVideos(channelId, page);
 			future.waitForFinished();
 			return future.result();
 		}

@@ -1,11 +1,12 @@
-// DownloadOrchestrationService.cpp
 #include "DownloadOrchestrationService.h"
 #include <QtConcurrent\QtConcurrent>
+#include "LogSystem.h"
+#include "ModInfo.h"
 
 DownloadOrchestrationService::DownloadOrchestrationService(
-	QSharedPointer<ModManager> modManager,
-	QSharedPointer<INetworkManager> networkManager,
-	QSharedPointer<IMediaProcessor> mediaProcessor,
+	QSharedPointer<ConfigModManager> modManager,
+	QSharedPointer<NetworkManager> networkManager,
+	QSharedPointer<MediaProcessingService> mediaProcessor,
 	QSharedPointer<DownloadRecordRepository> recordRepository,
 	QObject* parent)
 	: QObject(parent)
@@ -85,15 +86,15 @@ void DownloadOrchestrationService::executeDownload(const QString& taskId,
 	}
 
 	try {
-		// 获取平台Mod
-		auto platformMod = m_modManager->getVideoPlatformMod(request.platformId);
-		if (!platformMod) {
+		// 获取平台
+		auto platform = m_modManager->getPlatformForUrl(request.videoUrl.toString());
+		if (!platform) {
 			throw std::runtime_error(
-				QString("Platform mod not found: %1").arg(request.platformId).toStdString());
+				QString("No platform found for URL: %1").arg(request.videoUrl.toString()).toStdString());
 		}
 
 		// 获取视频信息
-		auto videoInfoFuture = platformMod->getVideoInfo(request.videoUrl);
+		auto videoInfoFuture = platform->getVideoInfo(request.videoUrl.toString());
 		videoInfoFuture.waitForFinished();
 		VideoInfo videoInfo = videoInfoFuture.result();
 
@@ -108,11 +109,18 @@ void DownloadOrchestrationService::executeDownload(const QString& taskId,
 			return;
 		}
 
+		// 创建StreamRequest - 使用正确的结构
+		StreamRequest videoRequest;
+		videoRequest.quality = request.videoStream.id;
+		videoRequest.type = StreamType::Video;
+
+		StreamRequest audioRequest;
+		audioRequest.quality = request.audioStream.id;
+		audioRequest.type = StreamType::Audio;
+
 		// 获取视频流和音频流
-		auto videoStreamsFuture = platformMod->getVideoStreams(
-			videoInfo.videoId, request.videoStream);
-		auto audioStreamsFuture = platformMod->getAudioStreams(
-			videoInfo.videoId, request.audioStream);
+		auto videoStreamsFuture = platform->getVideoStreams(videoInfo, videoRequest);
+		auto audioStreamsFuture = platform->getAudioStreams(videoInfo, audioRequest);
 
 		videoStreamsFuture.waitForFinished();
 		audioStreamsFuture.waitForFinished();

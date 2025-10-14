@@ -1,5 +1,4 @@
-#ifndef NETWORKMANAGER_H
-#define NETWORKMANAGER_H
+#pragma once
 
 #include "INetworkManager.h"
 #include <QObject>
@@ -89,5 +88,3 @@ private:
 
 	static const int MAX_CONCURRENT_REQUESTS = 10;
 };
-
-#endif // NETWORKMANAGER_H

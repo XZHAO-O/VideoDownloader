@@ -274,7 +274,7 @@ void ModManagerPage::loadMods()
 	}
 	else {
 		for (const QString& modId : modIds) {
-			ModInfo modInfo = m_modManager->getModInfo(modId);
+			ModInfo modInfo = m_modManager->getMod(modId);
 			if (modInfo.isValid()) {
 				createModTab(modId, QSharedPointer<ModCardModel>::create(modInfo));
 			}
@@ -403,7 +403,7 @@ void ModManagerPage::updateModTab(const QString& modId)
 {
 	if (m_modModels.contains(modId) && m_modTabs.contains(modId)) {
 		// 更新模型数据
-		ModInfo modInfo = m_modManager->getModInfo(modId);
+		ModInfo modInfo = m_modManager->getMod(modId);
 		if (modInfo.isValid()) {
 			m_modModels[modId]->fromModInfo(modInfo);
 		}

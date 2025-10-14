@@ -45,9 +45,6 @@ public:
 	// 获取已加载的 Mod ID 列表
 	QList<QString> getLoadedMods() const;  // 添加这个方法
 
-	// 获取 Mod 信息
-	ModInfo getModInfo(const QString& modId) const;  // 添加这个方法
-
 	// 平台操作
 	QFuture<VideoInfo> getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
