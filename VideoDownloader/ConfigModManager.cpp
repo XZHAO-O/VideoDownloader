@@ -14,6 +14,7 @@ ConfigModManager::ConfigModManager(QSharedPointer<ConfigManager> configManager,
 	, m_networkManager(networkManager)
 {
 	// 使用现有的LogSystem，不需要spdlog
+	initialize();
 }
 
 bool ConfigModManager::initialize()

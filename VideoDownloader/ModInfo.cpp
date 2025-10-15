@@ -12,7 +12,7 @@ ModInfo ModInfo::fromJson(const QJsonObject& json, const QString& filePath)
 	info.author = json["author"].toString();
 	info.description = json["description"].toString();
 	info.config = json;
-	info.modPath = QFileInfo(filePath).absolutePath();
+	info.modPath = filePath;
 	info.loadTime = QDateTime::currentDateTime();
 
 	// 解析支持的平台
@@ -32,8 +32,8 @@ ModInfo ModInfo::fromJson(const QJsonObject& json, const QString& filePath)
 	}
 
 	// 解析启用状态和优先级
-	info.enabled = json.value("enabled").toBool(true);
-	info.priority = json.value("priority").toInt(1);
+	info.enabled = json.value("enabled").toBool();
+	info.priority = json.value("priority").toInt();
 
 	return info;
 }

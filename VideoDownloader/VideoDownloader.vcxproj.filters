@@ -355,12 +355,6 @@
     <ClCompile Include="NetworkManager.cpp">
       <Filter>Core\Network</Filter>
     </ClCompile>
-    <ClCompile Include="BaseVideoPlatformMod.cpp">
-      <Filter>Core\Mod</Filter>
-    </ClCompile>
-    <ClCompile Include="ModManager.cpp">
-      <Filter>Core\Mod</Filter>
-    </ClCompile>
     <ClCompile Include="DownloadOrchestrationService.cpp">
       <Filter>Services</Filter>
     </ClCompile>
@@ -390,6 +384,15 @@
     </ClCompile>
     <ClCompile Include="ModCardWidget.cpp">
       <Filter>Ui\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigModManager.cpp">
+      <Filter>Core\Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigVideoPlatform.cpp">
+      <Filter>Core\Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="ModInfo.cpp">
+      <Filter>Core\Mod</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -645,18 +648,6 @@
     <QtMoc Include="IMediaProcessor.h">
       <Filter>Core\models</Filter>
     </QtMoc>
-    <QtMoc Include="IMod.h">
-      <Filter>Core\Mod</Filter>
-    </QtMoc>
-    <QtMoc Include="IVideoPlatformMod.h">
-      <Filter>Core\Mod</Filter>
-    </QtMoc>
-    <QtMoc Include="BaseVideoPlatformMod.h">
-      <Filter>Core\Mod</Filter>
-    </QtMoc>
-    <QtMoc Include="ModManager.h">
-      <Filter>Core\Mod</Filter>
-    </QtMoc>
     <QtMoc Include="DownloadOrchestrationService.h">
       <Filter>Services</Filter>
     </QtMoc>
@@ -702,6 +693,12 @@
     <QtMoc Include="ModCardWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
+    <QtMoc Include="ConfigModManager.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="ConfigVideoPlatform.h">
+      <Filter>Core\Mod</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtAntDesign.ui">
@@ -733,9 +730,6 @@
     <ClInclude Include="DownloadRecord.h">
       <Filter>Storage</Filter>
     </ClInclude>
-    <ClInclude Include="ApplicationState.h">
-      <Filter>Core\models</Filter>
-    </ClInclude>
     <ClInclude Include="VideoDownloadRequest.h">
       <Filter>Core\models</Filter>
     </ClInclude>
@@ -750,6 +744,12 @@
     </ClInclude>
     <ClInclude Include="DownloadCardState.h">
       <Filter>Ui\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="ApplicationState.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="ModInfo.h">
+      <Filter>Core\Mod</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

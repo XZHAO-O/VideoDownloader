@@ -1,0 +1,143 @@
+{
+  "modId": "bilibili",
+  "name": "哔哩哔哩视频下载",
+  "version": "1.0.0",
+  "author": "VideoDownloader Team",
+  "description": "支持哔哩哔哩视频下载的Mod",
+  "supportedPlatforms": [ "windows", "linux", "macos" ],
+
+  "urlPatterns": [
+    "https://www\\.bilibili\\.com/video/[A-Za-z0-9]+",
+    "https://www\\.bilibili\\.com/video/BV[A-Za-z0-9]+",
+    "https://b23\\.tv/[A-Za-z0-9]+",
+    "https://m\\.bilibili\\.com/video/[A-Za-z0-9]+",
+    "https://m\\.bilibili\\.com/video/BV[A-Za-z0-9]+"
+  ],
+
+  "apiEndpoints": {
+    "videoInfo": "https://api.bilibili.com/x/web-interface/view",
+    "playUrl": "https://api.bilibili.com/x/player/playurl",
+    "search": "https://api.bilibili.com/x/web-interface/search/type"
+  },
+
+  "requestHeaders": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Referer": "https://www.bilibili.com",
+    "Origin": "https://www.bilibili.com"
+  },
+
+  "videoInfoParser": {
+    "title": "data.title",
+    "author": "data.owner.name",
+    "authorId": "data.owner.mid",
+    "duration": "data.duration",
+    "thumbnail": "data.pic",
+    "description": "data.desc",
+    "videoId": "data.bvid",
+    "viewCount": "data.stat.view",
+    "likeCount": "data.stat.like",
+    "coinCount": "data.stat.coin",
+    "favoriteCount": "data.stat.favorite",
+    "shareCount": "data.stat.share",
+    "replyCount": "data.stat.reply",
+    "uploadTime": "data.pubdate"
+  },
+
+  "streamParser": {
+    "video": {
+      "urlPath": "data.dash.video.#.baseUrl",
+      "qualityPath": "data.dash.video.#.id",
+      "codecPath": "data.dash.video.#.codecs",
+      "widthPath": "data.dash.video.#.width",
+      "heightPath": "data.dash.video.#.height",
+      "bitratePath": "data.dash.video.#.bandwidth",
+      "formatPath": "data.dash.video.#.mimeType"
+    },
+    "audio": {
+      "urlPath": "data.dash.audio.#.baseUrl",
+      "qualityPath": "data.dash.audio.#.id",
+      "codecPath": "data.dash.audio.#.codecs",
+      "bitratePath": "data.dash.audio.#.bandwidth",
+      "formatPath": "data.dash.audio.#.mimeType"
+    }
+  },
+
+  "qualityMapping": {
+    "video": {
+      "8K": 127,
+      "4K": 126,
+      "1080p60": 116,
+      "1080p+": 112,
+      "1080p": 80,
+      "720p60": 74,
+      "720p": 64,
+      "480p": 32,
+      "360p": 16
+    },
+    "audio": {
+      "high": 30280,
+      "medium": 30232,
+      "low": 30216
+    }
+  },
+
+  "videoIdExtractors": [
+    {
+      "pattern": "BV([A-Za-z0-9]+)",
+      "group": 1
+    },
+    {
+      "pattern": "video/(BV[A-Za-z0-9]+)",
+      "group": 1
+    },
+    {
+      "pattern": "video/([A-Za-z0-9]+)",
+      "group": 1
+    }
+  ],
+
+  "apiParameters": {
+    "videoInfo": {
+      "bvid": "{videoId}"
+    },
+    "playUrl": {
+      "bvid": "{videoId}",
+      "qn": "{quality}",
+      "fnval": 4048,
+      "fourk": 1
+    },
+    "search": {
+      "keyword": "{keyword}",
+      "search_type": "video",
+      "page": "{page}",
+      "pagesize": 20
+    }
+  },
+
+  "searchResultParser": {
+    "itemsPath": "data.result",
+    "item": {
+      "videoId": "bvid",
+      "title": "title",
+      "author": "author",
+      "description": "description",
+      "thumbnail": "pic",
+      "duration": "duration",
+      "viewCount": "play",
+      "uploadTime": "pubdate"
+    },
+    "totalResults": "data.numResults"
+  },
+
+  "enabled": true,
+  "priority": 1,
+
+  "additionalConfig": {
+    "needCookies": false,
+    "supportDash": true,
+    "supportHDR": false,
+    "support4K": true,
+    "supportMultiAudio": false,
+    "supportMultiSubtitle": false
+  }
+}
