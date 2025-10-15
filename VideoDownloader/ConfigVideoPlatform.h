@@ -22,7 +22,7 @@ public:
 		QObject* parent = nullptr);
 
 	// 平台接口
-	QFuture<VideoInfo> getVideoInfo(const QString& url);
+	VideoInfo getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);

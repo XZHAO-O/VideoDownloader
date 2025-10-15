@@ -9,6 +9,7 @@
 #include <QSslError>
 #include <QFutureInterface>
 #include <QRandomGenerator>
+#include <QEventLoop>
 
 NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: QObject(parent)
@@ -65,59 +66,51 @@ NetworkManager::~NetworkManager()
 	m_activeRequests.clear();
 }
 
-QFuture<NetworkResponse> NetworkManager::get(const QString& url, const QVariantMap& headers)
+NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& headers)
 {
-	QFutureInterface<NetworkResponse> futureInterface;
-	futureInterface.reportStarted();
-	QFuture<NetworkResponse> future = futureInterface.future();
+	NetworkResponse networkResponse;
 
 	if (m_activeRequests.size() >= MAX_CONCURRENT_REQUESTS) {
-		NetworkResponse response;
-		response.success = false;
-		response.errorString = "Too many concurrent requests";
-		futureInterface.reportResult(response);
-		futureInterface.reportFinished();
-		return future;
+		networkResponse.success = false;
+		networkResponse.errorString = "Too many concurrent requests";
+		return networkResponse;
 	}
 
-	auto context = std::make_shared<RequestContext>();
-	context->id = generateRequestId();
-	context->request = QNetworkRequest(QUrl(url));
-	context->maxRetries = m_defaultRetryCount;
-	context->futureInterface = futureInterface;
-	context->finished = false;
+	auto request = QNetworkRequest(QUrl(url));
 
 	// 设置请求头
-	context->request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-	context->request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
 	// 设置自定义头
 	for (auto it = headers.begin(); it != headers.end(); ++it) {
-		context->request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
-	}
-
-	// 设置超时定时器
-	context->timeoutTimer = new QTimer(this);
-	context->timeoutTimer->setSingleShot(true);
-	connect(context->timeoutTimer, &QTimer::timeout, this, [this, context]() {
-		NetworkResponse response;
-		response.success = false;
-		response.errorString = "Request timeout";
-		completeRequest(context, response);
-		});
-	context->timeoutTimer->start(m_timeoutMs);
-
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests[context->id] = context;
+		request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
 	}
 
 	LOG_DEBUG("Network", QString("GET request started: %1").arg(url));
 
-	QNetworkReply* reply = m_networkManager->get(context->request);
-	handleReply(reply, context);
+	QNetworkReply* reply = m_networkManager->get(request);
+	//handleReply(reply, context);
+	// 创建事件循环等待请求完成
+	QEventLoop loop;
+	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+	loop.exec();
 
-	return future;
+	// 检查错误
+	if (reply->error() != QNetworkReply::NoError) {
+		networkResponse.errorString = QString("Network error: %1").arg(reply->errorString());
+		reply->deleteLater();
+		return networkResponse;
+	}
+
+	// 读取响应
+	QByteArray data = reply->readAll();
+	reply->deleteLater();
+
+	networkResponse.success = true;
+	networkResponse.data = data;
+
+	return networkResponse;
 }
 
 QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QVariantMap& data, const QVariantMap& headers)

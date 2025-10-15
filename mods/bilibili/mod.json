@@ -7,17 +7,13 @@
   "supportedPlatforms": [ "windows", "linux", "macos" ],
 
   "urlPatterns": [
-    "https://www\\.bilibili\\.com/video/[A-Za-z0-9]+",
-    "https://www\\.bilibili\\.com/video/BV[A-Za-z0-9]+",
-    "https://b23\\.tv/[A-Za-z0-9]+",
-    "https://m\\.bilibili\\.com/video/[A-Za-z0-9]+",
-    "https://m\\.bilibili\\.com/video/BV[A-Za-z0-9]+"
+    "^(?:https?://)?(?:www\\.)?bilibili\\.com/video/([^/?]+)(?:[/?].*)?$",
+    "https://b23\\.tv/[A-Za-z0-9]+"
   ],
 
   "apiEndpoints": {
     "videoInfo": "https://api.bilibili.com/x/web-interface/view",
-    "playUrl": "https://api.bilibili.com/x/player/playurl",
-    "search": "https://api.bilibili.com/x/web-interface/search/type"
+    "playUrl": "https://api.bilibili.com/x/player/playurl"
   },
 
   "requestHeaders": {
@@ -97,9 +93,7 @@
   ],
 
   "apiParameters": {
-    "videoInfo": {
-      "bvid": "{videoId}"
-    },
+    "videoInfo": "bvid",
     "playUrl": {
       "bvid": "{videoId}",
       "qn": "{quality}",
@@ -115,7 +109,7 @@
   },
 
   "searchResultParser": {
-    "itemsPath": "data.result",
+    "itemsPath": "data",
     "item": {
       "videoId": "bvid",
       "title": "title",

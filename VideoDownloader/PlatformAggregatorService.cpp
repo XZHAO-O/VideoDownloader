@@ -25,29 +25,25 @@ QSharedPointer<ConfigVideoPlatform> PlatformAggregatorService::getPlatformForUrl
 	return m_modManager ? m_modManager->getPlatformForUrl(url.toString()) : nullptr;
 }
 
-QFuture<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
+VideoInfo PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 {
-	return QtConcurrent::run([this, videoUrl]() -> VideoInfo {
-		auto platform = getPlatformForUrl(videoUrl);
-		if (!platform) {
-			LogSystem::instance().error(
-				QString("No platform found for URL: %1").arg(videoUrl.toString()),
-				"PlatformAggregator");
-			return VideoInfo();
-		}
+	auto platform = getPlatformForUrl(videoUrl);
+	if (!platform) {
+		LogSystem::instance().error(
+			QString("No platform found for URL: %1").arg(videoUrl.toString()),
+			"PlatformAggregator");
+		return VideoInfo();
+	}
 
-		try {
-			auto future = platform->getVideoInfo(videoUrl.toString());
-			future.waitForFinished();
-			return future.result();
-		}
-		catch (const std::exception& e) {
-			LogSystem::instance().error(
-				QString("Failed to get video info: %1").arg(e.what()),
-				"PlatformAggregator");
-			return VideoInfo();
-		}
-		});
+	try {
+		return platform->getVideoInfo(videoUrl.toString());
+	}
+	catch (const std::exception& e) {
+		LogSystem::instance().error(
+			QString("Failed to get video info: %1").arg(e.what()),
+			"PlatformAggregator");
+		return VideoInfo();
+	}
 }
 
 QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QString& videoId,
@@ -185,20 +181,11 @@ QFuture<SearchResult> PlatformAggregatorService::searchVideosByChannel(const QSt
 QFuture<QList<VideoInfo>> PlatformAggregatorService::getBatchVideoInfo(const QList<QUrl>& videoUrls)
 {
 	return QtConcurrent::run([this, videoUrls]() -> QList<VideoInfo> {
-		QList<QFuture<VideoInfo>> futures;
+		QList<VideoInfo> videoInfos;
 		for (const auto& url : videoUrls) {
-			futures.append(getVideoInfo(url));
+			videoInfos.append(getVideoInfo(url));
 		}
 
-		QList<VideoInfo> results;
-		for (auto& future : futures) {
-			future.waitForFinished();
-			VideoInfo info = future.result();
-			if (info.isValid()) {
-				results.append(info);
-			}
-		}
-
-		return results;
+		return videoInfos;
 		});
 }

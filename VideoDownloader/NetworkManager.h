@@ -29,7 +29,7 @@ public:
 	~NetworkManager();
 
 	// INetworkManager 接口实现
-	QFuture<NetworkResponse> get(const QString& url,
+	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {}) override;
 	QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},

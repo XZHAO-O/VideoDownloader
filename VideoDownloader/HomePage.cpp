@@ -5,10 +5,12 @@
 #include "DesignSystem.h"
 #include "StyleSheet.h"
 #include "AntButton.h"
+#include "LogSystem.h"
 
 HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
+	, m_configModManager(appController->getConfigModManager())
 	, videoWindow(nullptr)
 	, antInput(nullptr)
 	, m_searchResultsWidget(nullptr)
@@ -75,7 +77,8 @@ void HomePage::onSearchClicked()
 	}
 
 	// 加载模拟数据
-	loadMockSearchData();
+	//loadMockSearchData();
+	getVideoList(searchText);
 
 	// 显示并定位搜索结果组件
 	updateSearchResultsPosition();
@@ -113,6 +116,48 @@ void HomePage::updateSearchResultsPosition()
 	m_searchResultsWidget->setFixedSize(containerWidth, containerHeight);
 	m_searchResultsWidget->move(inputLocalPos.x(),
 		inputLocalPos.y() + antInput->height() + 8);
+}
+
+void HomePage::getVideoList(const QString& searchText)
+{
+	// 清空之前的结果
+	m_searchResultsWidget->clearAll();
+	//匹配网址前缀
+	//QString modId = m_configModManager->findModForUrl(searchText);
+	//if (modId.isEmpty())
+	//{
+	//	// 没有匹配的Mod，显示错误信息
+	//	return;
+	//}
+	// 获取平台聚合服务
+	auto platformService = m_appController->getPlatformService();
+	if (!platformService) {
+		LOG_ERROR("HomePage", "平台服务未初始化");
+		return;
+	}
+
+	// 检查是否有可用的平台
+	auto availablePlatforms = platformService->getAvailablePlatforms();
+	if (availablePlatforms.isEmpty()) {
+		LOG_ERROR("HomePage", "没有可用的视频平台，请检查Mod配置");
+		return;
+	}
+
+	LOG_INFO("HomePage", "开始搜索: %s", searchText.toUtf8().constData());
+
+	// 启动搜索
+	VideoInfo videoInfo = platformService->getVideoInfo(searchText);
+	QStringList Titles;
+	Titles.append(videoInfo.title);
+	QStringList Durations;
+	Durations.append(QString::number(videoInfo.duration));
+	QStringList Authors;
+	Authors.append(videoInfo.author);
+	for (int i = 0; i < Titles.size(); ++i) {
+		m_searchResultsWidget->addSearchResultItem(Titles[i], Durations[i], Authors[i]);
+	}
+	//QFuture<SearchResult> future = platformService->searchVideos(searchText, availablePlatforms.first());
+	//m_searchWatcher.setFuture(future);
 }
 
 void HomePage::loadMockSearchData()

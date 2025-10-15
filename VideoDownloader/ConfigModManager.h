@@ -46,7 +46,7 @@ public:
 	QList<QString> getLoadedMods() const;  // 添加这个方法
 
 	// 平台操作
-	QFuture<VideoInfo> getVideoInfo(const QString& url);
+	VideoInfo getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, const QString& platformId = "", int page = 1);

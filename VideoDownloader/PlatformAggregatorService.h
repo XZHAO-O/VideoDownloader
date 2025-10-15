@@ -20,7 +20,7 @@ public:
 	QSharedPointer<ConfigVideoPlatform> getPlatformForUrl(const QUrl& url) const;  // 修改返回类型
 
 	// 视频信息获取
-	QFuture<VideoInfo> getVideoInfo(const QUrl& videoUrl);
+	VideoInfo getVideoInfo(const QUrl& videoUrl);
 	QFuture<QList<StreamInfo>> getVideoStreams(const QString& videoId, const QString& platformId,
 		const VideoQuality& quality);
 	QFuture<QList<StreamInfo>> getAudioStreams(const QString& videoId, const QString& platformId,

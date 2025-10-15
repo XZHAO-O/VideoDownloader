@@ -326,16 +326,14 @@ QList<QString> ConfigModManager::getAvailablePlatforms() const
 	return m_platforms.keys();
 }
 
-QFuture<VideoInfo> ConfigModManager::getVideoInfo(const QString& url)
+VideoInfo ConfigModManager::getVideoInfo(const QString& url)
 {
-	return QtConcurrent::run([this, url]() -> VideoInfo {
-		auto platform = getPlatformForUrl(url);
-		if (!platform) {
-			throw std::runtime_error("No platform found for URL: " + url.toStdString());
-		}
+	auto platform = getPlatformForUrl(url);
+	if (!platform) {
+		throw std::runtime_error("No platform found for URL: " + url.toStdString());
+	}
 
-		return platform->getVideoInfo(url).result();
-		});
+	return platform->getVideoInfo(url);
 }
 
 QFuture<QList<StreamInfo>> ConfigModManager::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)

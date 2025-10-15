@@ -6,7 +6,8 @@
 #include "AntInput.h"
 #include "ApplicationController.h"
 #include "DownloadManager.h"
-#include "SearchResultsWidget.h"  // 新增
+#include "SearchResultsWidget.h"
+#include "ConfigModManager.h"
 
 class HomePage : public QWidget
 {
@@ -23,19 +24,21 @@ protected:
 private slots:
 	void onSearchTextChanged(const QString& text);
 	void onSearchClicked();
-	void onNextButtonClicked();  // 新增
+	void onNextButtonClicked();
 
 private:
 	void setupUI();
 	void setupConnections();
 	void updateSearchResultsPosition();
+	void getVideoList(const QString& searchText);
 	void loadMockSearchData();
 
 	FramelessVideoWindow* videoWindow = nullptr;
 	AntInput* antInput = nullptr;
-	SearchResultsWidget* m_searchResultsWidget = nullptr;  // 替换为组件
+	SearchResultsWidget* m_searchResultsWidget = nullptr;
 
 	QSharedPointer<ApplicationController> m_appController;
+	QSharedPointer<ConfigModManager> m_configModManager;
 
 signals:
 	void navigateToDownloadRequested();

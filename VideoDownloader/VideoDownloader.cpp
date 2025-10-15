@@ -166,7 +166,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 		});
 
 
-	ModManagerPage* modManagerPage = new ModManagerPage(appController->getModManager(), stackedWidget);
+	ModManagerPage* modManagerPage = new ModManagerPage(appController->getConfigModManager(), stackedWidget);
 	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
 	stackedWidget->addWidget(homePage);

@@ -26,11 +26,9 @@ public:
 	bool initialize();
 	void shutdown();
 
-	//configmanager
-	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
-
 	// 获取服务实例
-	QSharedPointer<ConfigModManager> getModManager() const { return m_modManager; }  // 修改返回类型
+	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
+	QSharedPointer<ConfigModManager> getConfigModManager() const { return m_modManager; }  // 修改返回类型
 	QSharedPointer<DownloadManager> getDownloadManager() const { return m_downloadManager; }
 	QSharedPointer<DownloadOrchestrationService> getDownloadService() const { return m_downloadService; }
 	QSharedPointer<PlatformAggregatorService> getPlatformService() const { return m_platformService; }
@@ -60,7 +58,7 @@ private:
 	QSharedPointer<EventBus> m_eventBus;
 
 	// 服务
-	QSharedPointer<ConfigModManager> m_modManager;  // 修改类型
+	QSharedPointer<ConfigModManager> m_modManager;
 	QSharedPointer<NetworkManager> m_networkManager;
 	QSharedPointer<MediaProcessingService> m_mediaService;
 	QSharedPointer<DownloadOrchestrationService> m_downloadService;

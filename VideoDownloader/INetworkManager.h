@@ -26,7 +26,7 @@ class INetworkManager {
 public:
 	virtual ~INetworkManager() = default;
 
-	virtual QFuture<NetworkResponse> get(const QString& url,
+	virtual NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {}) = 0;
 	virtual QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},

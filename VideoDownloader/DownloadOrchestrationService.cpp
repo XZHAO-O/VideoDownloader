@@ -94,9 +94,7 @@ void DownloadOrchestrationService::executeDownload(const QString& taskId,
 		}
 
 		// 获取视频信息
-		auto videoInfoFuture = platform->getVideoInfo(request.videoUrl.toString());
-		videoInfoFuture.waitForFinished();
-		VideoInfo videoInfo = videoInfoFuture.result();
+		VideoInfo videoInfo = platform->getVideoInfo(request.videoUrl.toString());
 
 		if (!videoInfo.isValid()) {
 			throw std::runtime_error("Failed to get video info");

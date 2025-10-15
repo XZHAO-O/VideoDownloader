@@ -25,80 +25,63 @@ bool ConfigVideoPlatform::matchesUrl(const QString& url) const
 	return false;
 }
 
-QFuture<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
+VideoInfo ConfigVideoPlatform::getVideoInfo(const QString& url)
 {
-	return QtConcurrent::run([this, url]() -> VideoInfo {
-		try {
-			LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
+	try {
+		LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
 
-			QString videoId = extractVideoId(url);
-			QString apiUrl = m_modInfo.getApiEndpoint("videoInfo");
+		QString videoId = extractVideoId(url);
+		QString apiUrl = m_modInfo.getApiEndpoint("videoInfo");
 
-			if (apiUrl.isEmpty()) {
-				throw std::runtime_error("Video info API endpoint not configured");
-			}
-
-			// 构建请求参数
-			QVariantMap params;
-			QVariantMap headers = m_modInfo.getRequestHeaders();
-
-			// 根据平台构建不同的参数
-			if (m_modInfo.modId == "bilibili") {
-				// B站API参数
-				QRegularExpression bvRegex("BV[0-9A-Za-z]{10}");
-				auto match = bvRegex.match(url);
-				if (match.hasMatch()) {
-					params["bvid"] = match.captured(0);
-				}
-			}
-			else if (m_modInfo.modId == "youtube") {
-				// YouTube API参数
-				QRegularExpression youtubeRegex("(?:v=|/)([0-9A-Za-z_-]{11})");
-				auto match = youtubeRegex.match(url);
-				if (match.hasMatch()) {
-					params["videoId"] = match.captured(1);
-				}
-			}
-
-			// 发送请求
-			NetworkResponse response;
-			if (!params.isEmpty()) {
-				QUrl fullUrl(apiUrl);
-				QUrlQuery query;
-				for (auto it = params.begin(); it != params.end(); ++it) {
-					query.addQueryItem(it.key(), it.value().toString());
-				}
-				fullUrl.setQuery(query);
-				response = m_networkManager->get(fullUrl.toString(), headers).result();
-			}
-			else {
-				response = m_networkManager->get(apiUrl, headers).result();
-			}
-
-			if (!response.success) {
-				throw std::runtime_error(response.errorString.toStdString());
-			}
-
-			QJsonDocument doc = QJsonDocument::fromJson(response.data);
-			if (doc.isNull()) {
-				throw std::runtime_error("Invalid JSON response");
-			}
-
-			VideoInfo videoInfo = parseVideoInfo(doc.object());
-			videoInfo.platformId = m_modInfo.modId;
-
-			LOG_INFO("ConfigVideoPlatform", "Video info retrieved: %s", videoInfo.title.toUtf8().constData());
-			emit videoInfoReceived(videoInfo);
-
-			return videoInfo;
-
+		if (apiUrl.isEmpty()) {
+			throw std::runtime_error("Video info API endpoint not configured");
 		}
-		catch (const std::exception& e) {
-			LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", e.what());
-			emit errorOccurred(QString("Failed to get video info: %1").arg(e.what()));
-			throw;
+
+		// 构建请求参数
+		QVariantMap params;
+		QVariantMap headers = m_modInfo.getRequestHeaders();
+
+		// 根据平台构建不同的参数
+		params[m_modInfo.getConfigValue("apiParameters.videoInfo").toString()] = videoId;
+
+		// 发送请求
+		NetworkResponse response;
+		if (!params.isEmpty()) {
+			QUrl fullUrl(apiUrl);
+			QUrlQuery query;
+			for (auto it = params.begin(); it != params.end(); ++it) {
+				query.addQueryItem(it.key(), it.value().toString());
+			}
+			fullUrl.setQuery(query);
+			response = m_networkManager->get(fullUrl.toString(), headers);
 		}
-		});
+		else {
+			response = m_networkManager->get(apiUrl, headers);
+		}
+
+		if (!response.success) {
+			throw std::runtime_error(response.errorString.toStdString());
+		}
+
+		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+		if (doc.isNull()) {
+			throw std::runtime_error("Invalid JSON response");
+		}
+		//qDebug() << doc.toJson();
+		VideoInfo videoInfo = parseVideoInfo(doc.object());
+		videoInfo.platformId = m_modInfo.modId;
+
+		LOG_INFO("ConfigVideoPlatform", "Video info retrieved: %s", videoInfo.title.toUtf8().constData());
+		emit videoInfoReceived(videoInfo);
+
+		return videoInfo;
+
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", e.what());
+		emit errorOccurred(QString("Failed to get video info: %1").arg(e.what()));
+		throw;
+	}
 }
 
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)
@@ -118,7 +101,7 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo&
 			QVariantMap headers = m_modInfo.getRequestHeaders();
 
 			// 发送请求
-			NetworkResponse response = m_networkManager->get(apiUrl, headers).result();
+			NetworkResponse response = m_networkManager->get(apiUrl, headers);
 			if (!response.success) {
 				throw std::runtime_error(response.errorString.toStdString());
 			}
@@ -161,7 +144,7 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getAudioStreams(const VideoInfo&
 			QVariantMap headers = m_modInfo.getRequestHeaders();
 
 			// 发送请求
-			NetworkResponse response = m_networkManager->get(apiUrl, headers).result();
+			NetworkResponse response = m_networkManager->get(apiUrl, headers);
 			if (!response.success) {
 				throw std::runtime_error(response.errorString.toStdString());
 			}
@@ -214,7 +197,7 @@ QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, 
 			}
 
 			// 发送请求
-			NetworkResponse response = m_networkManager->get(apiUrl, headers).result();
+			NetworkResponse response = m_networkManager->get(apiUrl, headers);
 			if (!response.success) {
 				throw std::runtime_error(response.errorString.toStdString());
 			}
@@ -324,20 +307,18 @@ QList<StreamInfo> ConfigVideoPlatform::parseStreams(const QJsonObject& data, Str
 
 QString ConfigVideoPlatform::extractVideoId(const QString& url)
 {
-	// 根据平台提取视频ID
-	if (m_modInfo.modId == "bilibili") {
-		QRegularExpression bvRegex("BV[0-9A-Za-z]{10}");
-		auto match = bvRegex.match(url);
-		if (match.hasMatch()) {
-			return match.captured(0);
-		}
+	QList<QRegularExpression> regexs;
+	QList<QString> urlPatterns = m_modInfo.getUrlPatterns();
+	for (const QString& pattern : urlPatterns)
+	{
+		regexs.append(QRegularExpression(pattern));
 	}
-	else if (m_modInfo.modId == "youtube") {
-		QRegularExpression youtubeRegex("(?:v=|/)([0-9A-Za-z_-]{11})");
-		auto match = youtubeRegex.match(url);
-		if (match.hasMatch()) {
+	// 根据平台提取视频ID
+	for (const QRegularExpression& regex : regexs)
+	{
+		auto match = regex.match(url);
+		if (match.hasMatch())
 			return match.captured(1);
-		}
 	}
 
 	return QString();
