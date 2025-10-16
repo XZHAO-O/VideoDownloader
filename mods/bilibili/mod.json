@@ -129,7 +129,7 @@
   "additionalConfig": {
     "needCookies": false,
     "supportDash": true,
-    "supportHDR": false,
+    "supportHDR": true,
     "support4K": true,
     "supportMultiAudio": false,
     "supportMultiSubtitle": false

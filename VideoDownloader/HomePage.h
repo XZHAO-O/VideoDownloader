@@ -40,6 +40,8 @@ private:
 	QSharedPointer<ApplicationController> m_appController;
 	QSharedPointer<ConfigModManager> m_configModManager;
 
+	bool searchChanged = false;
+
 signals:
 	void navigateToDownloadRequested();
 };

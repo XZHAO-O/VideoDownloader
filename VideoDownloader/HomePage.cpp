@@ -65,11 +65,14 @@ void HomePage::setupConnections()
 
 void HomePage::onSearchTextChanged(const QString& text)
 {
-	Q_UNUSED(text);
+	//Q_UNUSED(text);
+	searchChanged = true;
 }
 
 void HomePage::onSearchClicked()
 {
+	if (!searchChanged) return;
+
 	QString searchText = antInput->text().trimmed();
 	if (searchText.isEmpty()) {
 		m_searchResultsWidget->hide();
@@ -79,11 +82,6 @@ void HomePage::onSearchClicked()
 	// 加载模拟数据
 	//loadMockSearchData();
 	getVideoList(searchText);
-
-	// 显示并定位搜索结果组件
-	updateSearchResultsPosition();
-	m_searchResultsWidget->show();
-	m_searchResultsWidget->raise();
 }
 
 void HomePage::onNextButtonClicked()
@@ -147,6 +145,12 @@ void HomePage::getVideoList(const QString& searchText)
 
 	// 启动搜索
 	VideoInfo videoInfo = platformService->getVideoInfo(searchText);
+	if (!videoInfo.isValid())
+	{
+		m_searchResultsWidget->hide();
+		return;
+	}
+
 	QStringList Titles;
 	Titles.append(videoInfo.title);
 	QStringList Durations;
@@ -156,8 +160,13 @@ void HomePage::getVideoList(const QString& searchText)
 	for (int i = 0; i < Titles.size(); ++i) {
 		m_searchResultsWidget->addSearchResultItem(Titles[i], Durations[i], Authors[i]);
 	}
-	//QFuture<SearchResult> future = platformService->searchVideos(searchText, availablePlatforms.first());
-	//m_searchWatcher.setFuture(future);
+
+	// 显示并定位搜索结果组件
+	updateSearchResultsPosition();
+	m_searchResultsWidget->show();
+	m_searchResultsWidget->raise();
+
+	searchChanged = false;
 }
 
 void HomePage::loadMockSearchData()
