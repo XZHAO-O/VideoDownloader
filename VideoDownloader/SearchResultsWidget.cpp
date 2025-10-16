@@ -83,7 +83,7 @@ public:
 		// 标题
 		QFont titleFont = QApplication::font();
 		titleFont.setBold(true);
-		titleFont.setPointSizeF(titleFont.pointSizeF() + 0.5);
+		titleFont.setPointSizeF(titleFont.pointSizeF() - 1);
 		QFontMetrics fmTitle(titleFont);
 
 		QRect titleRect(textRect.left(), textRect.top() + 12, textWidth, fmTitle.height());
@@ -98,7 +98,7 @@ public:
 
 		// 元信息（时长和作者）
 		QFont metaFont = QApplication::font();
-		metaFont.setPointSizeF(metaFont.pointSizeF() - 0.5);
+		metaFont.setPointSizeF(metaFont.pointSizeF() - 1.5);
 		QFontMetrics fmMeta(metaFont);
 
 		QRect metaRect(textRect.left(), titleRect.bottom() + 4, textWidth, fmMeta.height());

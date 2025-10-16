@@ -326,7 +326,7 @@ QList<QString> ConfigModManager::getAvailablePlatforms() const
 	return m_platforms.keys();
 }
 
-VideoInfo ConfigModManager::getVideoInfo(const QString& url)
+QList<VideoInfo> ConfigModManager::getVideoInfo(const QString& url)
 {
 	auto platform = getPlatformForUrl(url);
 	if (!platform) {

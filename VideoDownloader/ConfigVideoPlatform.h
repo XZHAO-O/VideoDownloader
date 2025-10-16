@@ -22,7 +22,7 @@ public:
 		QObject* parent = nullptr);
 
 	// 平台接口
-	VideoInfo getVideoInfo(const QString& url);
+	QList<VideoInfo> getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
@@ -45,7 +45,7 @@ private:
 	QVariantMap buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QVariant extractJsonValue(const QJsonObject& data, const QString& path);
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);
-	VideoInfo parseVideoInfo(const QJsonObject& data);
+	QList<VideoInfo> parseVideoInfo(const QJsonObject& data);
 
 	ModInfo m_modInfo;
 	QSharedPointer<INetworkManager> m_networkManager;

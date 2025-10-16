@@ -33,13 +33,16 @@ struct VideoInfo {
 	QString description;
 	QUrl thumbnailUrl;
 	QImage thumbnail;
-	double duration; // seconds
+	QString duration; // seconds
 	QDateTime uploadDate;
 	qint64 viewCount;
 	qint64 likeCount;
 	QString category;
 	QList<QString> tags;
 	QString platformId;
+
+	// 额外参数存储（如aid, cid等）
+	QVariantMap extraParams;
 
 	// 可用流
 	QList<StreamInfo> videoStreams;
@@ -50,8 +53,7 @@ struct VideoInfo {
 	}
 
 	// 格式化时长
-	QString formattedDuration() const {
-		int totalSeconds = static_cast<int>(duration);
+	QString formattedDuration(int totalSeconds) const {
 		int hours = totalSeconds / 3600;
 		int minutes = (totalSeconds % 3600) / 60;
 		int seconds = totalSeconds % 60;

@@ -85,64 +85,64 @@ void DownloadOrchestrationService::executeDownload(const QString& taskId,
 		return;
 	}
 
-	try {
-		// 获取平台
-		auto platform = m_modManager->getPlatformForUrl(request.videoUrl.toString());
-		if (!platform) {
-			throw std::runtime_error(
-				QString("No platform found for URL: %1").arg(request.videoUrl.toString()).toStdString());
-		}
+	//try {
+	//	// 获取平台
+	//	auto platform = m_modManager->getPlatformForUrl(request.videoUrl.toString());
+	//	if (!platform) {
+	//		throw std::runtime_error(
+	//			QString("No platform found for URL: %1").arg(request.videoUrl.toString()).toStdString());
+	//	}
 
-		// 获取视频信息
-		VideoInfo videoInfo = platform->getVideoInfo(request.videoUrl.toString());
+	//	// 获取视频信息
+	//	QList<VideoInfo> videoInfo = platform->getVideoInfo(request.videoUrl.toString());
 
-		if (!videoInfo.isValid()) {
-			throw std::runtime_error("Failed to get video info");
-		}
+	//	if (!videoInfo.isValid()) {
+	//		throw std::runtime_error("Failed to get video info");
+	//	}
 
-		onVideoInfoReceived(taskId, videoInfo);
+	//	onVideoInfoReceived(taskId, videoInfo);
 
-		// 检查是否取消
-		if (m_activeDownloads[taskId].cancelled) {
-			return;
-		}
+	//	// 检查是否取消
+	//	if (m_activeDownloads[taskId].cancelled) {
+	//		return;
+	//	}
 
-		// 创建StreamRequest - 使用正确的结构
-		StreamRequest videoRequest;
-		videoRequest.quality = request.videoStream.id;
-		videoRequest.type = StreamType::Video;
+	//	// 创建StreamRequest - 使用正确的结构
+	//	StreamRequest videoRequest;
+	//	videoRequest.quality = request.videoStream.id;
+	//	videoRequest.type = StreamType::Video;
 
-		StreamRequest audioRequest;
-		audioRequest.quality = request.audioStream.id;
-		audioRequest.type = StreamType::Audio;
+	//	StreamRequest audioRequest;
+	//	audioRequest.quality = request.audioStream.id;
+	//	audioRequest.type = StreamType::Audio;
 
-		// 获取视频流和音频流
-		auto videoStreamsFuture = platform->getVideoStreams(videoInfo, videoRequest);
-		auto audioStreamsFuture = platform->getAudioStreams(videoInfo, audioRequest);
+	//	// 获取视频流和音频流
+	//	auto videoStreamsFuture = platform->getVideoStreams(videoInfo, videoRequest);
+	//	auto audioStreamsFuture = platform->getAudioStreams(videoInfo, audioRequest);
 
-		videoStreamsFuture.waitForFinished();
-		audioStreamsFuture.waitForFinished();
+	//	videoStreamsFuture.waitForFinished();
+	//	audioStreamsFuture.waitForFinished();
 
-		QList<StreamInfo> videoStreams = videoStreamsFuture.result();
-		QList<StreamInfo> audioStreams = audioStreamsFuture.result();
+	//	QList<StreamInfo> videoStreams = videoStreamsFuture.result();
+	//	QList<StreamInfo> audioStreams = audioStreamsFuture.result();
 
-		onStreamsReceived(taskId, videoStreams, audioStreams);
+	//	onStreamsReceived(taskId, videoStreams, audioStreams);
 
-		// 这里应该继续实现实际的下载逻辑
-		// 由于时间关系，我们只模拟下载完成
-		QThread::sleep(2); // 模拟下载延迟
+	//	// 这里应该继续实现实际的下载逻辑
+	//	// 由于时间关系，我们只模拟下载完成
+	//	QThread::sleep(2); // 模拟下载延迟
 
-		if (!m_activeDownloads[taskId].cancelled) {
-			QString finalPath = request.outputPath;
-			onDownloadCompleted(taskId, finalPath);
-		}
+	//	if (!m_activeDownloads[taskId].cancelled) {
+	//		QString finalPath = request.outputPath;
+	//		onDownloadCompleted(taskId, finalPath);
+	//	}
 
-	}
-	catch (const std::exception& e) {
-		if (m_activeDownloads.contains(taskId) && !m_activeDownloads[taskId].cancelled) {
-			onDownloadFailed(taskId, QString::fromStdString(e.what()));
-		}
-	}
+	//}
+	//catch (const std::exception& e) {
+	//	if (m_activeDownloads.contains(taskId) && !m_activeDownloads[taskId].cancelled) {
+	//		onDownloadFailed(taskId, QString::fromStdString(e.what()));
+	//	}
+	//}
 }
 
 void DownloadOrchestrationService::onVideoInfoReceived(const QString& taskId,

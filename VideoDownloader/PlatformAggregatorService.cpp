@@ -25,14 +25,14 @@ QSharedPointer<ConfigVideoPlatform> PlatformAggregatorService::getPlatformForUrl
 	return m_modManager ? m_modManager->getPlatformForUrl(url.toString()) : nullptr;
 }
 
-VideoInfo PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
+QList<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 {
 	auto platform = getPlatformForUrl(videoUrl);
 	if (!platform) {
 		LogSystem::instance().error(
 			QString("No platform found for URL: %1").arg(videoUrl.toString()),
 			"PlatformAggregator");
-		return VideoInfo();
+		return QList<VideoInfo>();
 	}
 
 	try {
@@ -42,7 +42,7 @@ VideoInfo PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 		LogSystem::instance().error(
 			QString("Failed to get video info: %1").arg(e.what()),
 			"PlatformAggregator");
-		return VideoInfo();
+		return QList<VideoInfo>();
 	}
 }
 

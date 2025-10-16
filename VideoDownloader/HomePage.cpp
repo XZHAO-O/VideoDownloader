@@ -59,13 +59,14 @@ void HomePage::setupUI()
 void HomePage::setupConnections()
 {
 	connect(antInput, &AntInput::textChanged, this, &HomePage::onSearchTextChanged);
+	connect(antInput, &AntInput::searchClicked, this, &HomePage::onSearchClicked);
 	connect(antInput, &AntInput::returnPressed, this, &HomePage::onSearchClicked);
 	connect(m_searchResultsWidget, &SearchResultsWidget::nextButtonClicked, this, &HomePage::onNextButtonClicked);
 }
 
 void HomePage::onSearchTextChanged(const QString& text)
 {
-	//Q_UNUSED(text);
+	Q_UNUSED(text);
 	searchChanged = true;
 }
 
@@ -144,27 +145,33 @@ void HomePage::getVideoList(const QString& searchText)
 	LOG_INFO("HomePage", "开始搜索: %s", searchText.toUtf8().constData());
 
 	// 启动搜索
-	VideoInfo videoInfo = platformService->getVideoInfo(searchText);
-	if (!videoInfo.isValid())
+	QList<VideoInfo> videoInfoList = platformService->getVideoInfo(searchText);
+	if (!videoInfoList[0].isValid())
 	{
 		m_searchResultsWidget->hide();
 		return;
 	}
-
 	QStringList Titles;
-	Titles.append(videoInfo.title);
 	QStringList Durations;
-	Durations.append(QString::number(videoInfo.duration));
 	QStringList Authors;
-	Authors.append(videoInfo.author);
-	for (int i = 0; i < Titles.size(); ++i) {
-		m_searchResultsWidget->addSearchResultItem(Titles[i], Durations[i], Authors[i]);
+	for (int i = 0; i < videoInfoList.size(); i++)
+	{
+		if (videoInfoList[i].isValid())
+		{
+			// 添加搜索结果项
+			Titles.append(videoInfoList[i].title);
+			Durations.append(videoInfoList[i].duration);
+			Authors.append(videoInfoList[i].author);
+			m_searchResultsWidget->addSearchResultItem(Titles[i], Durations[i], Authors[i]);
+		}
 	}
 
 	// 显示并定位搜索结果组件
 	updateSearchResultsPosition();
 	m_searchResultsWidget->show();
 	m_searchResultsWidget->raise();
+
+	m_searchResultsWidget->setFocus();
 
 	searchChanged = false;
 }

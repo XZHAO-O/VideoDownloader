@@ -25,7 +25,7 @@ bool ConfigVideoPlatform::matchesUrl(const QString& url) const
 	return false;
 }
 
-VideoInfo ConfigVideoPlatform::getVideoInfo(const QString& url)
+QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 {
 	try {
 		LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
@@ -68,13 +68,16 @@ VideoInfo ConfigVideoPlatform::getVideoInfo(const QString& url)
 			throw std::runtime_error("Invalid JSON response");
 		}
 		//qDebug() << doc.toJson();
-		VideoInfo videoInfo = parseVideoInfo(doc.object());
-		videoInfo.platformId = m_modInfo.modId;
+		QList<VideoInfo> videoInfoList = parseVideoInfo(doc.object());
+		for (VideoInfo& videoInfo : videoInfoList)
+		{
+			videoInfo.platformId = m_modInfo.modId;
 
-		LOG_INFO("ConfigVideoPlatform", "Video info retrieved: %s", videoInfo.title.toUtf8().constData());
-		emit videoInfoReceived(videoInfo);
+			LOG_INFO("ConfigVideoPlatform", "Video info retrieved: %s", videoInfo.title.toUtf8().constData());
+			emit videoInfoReceived(videoInfo);
+		}
 
-		return videoInfo;
+		return videoInfoList;
 
 	}
 	catch (const std::exception& e) {
@@ -229,29 +232,147 @@ QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, 
 		});
 }
 
-VideoInfo ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
+QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 {
-	VideoInfo info;
+	QList<VideoInfo> videoList;
 	QVariantMap parserConfig = m_modInfo.getVideoInfoParser();
 
-	// 使用配置的路径从JSON中提取数据
-	info.title = extractJsonValue(data, parserConfig.value("title").toString()).toString();
-	info.author = extractJsonValue(data, parserConfig.value("author").toString()).toString();
-	info.description = extractJsonValue(data, parserConfig.value("description").toString()).toString();
+	// 检查是否为哔哩哔哩平台
+	if (m_modInfo.modId == "bilibili") {
+		// 解析主视频信息
+		VideoInfo mainInfo;
+		mainInfo.title = extractJsonValue(data, parserConfig.value("title").toString()).toString();
+		mainInfo.author = extractJsonValue(data, parserConfig.value("author").toString()).toString();
+		mainInfo.description = extractJsonValue(data, parserConfig.value("description").toString()).toString();
 
-	QVariant durationValue = extractJsonValue(data, parserConfig.value("duration").toString());
-	if (durationValue.canConvert<double>()) {
-		info.duration = durationValue.toDouble();
+		QVariant durationValue = extractJsonValue(data, parserConfig.value("duration").toString());
+		if (durationValue.canConvert<int>()) {
+			mainInfo.duration = mainInfo.formattedDuration(durationValue.toInt());
+		}
+
+		QString thumbnailUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
+		if (!thumbnailUrl.isEmpty()) {
+			mainInfo.thumbnailUrl = QUrl(thumbnailUrl);
+		}
+
+		mainInfo.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
+
+		// 添加额外参数
+		mainInfo.extraParams["aid"] = extractJsonValue(data, "aid").toString();
+		mainInfo.extraParams["cid"] = extractJsonValue(data, "cid").toString();
+		mainInfo.extraParams["bvid"] = mainInfo.videoId;
+
+		// 解析统计数据
+		QJsonObject statData = extractJsonValue(data, "data.stat").toJsonObject();
+		if (!statData.isEmpty()) {
+			mainInfo.viewCount = extractJsonValue(statData, "view").toLongLong();
+			mainInfo.likeCount = extractJsonValue(statData, "like").toLongLong();
+		}
+
+		// 解析上传时间
+		QVariant pubdateValue = extractJsonValue(data, "data.pubdate");
+		if (pubdateValue.canConvert<qint64>()) {
+			qint64 timestamp = pubdateValue.toLongLong();
+			mainInfo.uploadDate = QDateTime::fromSecsSinceEpoch(timestamp);
+		}
+
+		videoList.append(mainInfo);
+
+		// 解析分P信息
+		QJsonArray pagesArray = extractJsonArray(data, "data.pages");
+		if (!pagesArray.isEmpty() && pagesArray.size() > 1) {
+			for (const QJsonValue& pageValue : pagesArray) {
+				QJsonObject pageObj = pageValue.toObject();
+
+				VideoInfo pageInfo;
+				pageInfo.title = pageObj["part"].toString();
+				pageInfo.author = mainInfo.author;
+				pageInfo.description = mainInfo.description;
+				pageInfo.thumbnailUrl = mainInfo.thumbnailUrl;
+				pageInfo.videoId = mainInfo.videoId;
+				pageInfo.duration = pageInfo.formattedDuration(pageObj["duration"].toInt());
+				pageInfo.viewCount = mainInfo.viewCount;
+				pageInfo.likeCount = mainInfo.likeCount;
+				pageInfo.uploadDate = mainInfo.uploadDate;
+
+				// 添加分P特定参数
+				pageInfo.extraParams["aid"] = mainInfo.extraParams["aid"];
+				pageInfo.extraParams["bvid"] = mainInfo.videoId;
+				pageInfo.extraParams["cid"] = QString::number(pageObj["cid"].toVariant().toLongLong());
+				pageInfo.extraParams["page"] = QString::number(pageObj["page"].toInt());
+
+				videoList.append(pageInfo);
+			}
+		}
+
+		// 解析合集信息（ugc_season）
+		QJsonObject ugcSeason = extractJsonValue(data, "data.ugc_season").toJsonObject();
+		if (!ugcSeason.isEmpty()) {
+			QJsonArray sectionsArray = ugcSeason["sections"].toArray();
+
+			for (const QJsonValue& sectionValue : sectionsArray) {
+				QJsonObject sectionObj = sectionValue.toObject();
+				QJsonArray episodesArray = sectionObj["episodes"].toArray();
+
+				for (const QJsonValue& episodeValue : episodesArray) {
+					QJsonObject episodeObj = episodeValue.toObject();
+					QJsonObject arcObj = episodeObj["arc"].toObject();
+
+					VideoInfo episodeInfo;
+					episodeInfo.title = arcObj["title"].toString();
+					if (episodeInfo.title == mainInfo.title)
+					{
+						continue;
+					}
+					episodeInfo.author = arcObj["author"].toObject()["name"].toString();
+					episodeInfo.description = arcObj["desc"].toString();
+
+					QString episodeThumbnail = arcObj["pic"].toString();
+					if (!episodeThumbnail.isEmpty()) {
+						episodeInfo.thumbnailUrl = QUrl(episodeThumbnail);
+					}
+
+					episodeInfo.videoId = episodeObj["bvid"].toString();
+					episodeInfo.duration = episodeInfo.formattedDuration(arcObj["duration"].toInt());
+
+					QJsonObject episodeStat = arcObj["stat"].toObject();
+					episodeInfo.viewCount = episodeStat["view"].toVariant().toLongLong();
+					episodeInfo.likeCount = episodeStat["like"].toVariant().toLongLong();
+					episodeInfo.platformId = m_modInfo.modId;
+					// 添加合集视频参数
+					episodeInfo.extraParams["aid"] = QString::number(episodeObj["aid"].toVariant().toLongLong());
+					episodeInfo.extraParams["bvid"] = episodeInfo.videoId;
+					episodeInfo.extraParams["cid"] = QString::number(episodeObj["cid"].toVariant().toLongLong());
+					episodeInfo.extraParams["season_id"] = QString::number(ugcSeason["id"].toVariant().toLongLong());
+					episodeInfo.extraParams["episode_id"] = QString::number(episodeObj["id"].toVariant().toLongLong());
+
+					videoList.append(episodeInfo);
+				}
+			}
+		}
+	}
+	else {
+		// 其他平台的原有逻辑（保持兼容）
+		VideoInfo info;
+		info.title = extractJsonValue(data, parserConfig.value("title").toString()).toString();
+		info.author = extractJsonValue(data, parserConfig.value("author").toString()).toString();
+		info.description = extractJsonValue(data, parserConfig.value("description").toString()).toString();
+
+		QVariant durationValue = extractJsonValue(data, parserConfig.value("duration").toString());
+		if (durationValue.canConvert<int>()) {
+			info.duration = info.formattedDuration(durationValue.toInt());
+		}
+
+		QString thumbnailUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
+		if (!thumbnailUrl.isEmpty()) {
+			info.thumbnailUrl = QUrl(thumbnailUrl);
+		}
+
+		info.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
+		videoList.append(info);
 	}
 
-	QString thumbnailUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
-	if (!thumbnailUrl.isEmpty()) {
-		info.thumbnailUrl = QUrl(thumbnailUrl);
-	}
-
-	info.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
-
-	return info;
+	return videoList;
 }
 
 QList<StreamInfo> ConfigVideoPlatform::parseStreams(const QJsonObject& data, StreamType type)

@@ -13,12 +13,12 @@ public:
 
 	//PopupViewController* PopupView() { return popupView; };
 
+signals:
+	void searchClicked();
+
 protected:
 	void resizeEvent(QResizeEvent* event) override;
 	void mousePressEvent(QMouseEvent* event) override;
-
-private slots:
-	void onSearchClicked();
 
 private:
 	QToolButton* m_searchButton = nullptr;

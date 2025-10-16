@@ -18,7 +18,9 @@ AntInput::AntInput(int popupHeight, QStringList itemTextList, QWidget* parent)
         background: transparent;
     })");
 
-	connect(m_searchButton, &QToolButton::clicked, this, &AntInput::onSearchClicked);
+	connect(m_searchButton, &QToolButton::clicked, this, [this]() {
+		emit searchClicked();
+		});
 
 	QFont font = this->font();
 	font.setPointSizeF(10.8);  // 自定义大小
@@ -90,8 +92,4 @@ void AntInput::updateSearchButtonPosition()
 void AntInput::setCurrentText(QString text)
 {
 	setText(text);
-}
-
-void AntInput::onSearchClicked()
-{
 }
