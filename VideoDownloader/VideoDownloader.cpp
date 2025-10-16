@@ -142,15 +142,14 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	HomePage* homePage = new HomePage(appController, stackedWidget);
 	DownloadPage* downloadPage = new DownloadPage(appController->getDownloadManager(), stackedWidget);
 
-	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage]() {
+	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
 		// 切换到下载页面
 		stackedWidget->setCurrentWidget(downloadPage);
 
 		// 设置下载页面的标签页为"待下载"
-		if (downloadPage) {
-			// 这里需要根据你的DownloadPage实现来设置当前标签页
-			// 例如：downloadPage->setCurrentTab(0);
-		}
+		// 这里需要根据你的DownloadPage实现来设置当前标签页
+		// 例如：downloadPage->setCurrentTab(0);
+		downloadPage->createDownloadCards(selectedVideoInfoList);
 
 		// 更新导航按钮状态
 		for (ButtonInfo& info : buttonInfos) {

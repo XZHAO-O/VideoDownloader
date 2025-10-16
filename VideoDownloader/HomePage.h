@@ -40,8 +40,9 @@ private:
 	QSharedPointer<ApplicationController> m_appController;
 	QSharedPointer<ConfigModManager> m_configModManager;
 
+	QList<VideoInfo> videoInfoList;
 	bool searchChanged = false;
 
 signals:
-	void navigateToDownloadRequested();
+	void navigateToDownloadRequested(QList<VideoInfo> selectedVideoInfoList);
 };

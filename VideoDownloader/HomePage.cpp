@@ -87,6 +87,11 @@ void HomePage::onSearchClicked()
 
 void HomePage::onNextButtonClicked()
 {
+	QList<int> selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
+	QList<VideoInfo> selectedVideoInfoList;
+	for (int index : selectedIndexes)
+		selectedVideoInfoList.append(videoInfoList[index]);
+
 	// 隐藏搜索结果组件
 	m_searchResultsWidget->hide();
 
@@ -94,7 +99,7 @@ void HomePage::onNextButtonClicked()
 	antInput->clear();
 
 	// 发出导航信号
-	emit navigateToDownloadRequested();
+	emit navigateToDownloadRequested(selectedVideoInfoList);
 
 	qDebug() << "导航到下载队列页面，选中了" << m_searchResultsWidget->getSelectedCount() << "个项目";
 }
@@ -120,6 +125,7 @@ void HomePage::updateSearchResultsPosition()
 void HomePage::getVideoList(const QString& searchText)
 {
 	// 清空之前的结果
+	videoInfoList.clear();
 	m_searchResultsWidget->clearAll();
 	//匹配网址前缀
 	//QString modId = m_configModManager->findModForUrl(searchText);
@@ -145,7 +151,7 @@ void HomePage::getVideoList(const QString& searchText)
 	LOG_INFO("HomePage", "开始搜索: %s", searchText.toUtf8().constData());
 
 	// 启动搜索
-	QList<VideoInfo> videoInfoList = platformService->getVideoInfo(searchText);
+	videoInfoList = platformService->getVideoInfo(searchText);
 	if (!videoInfoList[0].isValid())
 	{
 		m_searchResultsWidget->hide();

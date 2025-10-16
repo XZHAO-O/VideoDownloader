@@ -394,6 +394,9 @@
     <ClCompile Include="ModInfo.cpp">
       <Filter>Core\Mod</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadCardContainerWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -698,6 +701,9 @@
     </QtMoc>
     <QtMoc Include="ConfigVideoPlatform.h">
       <Filter>Core\Mod</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadCardContainerWidget.h">
+      <Filter>Ui\Widgets</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

@@ -108,6 +108,7 @@
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
+    <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadOrchestrationService.cpp" />
@@ -356,6 +357,7 @@
     <QtMoc Include="DownloadCard.h" />
     <QtMoc Include="ConfigModManager.h" />
     <QtMoc Include="ConfigVideoPlatform.h" />
+    <QtMoc Include="DownloadCardContainerWidget.h" />
     <ClInclude Include="DownloadCardState.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />

@@ -13,6 +13,7 @@
 #include "TabContentWidget.h"
 #include "AntTabWidgetContainer.h"
 #include "DownloadManager.h"
+#include "VideoInfo.h"
 
 class DownloadPage : public QWidget
 {
@@ -21,6 +22,9 @@ class DownloadPage : public QWidget
 public:
 	DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent = nullptr);
 	~DownloadPage();
+
+	void createDownloadCards(QList<VideoInfo> videoInfoList);
+
 protected:
 	void resizeEvent(QResizeEvent* event) override;
 private:

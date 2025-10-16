@@ -1,16 +1,8 @@
 #pragma once
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QScrollArea>
-#include <QList>
-#include <QSharedPointer>
-#include "DownloadCard.h"
-#include "DownloadManager.h"
-#include "NoDataWidget.h"
-#include "AntScrollArea.h"
+#include "DownloadCardContainerWidget.h"
 
-class DownloadedWidget : public QWidget
+class DownloadedWidget : public DownloadCardContainerWidget
 {
 	Q_OBJECT
 
@@ -18,22 +10,13 @@ public:
 	explicit DownloadedWidget(QSharedPointer<DownloadManager> downloadManager, QWidget* parent = nullptr);
 	~DownloadedWidget();
 
-private slots:
+protected:
+	// 实现纯虚函数
+	QList<DownloadTaskInfo> getTaskList() const override;
+	void setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo) override;
+	QString getNoDataText() const;
+
+protected slots:
 	void onDownloadCompleted(const QString& taskId, const QString& filePath);
 	void onDownloadFailed(const QString& taskId, const QString& error);
-	void updateTaskList();
-
-private:
-	void initUI();
-	void addTaskCard(const DownloadTaskInfo& taskInfo);
-	void removeTaskCard(const QString& taskId);
-
-private:
-	QSharedPointer<DownloadManager> m_downloadManager;
-	QVBoxLayout* m_mainLayout;
-	AntScrollArea* m_scrollArea;
-	QWidget* m_scrollWidget;
-	QVBoxLayout* m_scrollLayout;
-	QMap<QString, DownloadCard*> m_taskCards;
-	NoDataWidget* m_noDataWidget;
 };
