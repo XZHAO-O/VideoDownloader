@@ -31,6 +31,8 @@
 #include "PaginationWidget.h"
 #include "AntTreeView.h"
 #include "DownloadCard.h"
+#include "DownloadManager.h"
+#include "ApplicationController.h"
 
 DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
 	: QWidget(parent)
@@ -469,10 +471,25 @@ DownloadPage::~DownloadPage()
 {
 }
 
+QUrl DownloadPage::getVideoPlayUrl(const VideoInfo& videoInfo)
+{
+	auto platformService = m_downloadManager->getAppController()->getPlatformService();
+	//return platformService->getVideoPlayUrl(videoInfo);
+	return QUrl();
+}
+
 void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 {
 	for (const auto& videoInfo : videoInfoList)
 	{
+		//创建任务信息
+		DownloadTaskInfo taskInfo;
+		//存储请求参数到任务信息中
+		taskInfo.request.audioStream;
+		//根据请求参数获取视频地址
+		taskInfo.request.videoPlayUrl = getVideoPlayUrl(videoInfo);
+		//taskInfo.videoId = videoInfo.videoId;
+
 		// 创建卡片模型
 		auto cardModel = QSharedPointer<DownloadCardModel>::create();
 		cardModel->setTitle(videoInfo.title);

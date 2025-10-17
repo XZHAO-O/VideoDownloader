@@ -80,8 +80,7 @@ void HomePage::onSearchClicked()
 		return;
 	}
 
-	// 加载模拟数据
-	//loadMockSearchData();
+	// 加载数据
 	getVideoList(searchText);
 }
 
@@ -90,7 +89,9 @@ void HomePage::onNextButtonClicked()
 	QList<int> selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
 	QList<VideoInfo> selectedVideoInfoList;
 	for (int index : selectedIndexes)
+	{
 		selectedVideoInfoList.append(videoInfoList[index]);
+	}
 
 	// 隐藏搜索结果组件
 	m_searchResultsWidget->hide();

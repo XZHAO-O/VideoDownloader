@@ -178,7 +178,7 @@ QString DownloadCardModel::formattedDuration() const
 void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 {
 	m_taskId = taskInfo.taskId;
-	m_title = taskInfo.request.videoUrl.toString(); // 这里应该从VideoInfo获取实际标题
+	m_title = taskInfo.request.videoPlayUrl.toString(); // 这里应该从VideoInfo获取实际标题
 	m_progress = taskInfo.progressPercentage;
 	m_downloadSpeed = taskInfo.downloadSpeed;
 

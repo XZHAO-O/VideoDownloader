@@ -8,7 +8,7 @@
 
 struct VideoDownloadRequest {
 	QString taskId;
-	QUrl videoUrl;
+	QUrl videoPlayUrl;
 	QString platformId;
 	QString outputPath;
 	VideoQuality videoStream;
@@ -21,7 +21,7 @@ struct VideoDownloadRequest {
 	// 验证请求有效性
 	bool isValid() const {
 		return !taskId.isEmpty() &&
-			videoUrl.isValid() &&
+			videoPlayUrl.isValid() &&
 			!platformId.isEmpty() &&
 			!outputPath.isEmpty();
 	}

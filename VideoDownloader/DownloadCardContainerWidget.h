@@ -38,6 +38,7 @@ protected:
 	void initUI();
 	void addTaskCard(const DownloadTaskInfo& taskInfo);
 	void removeTaskCard(const QString& taskId);
+	void downloadVideo(const QString& url);
 	void updateVisibility();
 
 	// 虚函数，派生类可以重写

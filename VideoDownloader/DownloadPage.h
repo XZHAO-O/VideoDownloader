@@ -23,6 +23,8 @@ public:
 	DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent = nullptr);
 	~DownloadPage();
 
+	QUrl getVideoPlayUrl(const VideoInfo& videoInfo);
+
 	void createDownloadCards(QList<VideoInfo> videoInfoList);
 
 protected:

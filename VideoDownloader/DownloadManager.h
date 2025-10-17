@@ -18,6 +18,8 @@ public:
 	explicit DownloadManager(QSharedPointer<ApplicationController> appController,
 		QObject* parent = nullptr);
 
+	QSharedPointer<ApplicationController> getAppController() const;
+
 	// 下载操作
 	QString downloadVideo(const VideoDownloadRequest& request);
 	void pauseDownload(const QString& taskId);

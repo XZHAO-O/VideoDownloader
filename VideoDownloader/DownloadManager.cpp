@@ -34,6 +34,11 @@ DownloadManager::DownloadManager(QSharedPointer<ApplicationController> appContro
 	m_speedTimer->start(1000); // 每秒计算一次速度
 }
 
+QSharedPointer<ApplicationController> DownloadManager::getAppController() const
+{
+	return m_appController;
+}
+
 QString DownloadManager::downloadVideo(const VideoDownloadRequest& request)
 {
 	if (!request.isValid()) {
