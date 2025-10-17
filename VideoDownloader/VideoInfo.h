@@ -32,7 +32,6 @@ struct VideoInfo {
 	QString author;
 	QString description;
 	QUrl thumbnailUrl;
-	QImage thumbnail;
 	QString duration; // seconds
 	QDateTime uploadDate;
 	qint64 viewCount;

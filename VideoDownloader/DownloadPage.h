@@ -35,9 +35,9 @@ signals:
 private:
 	QSharedPointer<DownloadManager> m_downloadManager;
 	MaterialTabWidget* tabWidget = nullptr;
-	DownloadQueuePage* downloadQueuePage = nullptr;
-	DownloadingWidget* downloadingWidget = nullptr;
-	DownloadedWidget* downloadedWidget = nullptr;
+	DownloadCardContainerWidget* downloadQueuePage = nullptr;
+	DownloadCardContainerWidget* downloadingWidget = nullptr;
+	DownloadCardContainerWidget* downloadedWidget = nullptr;
 	AntScrollArea* scrollArea1 = nullptr;
 	AntScrollArea* scrollArea2 = nullptr;
 	QList<SkeletonWidget*> skeletons;

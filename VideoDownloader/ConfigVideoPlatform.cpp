@@ -288,12 +288,15 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 				pageInfo.title = pageObj["part"].toString();
 				pageInfo.author = mainInfo.author;
 				pageInfo.description = mainInfo.description;
-				pageInfo.thumbnailUrl = mainInfo.thumbnailUrl;
+
+
+				pageInfo.thumbnailUrl = pageObj["first_frame"].toString().isEmpty() ? mainInfo.thumbnailUrl : pageObj["first_frame"].toString();
+
 				pageInfo.videoId = mainInfo.videoId;
 				pageInfo.duration = pageInfo.formattedDuration(pageObj["duration"].toInt());
 				pageInfo.viewCount = mainInfo.viewCount;
 				pageInfo.likeCount = mainInfo.likeCount;
-				pageInfo.uploadDate = mainInfo.uploadDate;
+				pageInfo.uploadDate = pageObj["ctime"].toInteger() ? QDateTime::fromSecsSinceEpoch(pageObj["ctime"].toInteger()) : mainInfo.uploadDate;
 
 				// 添加分P特定参数
 				pageInfo.extraParams["aid"] = mainInfo.extraParams["aid"];
@@ -326,6 +329,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 					}
 					episodeInfo.author = arcObj["author"].toObject()["name"].toString();
 					episodeInfo.description = arcObj["desc"].toString();
+					episodeInfo.uploadDate = QDateTime::fromSecsSinceEpoch(arcObj["pubdate"].toInteger());
 
 					QString episodeThumbnail = arcObj["pic"].toString();
 					if (!episodeThumbnail.isEmpty()) {
