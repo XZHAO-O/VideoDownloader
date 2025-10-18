@@ -21,6 +21,22 @@
     "Origin": "https://www.bilibili.com"
   },
 
+  "qrCode": {
+    "enabled": "true",
+    "generateUrl": "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
+    "checkUrl": "https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
+    "codeUrl": "data.url",
+    "checkParams": {
+      "qrcode_key": "data.qrcode_key"
+    },
+    "status": "data.code",
+    "statusCode": {
+      "success": "0",
+      "unconfirmed": "86090",
+      "waiting": "86101",
+      "expired": "86038"
+    }
+  },
   "videoInfoParser": {
     "title": "data.title",
     "author": "data.owner.name",
@@ -37,7 +53,6 @@
     "replyCount": "data.stat.reply",
     "uploadTime": "data.pubdate"
   },
-
   "streamParser": {
     "url": "data.durl.0.url",
     "video": {
@@ -57,7 +72,6 @@
       "formatPath": "data.dash.audio.#.mimeType"
     }
   },
-
   "qualityMapping": {
     "video": {
       "8K": {
@@ -88,13 +102,6 @@
         "platform": "pc",
         "description": "4K超清"
       },
-      "1080p60": {
-        "qn": 116,
-        "fnval": 4048,
-        "fourk": 0,
-        "platform": "pc",
-        "description": "1080P 60帧"
-      },
       "1080p+": {
         "qn": 112,
         "fnval": 4048,
@@ -108,13 +115,6 @@
         "fourk": 0,
         "platform": "pc",
         "description": "1080P 高清"
-      },
-      "720p60": {
-        "qn": 74,
-        "fnval": 4048,
-        "fourk": 0,
-        "platform": "pc",
-        "description": "720P 60帧"
       },
       "720p": {
         "qn": 64,
@@ -153,7 +153,6 @@
       }
     }
   },
-
   "videoIdExtractors": [
     {
       "pattern": "BV([A-Za-z0-9]+)",
@@ -168,7 +167,6 @@
       "group": 1
     }
   ],
-
   "apiParameters": {
     "videoInfo": "bvid",
     "playUrl": {
@@ -178,7 +176,6 @@
       "fourk": 1
     }
   },
-
   "searchResultParser": {
     "itemsPath": "data",
     "item": {
@@ -193,10 +190,8 @@
     },
     "totalResults": "data.numResults"
   },
-
   "enabled": true,
   "priority": 1,
-
   "additionalConfig": {
     "needCookies": false,
     "supportDash": true,

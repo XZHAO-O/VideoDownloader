@@ -11,7 +11,277 @@ ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo,
 	: QObject(parent)
 	, m_modInfo(modInfo)
 	, m_networkManager(networkManager)
+	, m_qrCodePollTimer(new QTimer(this))
+	, m_isQRCodeLoginActive(false)
 {
+	// 初始化二维码轮询定时器
+	m_qrCodePollTimer->setInterval(3000); // 3秒轮询一次
+	connect(m_qrCodePollTimer, &QTimer::timeout, this, &ConfigVideoPlatform::onQRCodePollTimeout);
+}
+
+// 获取二维码配置
+QVariantMap ConfigVideoPlatform::getQRCodeConfig() const
+{
+	return m_modInfo.getConfigValue("qrCode").toMap();
+}
+
+// 开始二维码登录
+QUrl ConfigVideoPlatform::startQRCodeLogin()
+{
+	QVariantMap qrConfig = getQRCodeConfig();
+	if (!qrConfig.value("enabled", false).toBool()) {
+		LOG_WARN("ConfigVideoPlatform", "QR code login is not enabled in configuration");
+		emit qrCodeLoginFailed("二维码登录功能未启用");
+		return QUrl();
+	}
+
+	if (m_isQRCodeLoginActive) {
+		LOG_WARN("ConfigVideoPlatform", "QR code login is already active");
+		return QUrl();
+	}
+
+	m_isQRCodeLoginActive = true;
+	m_qrCodeKey.clear();
+
+	LOG_INFO("ConfigVideoPlatform", "Starting QR code login");
+	return generateQRCode();
+}
+
+// 停止二维码登录
+void ConfigVideoPlatform::stopQRCodeLogin()
+{
+	if (m_qrCodePollTimer->isActive()) {
+		m_qrCodePollTimer->stop();
+	}
+
+	m_isQRCodeLoginActive = false;
+	m_qrCodeKey.clear();
+
+	LOG_INFO("ConfigVideoPlatform", "QR code login stopped");
+}
+
+// 检查二维码登录是否活跃
+bool ConfigVideoPlatform::isQRCodeLoginActive() const
+{
+	return m_isQRCodeLoginActive;
+}
+
+// 生成二维码
+QUrl ConfigVideoPlatform::generateQRCode()
+{
+	try {
+		QVariantMap qrConfig = getQRCodeConfig();
+		QString generateUrl = qrConfig.value("generateUrl").toString();
+
+		if (generateUrl.isEmpty()) {
+			throw std::runtime_error("QR code generate URL not configured");
+		}
+
+		QVariantMap headers = m_modInfo.getRequestHeaders();
+
+		// 发送请求生成二维码
+		NetworkResponse response = m_networkManager->get(generateUrl, headers);
+
+		if (!response.success) {
+			throw std::runtime_error(response.errorString.toStdString());
+		}
+
+		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+		if (doc.isNull()) {
+			throw std::runtime_error("Invalid JSON response");
+		}
+
+		QJsonObject rootObj = doc.object();
+		if (rootObj["code"].toInt() != 0) {
+			throw std::runtime_error(QString("API error: %1").arg(rootObj["message"].toString()).toStdString());
+		}
+
+		QJsonObject data = rootObj["data"].toObject();
+
+		// 从配置中获取字段映射
+		QString codeUrlPath = qrConfig.value("codeUrl").toString();
+		QVariantMap checkParams = qrConfig.value("checkParams").toMap();
+
+		// 提取二维码URL和key
+		QUrl qrCodeUrl = QUrl(extractJsonValue(rootObj, codeUrlPath).toString());
+		m_qrCodeKey = extractJsonValue(rootObj, checkParams.value("qrcode_key").toString()).toString();
+
+		if (qrCodeUrl.isEmpty() || m_qrCodeKey.isEmpty()) {
+			throw std::runtime_error("Failed to extract QR code data from response");
+		}
+
+		LOG_INFO("ConfigVideoPlatform", "QR code generated, key: %s", m_qrCodeKey.toUtf8().constData());
+
+		// 创建二维码图片
+		//QPixmap qrCodePixmap = SimpleQRCodeGenerator::generateQRCode(qrCodeUrl, 240);
+
+		// 发出二维码生成信号
+		//emit qrCodeGenerated(qrCodePixmap, m_qrCodeKey);
+
+		// 获取状态码配置
+		QVariantMap statusCodes = qrConfig.value("statusCode").toMap();
+		int waitingCode = statusCodes.value("waiting").toInt();
+		emit qrCodeLoginStatusChanged("请使用哔哩哔哩APP扫描二维码", waitingCode);
+
+		// 开始轮询状态
+		m_qrCodePollTimer->start();
+
+		return qrCodeUrl;
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("ConfigVideoPlatform", "Failed to generate QR code: %s", e.what());
+		emit qrCodeLoginFailed(QString("生成二维码失败: %1").arg(e.what()));
+		m_isQRCodeLoginActive = false;
+	}
+}
+
+// 轮询二维码状态
+void ConfigVideoPlatform::pollQRCodeStatus()
+{
+	if (m_qrCodeKey.isEmpty()) {
+		return;
+	}
+
+	try {
+		QVariantMap qrConfig = getQRCodeConfig();
+		QString checkUrl = qrConfig.value("checkUrl").toString();
+
+		if (checkUrl.isEmpty()) {
+			throw std::runtime_error("QR code check URL not configured");
+		}
+
+		QVariantMap headers = m_modInfo.getRequestHeaders();
+
+		// 构建查询参数
+		QUrl url(checkUrl);
+		QUrlQuery query;
+		QVariantMap checkParams = qrConfig.value("checkParams").toMap();
+
+		for (auto it = checkParams.begin(); it != checkParams.end(); ++it) {
+			if (it.key() == "qrcode_key") {
+				query.addQueryItem(it.key(), m_qrCodeKey);
+			}
+			// 可以添加其他参数
+		}
+
+		url.setQuery(query);
+
+		NetworkResponse response = m_networkManager->get(url.toString(), headers);
+
+		if (!response.success) {
+			throw std::runtime_error(response.errorString.toStdString());
+		}
+
+		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+		if (doc.isNull()) {
+			throw std::runtime_error("Invalid JSON response");
+		}
+
+		QJsonObject rootObj = doc.object();
+		if (rootObj["code"].toInt() != 0) {
+			throw std::runtime_error(QString("API error: %1").arg(rootObj["message"].toString()).toStdString());
+		}
+
+		QJsonObject data = rootObj["data"].toObject();
+
+		// 从配置中获取状态字段和状态码
+		QString statusPath = qrConfig.value("status").toString();
+		QVariantMap statusCodes = qrConfig.value("statusCode").toMap();
+
+		int statusCode = extractJsonValue(data, statusPath).toInt();
+		QString message = data["message"].toString();
+
+		LOG_INFO("ConfigVideoPlatform", "QR code status: %d - %s", statusCode, message.toUtf8().constData());
+
+		// 根据状态码处理不同情况
+		if (statusCode == statusCodes.value("success").toInt()) {
+			// 登录成功
+			handleQRCodeLoginSuccess(data);
+		}
+		else if (statusCode == statusCodes.value("expired").toInt()) {
+			// 二维码过期
+			emit qrCodeLoginStatusChanged("二维码已失效，请重新扫描", statusCode);
+			stopQRCodeLogin();
+		}
+		else if (statusCode == statusCodes.value("unconfirmed").toInt()) {
+			// 已扫描未确认
+			emit qrCodeLoginStatusChanged("扫码成功，请在手机上确认登录", statusCode);
+		}
+		else if (statusCode == statusCodes.value("waiting").toInt()) {
+			// 等待扫描
+			emit qrCodeLoginStatusChanged("请使用哔哩哔哩APP扫描二维码", statusCode);
+		}
+		else {
+			// 其他状态
+			emit qrCodeLoginStatusChanged(message, statusCode);
+		}
+
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("ConfigVideoPlatform", "Failed to poll QR code status: %s", e.what());
+		// 不停止轮询，继续尝试
+	}
+}
+
+// 处理二维码登录成功
+void ConfigVideoPlatform::handleQRCodeLoginSuccess(const QJsonObject& data)
+{
+	try {
+		QString url = data["url"].toString();
+		QString refreshToken = data["refresh_token"].toString();
+		qint64 timestamp = data["timestamp"].toVariant().toLongLong();
+
+		LOG_INFO("ConfigVideoPlatform", "QR code login success, timestamp: %lld", timestamp);
+
+		// 解析URL获取cookies
+		QUrl loginUrl(url);
+		QUrlQuery query(loginUrl.query());
+
+		QVariantMap authData;
+		authData["refresh_token"] = refreshToken;
+		authData["timestamp"] = timestamp;
+		authData["DedeUserID"] = query.queryItemValue("DedeUserID");
+		authData["DedeUserID__ckMd5"] = query.queryItemValue("DedeUserID__ckMd5");
+		authData["SESSDATA"] = query.queryItemValue("SESSDATA");
+		authData["bili_jct"] = query.queryItemValue("bili_jct");
+		authData["Expires"] = query.queryItemValue("Expires");
+
+		// 停止轮询
+		stopQRCodeLogin();
+
+		// 发出成功信号
+		emit qrCodeLoginStatusChanged("登录成功", 0);
+		emit qrCodeLoginSuccess(authData);
+
+		LOG_INFO("ConfigVideoPlatform", "QR code login completed successfully");
+
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("ConfigVideoPlatform", "Failed to handle QR code login success: %s", e.what());
+		emit qrCodeLoginFailed(QString("处理登录成功数据失败: %1").arg(e.what()));
+	}
+}
+
+// 获取状态码
+int ConfigVideoPlatform::getQRStatusCode(const QString& status)
+{
+	QVariantMap qrConfig = getQRCodeConfig();
+	QVariantMap statusCodes = qrConfig.value("statusCode").toMap();
+
+	if (status == "success") return statusCodes.value("success").toInt();
+	if (status == "unconfirmed") return statusCodes.value("unconfirmed").toInt();
+	if (status == "waiting") return statusCodes.value("waiting").toInt();
+	if (status == "expired") return statusCodes.value("expired").toInt();
+
+	return -1;
+}
+
+// 定时器超时处理
+void ConfigVideoPlatform::onQRCodePollTimeout()
+{
+	if (m_isQRCodeLoginActive && !m_qrCodeKey.isEmpty()) {
+		pollQRCodeStatus();
+	}
 }
 
 bool ConfigVideoPlatform::matchesUrl(const QString& url) const

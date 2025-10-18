@@ -397,6 +397,9 @@
     <ClCompile Include="DownloadCardContainerWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="QRCodeLoginWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -703,6 +706,9 @@
       <Filter>Core\Mod</Filter>
     </QtMoc>
     <QtMoc Include="DownloadCardContainerWidget.h">
+      <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="QRCodeLoginWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
   </ItemGroup>

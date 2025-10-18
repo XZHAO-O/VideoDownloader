@@ -9,6 +9,7 @@
 #include "SlideStackedWidget.h"
 #include "ProfilePage.h"
 #include "StandardDialogPage.h"
+#include "QRCodeLoginWidget.h"
 
 class MaterialDialog : public QWidget
 {
@@ -20,17 +21,21 @@ public:
 		Login,
 		Register,
 		Profile,
-		Standard
+		Standard,
+		QRCodeLogin
 	};
 
 	MaterialDialog(bool loginState, std::function<void(MaterialDialog::PageIndex)> callback, QWidget* parent);
 	~MaterialDialog();
-public:
+
 	void showIndexPage(PageIndex index);
 	StandardDialogPage* standardDialog() { return standardPage; };
 
 	// 新增：设置标准对话框确认函数
 	void setStandardConfirmFunction(std::function<void()> func);
+
+	void setQRCodeLoginWidgetContent(const QString& title, QWidget* qrCodeLoginWidget);
+	void showQRCodeLoginWidget();
 
 signals:
 	void setStandardDialogText(QString title, QString text);
@@ -41,6 +46,7 @@ public:
 	RegisterPageWidget* registerPage;
 	ProfilePage* profilePage;
 	StandardDialogPage* standardPage;
+	QRCodeLoginWidget* qrCodeLoginWidget;
 private:
 	// 用户登录状态
 	bool m_loginState = false;

@@ -120,6 +120,12 @@
     <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModInfo.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
+    <ClCompile Include="QRCodeLoginWidget.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
@@ -373,6 +379,7 @@
     <QtMoc Include="ModCardModel.h" />
     <QtMoc Include="ModCardWidget.h" />
     <ClInclude Include="ModInfo.h" />
+    <QtMoc Include="QRCodeLoginWidget.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <ClInclude Include="VideoDownloadRequest.h" />

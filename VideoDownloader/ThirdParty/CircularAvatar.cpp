@@ -124,7 +124,7 @@ void CircularAvatar::mousePressEvent(QMouseEvent* event)
 {
 	if (event->button() == Qt::LeftButton)
 	{
-		emit showDialog(m_isLogin ? MaterialDialog::Profile : MaterialDialog::Login);
+		emit showDialog(MaterialDialog::QRCodeLogin);
 	}
 }
 

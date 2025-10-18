@@ -10,6 +10,7 @@
 #include "AntScrollArea.h"
 #include "NoDataWidget.h"
 #include "ModInfo.h"
+#include "ApplicationController.h"
 
 class QVBoxLayout;
 
@@ -18,8 +19,10 @@ class ModManagerPage : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ModManagerPage(QSharedPointer<ConfigModManager> modManager, QWidget* parent = nullptr);
+	explicit ModManagerPage(QSharedPointer<ApplicationController> appController, QWidget* parent = nullptr);
 	~ModManagerPage();
+
+	void addDialog(DialogViewController* dialog);
 
 protected:
 	void showEvent(QShowEvent* event) override;
@@ -48,6 +51,7 @@ private:
 	void updateTabName(const QString& modId);
 	void updateModTab(const QString& modId);
 
+	QSharedPointer<ApplicationController> m_appController;
 	QSharedPointer<ConfigModManager> m_modManager;
 	MaterialTabWidget* m_tabWidget = nullptr;
 	NoDataWidget* m_noDataWidget = nullptr;
@@ -59,4 +63,6 @@ private:
 	// 添加映射来跟踪标签页和模组的关联
 	QMap<QString, int> m_modTabIndexes; // modId -> tab index
 	QMap<int, QString> m_tabIndexMods;  // tab index -> modId
+
+	DialogViewController* m_dialogView;
 };

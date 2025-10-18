@@ -19,6 +19,8 @@ public:
 	// 新增：设置标准对话框确认函数
 	void setStandardConfirmFunction(std::function<void()> func);
 
+	void showQRCodeLoginDialog(const QString& title, QWidget* qrCodeLoginWidget);
+
 signals:
 	void playMask(bool isAddMask);
 	void successLogin(bool loginState);

@@ -1,4 +1,3 @@
-// ModCardWidget.cpp
 #include "ModCardWidget.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,15 +11,17 @@
 #include "AntToggleButton.h"
 #include "StyleSheet.h"
 #include "DesignSystem.h"
+#include "QrCodeWidget.h"
 
-ModCardWidget::ModCardWidget(QSharedPointer<ModCardModel> model, QWidget* parent)
+ModCardWidget::ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, QWidget* parent)
 	: QWidget(parent)
+	, m_configVideoPlatform(configVideoPlatform)
 	, m_model(model)
 {
 	setObjectName("ModCardWidget");
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	setMinimumHeight(400); // 进一步增加最小高度以适应更大的图标
-	setAttribute(Qt::WA_Hover, false); // 去掉悬浮效果
+	setMinimumHeight(400);
+	setAttribute(Qt::WA_Hover, false);
 
 	initUI();
 	initConnections();
@@ -29,12 +30,12 @@ ModCardWidget::ModCardWidget(QSharedPointer<ModCardModel> model, QWidget* parent
 		onModelChanged();
 	}
 
-	// 主题变化监听
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]() {
 		update();
 		updateUI();
 		});
 }
+
 
 ModCardWidget::~ModCardWidget()
 {
@@ -71,6 +72,12 @@ QSize ModCardWidget::sizeHint() const
 QSize ModCardWidget::minimumSizeHint() const
 {
 	return QSize(400, 400);
+}
+
+void ModCardWidget::addDialog(DialogViewController* dialog)
+{
+	m_dialogView = dialog;
+	connect(m_avatarButton, &CircularAvatar::showDialog, m_dialogView, &DialogViewController::showAnim);
 }
 
 void ModCardWidget::mousePressEvent(QMouseEvent* event)
@@ -122,10 +129,26 @@ void ModCardWidget::onToggleClicked(bool checked)
 
 void ModCardWidget::initUI()
 {
-	// 主布局 - 改为垂直布局
+	// 主布局
 	m_mainLayout = new QVBoxLayout(this);
-	m_mainLayout->setSpacing(24); // 增加间距
-	m_mainLayout->setContentsMargins(24, 20, 24, 20); // 增加边距
+	m_mainLayout->setSpacing(24);
+	m_mainLayout->setContentsMargins(24, 20, 24, 20);
+
+	// 创建顶部布局，包含头像按钮
+	QHBoxLayout* topLayout = new QHBoxLayout();
+	topLayout->setContentsMargins(0, 0, 0, 0);
+	topLayout->setSpacing(0);
+
+	// 添加弹性空间，将头像推到右侧
+	topLayout->addStretch();
+
+	// 创建头像按钮
+	m_avatarButton = new CircularAvatar(QSize(32, 32),
+		":/Imgs/noLogin.svg",
+		":/Imgs/github.svg",
+		this);
+	m_avatarButton->setToolTip("点击查看模组详情");
+	topLayout->addWidget(m_avatarButton);
 
 	// 第一部分：基本信息区域（图标 + 文字信息）
 	QWidget* basicInfoWidget = new QWidget(this);
@@ -230,6 +253,7 @@ void ModCardWidget::initUI()
 	buttonLayout->addStretch();
 
 	// 组装主布局
+	m_mainLayout->addLayout(topLayout);
 	m_mainLayout->addWidget(basicInfoWidget);
 	m_mainLayout->addWidget(descriptionWidget);
 	m_mainLayout->addWidget(buttonWidget);
@@ -244,6 +268,41 @@ void ModCardWidget::initConnections()
 	connect(m_openFolderButton, &AntButton::clicked, this, &ModCardWidget::openFolderClicked);
 	connect(m_updateButton, &AntButton::clicked, this, &ModCardWidget::updateClicked);
 	connect(m_uninstallButton, &AntButton::clicked, this, &ModCardWidget::uninstallClicked);
+	connect(m_avatarButton, &CircularAvatar::showDialog, this, &ModCardWidget::onAvatarClicked);
+	connect(m_dialogView, &DialogViewController::successLogin, m_avatarButton, &CircularAvatar::allowLogin);
+}
+
+void ModCardWidget::onAvatarClicked()
+{
+	QUrl qrCodeUrl = m_configVideoPlatform->startQRCodeLogin();
+	// 显示自定义的模组详情对话框
+	showCustomModDialog(qrCodeUrl);
+}
+
+// 添加显示自定义模组对话框的函数
+void ModCardWidget::showCustomModDialog(QUrl qrCodeUrl)
+{
+	if (!m_model) return;
+
+	// 创建自定义内容
+	QWidget* qrCodeLoginContent = new QWidget();
+	qrCodeLoginContent->setFixedSize(250, 250);
+
+	QHBoxLayout* contentLayout = new QHBoxLayout(qrCodeLoginContent);
+	contentLayout->setContentsMargins(0, 0, 0, 0);
+	contentLayout->setSpacing(0);
+
+	// 创建二维码
+	QrCodeWidget* qrCode = new QrCodeWidget(qrCodeLoginContent);
+	qrCode->setMinimumSize(QSize(150, 150));
+	qrCode->setData(qrCodeUrl.toString());
+
+	contentLayout->addStretch();
+	contentLayout->addWidget(qrCode);
+	contentLayout->addStretch();
+
+	// 使用对话框控制器显示自定义内容
+	m_dialogView->showQRCodeLoginDialog("模组详情", qrCodeLoginContent);
 }
 
 void ModCardWidget::updateUI()

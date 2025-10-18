@@ -150,6 +150,11 @@ void DialogViewController::updateDialogPositionAndSize(MaterialDialog::PageIndex
 			dialogW = dialog->standardPage->pageWidth();
 			dialogH = dialog->standardPage->pageHeight();
 		}
+		else if (index == MaterialDialog::QRCodeLogin)
+		{
+			dialogW = dialog->qrCodeLoginWidget->pageWidth();
+			dialogH = dialog->qrCodeLoginWidget->pageHeight();
+		}
 
 		//  1. 正确设置 stackedWidget 的尺寸
 		setGeometry((parentW - dialogW) / 2, (parentH - dialogH) / 2, dialogW, dialogH);
@@ -184,5 +189,14 @@ void DialogViewController::setStandardConfirmFunction(std::function<void()> func
 {
 	if (dialog) {
 		dialog->setStandardConfirmFunction(func);
+	}
+}
+
+void DialogViewController::showQRCodeLoginDialog(const QString& title, QWidget* qrCodeLoginWidget)
+{
+	if (dialog) {
+		dialog->setQRCodeLoginWidgetContent(title, qrCodeLoginWidget);
+		dialog->showQRCodeLoginWidget();
+		showAnim(MaterialDialog::PageIndex::QRCodeLogin);
 	}
 }

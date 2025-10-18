@@ -13,9 +13,10 @@
 #include "NoDataWidget.h"
 #include "NotificationManager.h"
 
-ModManagerPage::ModManagerPage(QSharedPointer<ConfigModManager> modManager, QWidget* parent)
+ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
-	, m_modManager(modManager)
+	, m_appController(appController)
+	, m_modManager(appController->getConfigModManager())
 {
 	setObjectName("ModManagerPage");
 	initUI();
@@ -29,6 +30,14 @@ ModManagerPage::ModManagerPage(QSharedPointer<ConfigModManager> modManager, QWid
 
 ModManagerPage::~ModManagerPage()
 {
+}
+
+void ModManagerPage::addDialog(DialogViewController* dialog)
+{
+	m_dialogView = dialog;
+	for (auto tab : m_modTabs) {
+		tab->addDialog(dialog);
+	}
 }
 
 void ModManagerPage::showEvent(QShowEvent* event)
@@ -348,7 +357,7 @@ void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardMo
 	}
 	else {
 		// 创建新的卡片组件
-		ModCardWidget* cardWidget = new ModCardWidget(model, this);
+		ModCardWidget* cardWidget = new ModCardWidget(m_appController->getPlatformService()->getPlatform(modId), model, this);
 		connect(cardWidget, &ModCardWidget::toggleClicked,
 			this, &ModManagerPage::onToggleClicked);
 		connect(cardWidget, &ModCardWidget::openFolderClicked,

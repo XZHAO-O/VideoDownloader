@@ -165,7 +165,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 		});
 
 
-	ModManagerPage* modManagerPage = new ModManagerPage(appController->getConfigModManager(), stackedWidget);
+	ModManagerPage* modManagerPage = new ModManagerPage(appController, stackedWidget);
 	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
 	stackedWidget->addWidget(homePage);
@@ -276,6 +276,8 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	DialogViewController* mDialog = new DialogViewController(avatar->loginState(), this);	// 实际登录状态要服务器给予
 	avatar->addDialog(mDialog);
 	connect(mDialog, &DialogViewController::successLogin, avatar, &CircularAvatar::allowLogin);
+
+	modManagerPage->addDialog(mDialog);
 
 	// 信号连接
 	connect(btnMax, &QToolButton::clicked, this, [this]()

@@ -1,9 +1,11 @@
-// ModCardWidget.h
 #pragma once
 
 #include <QWidget>
 #include <QSharedPointer>
 #include "ModCardModel.h"
+#include "CircularAvatar.h"
+#include "DialogViewController.h"
+#include "ConfigVideoPlatform.h"
 
 class QLabel;
 class QPushButton;
@@ -17,7 +19,7 @@ class ModCardWidget : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ModCardWidget(QSharedPointer<ModCardModel> model, QWidget* parent = nullptr);
+	explicit ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, QWidget* parent = nullptr);
 	~ModCardWidget();
 
 	QSharedPointer<ModCardModel> model() const { return m_model; }
@@ -26,6 +28,8 @@ public:
 	// 尺寸控制
 	QSize sizeHint() const override;
 	QSize minimumSizeHint() const override;
+
+	void addDialog(DialogViewController* dialog);
 
 signals:
 	void toggleClicked(bool enabled);
@@ -43,9 +47,12 @@ private slots:
 	void onModelChanged();
 	void onToggleClicked(bool checked);
 
+	void onAvatarClicked();
+
 private:
 	void initUI();
 	void initConnections();
+	void showCustomModDialog(QUrl qrCodeUrl);
 	void updateUI();
 	QString processRichText(const QString& text);
 	void updateTextColors();
@@ -66,5 +73,9 @@ private:
 
 	QVBoxLayout* m_mainLayout = nullptr; // 改为垂直布局
 
+	CircularAvatar* m_avatarButton = nullptr;
+	DialogViewController* m_dialogView = nullptr;
+
+	QSharedPointer<ConfigVideoPlatform> m_configVideoPlatform;
 	QSharedPointer<ModCardModel> m_model;
 };

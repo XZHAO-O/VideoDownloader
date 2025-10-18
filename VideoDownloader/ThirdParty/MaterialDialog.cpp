@@ -38,6 +38,10 @@ MaterialDialog::MaterialDialog(bool loginState, std::function<void(MaterialDialo
 	standardPage = new StandardDialogPage(stackedWidget);
 	stackedWidget->addWidget(standardPage);
 
+	//二维码页
+	qrCodeLoginWidget = new QRCodeLoginWidget(stackedWidget);
+	stackedWidget->addWidget(qrCodeLoginWidget);
+
 	connect(this, &MaterialDialog::setStandardDialogText, standardPage, &StandardDialogPage::setText);
 
 	// 默认显示登录页
@@ -89,6 +93,7 @@ MaterialDialog::MaterialDialog(bool loginState, std::function<void(MaterialDialo
 			loginPage->updateTheme();
 			registerPage->updateTheme();
 			standardPage->updateTheme();
+			qrCodeLoginWidget->updateTheme();
 		});
 }
 
@@ -109,6 +114,9 @@ void MaterialDialog::showIndexPage(PageIndex index)
 	case MaterialDialog::Standard:
 		stackedWidget->setCurrentWidget(standardPage);
 		break;
+	case MaterialDialog::QRCodeLogin:
+		stackedWidget->setCurrentWidget(qrCodeLoginWidget);
+		break;
 	default:
 		stackedWidget->setCurrentWidget(standardPage);
 		break;
@@ -121,4 +129,16 @@ void MaterialDialog::setStandardConfirmFunction(std::function<void()> func)
 	if (standardPage) {
 		standardPage->setConfirmFunction(func);
 	}
+}
+
+void MaterialDialog::setQRCodeLoginWidgetContent(const QString& title, QWidget* qrCodeLogin)
+{
+	if (qrCodeLoginWidget) {
+		qrCodeLoginWidget->setContent(title, qrCodeLogin);
+	}
+}
+
+void MaterialDialog::showQRCodeLoginWidget()
+{
+	showIndexPage(QRCodeLogin);
 }
