@@ -23,9 +23,12 @@ public:
 
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
+	QUrl getVideoPlayUrl(StreamRequest& request);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
+
+	QUrl parseVideoPlayUrl(const QJsonObject& data);
 
 	QString getModId() const { return m_modInfo.modId; }
 	QString getName() const { return m_modInfo.name; }
@@ -42,6 +45,7 @@ private:
 	// 内部方法
 	QList<StreamInfo> parseStreams(const QJsonObject& data, StreamType type);
 	QString extractVideoId(const QString& url);
+	QVariantMap getQualityParams(const QString& qualityName, StreamType type) const;
 	QVariantMap buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QVariant extractJsonValue(const QJsonObject& data, const QString& path);
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);

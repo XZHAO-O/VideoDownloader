@@ -471,11 +471,11 @@ DownloadPage::~DownloadPage()
 {
 }
 
-QUrl DownloadPage::getVideoPlayUrl(const VideoInfo& videoInfo)
+void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 {
 	auto platformService = m_downloadManager->getAppController()->getPlatformService();
-	//return platformService->getVideoPlayUrl(videoInfo);
-	return QUrl();
+	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
+	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
 }
 
 void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
@@ -484,10 +484,13 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 	{
 		//创建任务信息
 		DownloadTaskInfo taskInfo;
+		taskInfo.taskId = taskInfo.request.generateTaskId();
+		taskInfo.request.platformId = videoInfo.platformId;
 		//存储请求参数到任务信息中
-		taskInfo.request.audioStream;
+		taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
+		//taskInfo.streamRequest.extraParams["qn"] = "80";
 		//根据请求参数获取视频地址
-		taskInfo.request.videoPlayUrl = getVideoPlayUrl(videoInfo);
+		getVideoPlayUrl(taskInfo);
 		//taskInfo.videoId = videoInfo.videoId;
 
 		// 创建卡片模型
@@ -502,7 +505,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		cardModel->setState(DownloadCardState::Pending);
 
 		// 创建卡片
-		downloadQueuePage->addDownloadCard(new DownloadCard(cardModel, this));
+		downloadQueuePage->addDownloadCard(taskInfo, new DownloadCard(cardModel, this));
 	}
 }
 

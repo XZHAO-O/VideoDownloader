@@ -19,7 +19,7 @@ public:
 	virtual ~DownloadCardContainerWidget();
 
 	// 公共接口
-	void addDownloadCard(DownloadCard* downloadCard);
+	void addDownloadCard(DownloadTaskInfo downloadTaskInfo, DownloadCard* downloadCard);
 	void updateTaskList();
 
 protected:
@@ -31,6 +31,7 @@ protected:
 	QVBoxLayout* m_scrollLayout;
 	QMap<QString, DownloadCard*> m_taskCards;
 	QList<DownloadCard*> m_downloadCards; // 用于手动添加的卡片
+	QList<DownloadTaskInfo> m_downloadTasks; // 用于手动添加的任务
 	NoDataWidget* m_noDataWidget;
 	QString m_noDataText; // 存储无数据文本
 
@@ -38,7 +39,7 @@ protected:
 	void initUI();
 	void addTaskCard(const DownloadTaskInfo& taskInfo);
 	void removeTaskCard(const QString& taskId);
-	void downloadVideo(const QString& url);
+	void downloadVideo(const QUrl& url);
 	void updateVisibility();
 
 	// 虚函数，派生类可以重写

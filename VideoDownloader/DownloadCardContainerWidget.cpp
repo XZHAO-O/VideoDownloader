@@ -97,7 +97,7 @@ void DownloadCardContainerWidget::removeTaskCard(const QString& taskId)
 	updateVisibility();
 }
 
-void DownloadCardContainerWidget::downloadVideo(const QString& url)
+void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
 {
 	// 创建目录
 	QString savePath = "E:/CProject";
@@ -107,8 +107,7 @@ void DownloadCardContainerWidget::downloadVideo(const QString& url)
 	}
 
 	qDebug() << url;
-	qDebug() << QUrl(url);
-	QString fileName = QFileInfo(QUrl(url).path()).fileName();
+	QString fileName = QFileInfo(url.path()).fileName();
 	QString filePath = savePath + "/" + fileName;
 	// 打开文件
 	QFile* m_file = new QFile(filePath, this);
@@ -120,7 +119,7 @@ void DownloadCardContainerWidget::downloadVideo(const QString& url)
 
 	// 创建网络请求
 	QNetworkRequest request;
-	request.setUrl(QUrl(url));
+	request.setUrl(url);
 
 	request.setRawHeader("User-Agent",
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
@@ -173,15 +172,16 @@ void DownloadCardContainerWidget::downloadVideo(const QString& url)
 		});
 }
 
-void DownloadCardContainerWidget::addDownloadCard(DownloadCard* downloadCard)
+void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskInfo, DownloadCard* downloadCard)
 {
+	m_downloadTasks.append(downloadTaskInfo);
 	m_downloadCards.append(downloadCard);
 	// 在添加弹簧之前插入卡片
 	m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, downloadCard);
 
 	// 连接信号
-	connect(downloadCard, &DownloadCard::downloadClicked, this, [this]() {
-		downloadVideo("https://upos-sz-estghw.bilivideo.com/upgcxcode/12/82/33069138212/33069138212_qe1-1-192.mp4?e=ig8euxZM2rNcNbR37WdVhwdlhW4BhwdVhoNvNC8BqJIzNbfq9rVEuxTEnE8L5F6VnEsSTx0vkX8fqJeYTj_lta53NCM=&mid=0&og=hw&nbs=1&trid=44c54cf5214840bdab6d75ccfc11d29h&gen=playurlv3&os=estghw&deadline=1760694673&oi=2102659173&uipk=5&platform=html5&upsig=f02573149089d0051950eb399a04371c&uparams=e,mid,og,nbs,trid,gen,os,deadline,oi,uipk,platform&bvc=vod&nettype=0&bw=1489666&agrr=1&buvid=&build=0&dl=0&f=h_0_0&orderid=0,1");
+	connect(downloadCard, &DownloadCard::downloadClicked, this, [this, downloadTaskInfo]() {
+		downloadVideo(downloadTaskInfo.request.videoPlayUrl);
 		});
 
 	// 连接删除信号

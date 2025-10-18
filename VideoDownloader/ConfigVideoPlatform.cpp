@@ -87,6 +87,65 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 	}
 }
 
+QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
+{
+	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
+	if (apiUrl.isEmpty()) {
+		throw std::runtime_error("Play URL API endpoint not configured");
+	}
+
+	// 构建请求参数
+	QVariantMap params;
+	QVariantMap headers = m_modInfo.getRequestHeaders();
+	//QString cookies = getCookies();
+	//if (!cookies.isEmpty()) {
+	//	headers["Cookie"] = cookies;
+	//}
+
+	// 设置清晰度
+	//QVariantMap qualityMapping = m_modInfo.getQualityMapping(request.type);
+	//params["qn"] = qualityMapping.value(request.quality, 64); // 默认 720p
+
+
+	// 根据平台构建不同的参数
+	request.extraParams["qn"] = 80;
+	request.extraParams["type"] = "mp4";
+	request.extraParams["platform"] = "html5";
+	request.extraParams["high_quality"] = 1;
+
+	params.insert(request.extraParams);
+
+	// 发送请求
+	NetworkResponse response;
+	if (!params.isEmpty()) {
+		QUrl fullUrl(apiUrl);
+		QUrlQuery query;
+		for (auto it = params.begin(); it != params.end(); ++it) {
+			query.addQueryItem(it.key(), it.value().toString());
+		}
+		fullUrl.setQuery(query);
+		response = m_networkManager->get(fullUrl.toString(), headers);
+	}
+	else {
+		response = m_networkManager->get(apiUrl, headers);
+	}
+
+	if (!response.success) {
+		throw std::runtime_error(response.errorString.toStdString());
+	}
+
+	QJsonDocument doc = QJsonDocument::fromJson(response.data);
+	qDebug() << "JSON Document:" << doc.toJson();
+
+	// 获取对象
+	QJsonObject obj = doc.object();
+	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
+	LOG_INFO("ConfigVideoPlatform", "Video Play Url retrieved: %s", videoPlayUrl.toUtf8().constData());
+	//emit videoInfoReceived(videoInfo);
+
+	return videoPlayUrl;
+}
+
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)
 {
 	return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
@@ -232,6 +291,16 @@ QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, 
 		});
 }
 
+QUrl ConfigVideoPlatform::parseVideoPlayUrl(const QJsonObject& data)
+{
+	QString urlPath = m_modInfo.getConfigValue("streamParser.url").toString();
+
+	QUrl videoUrl(extractJsonValue(data, urlPath).toString());
+
+	LOG_INFO("ConfigVideoPlatform", "Successfully parsed video URL: %s", videoUrl.toUtf8().constData());
+	return videoUrl;
+}
+
 QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 {
 	QList<VideoInfo> videoList;
@@ -258,9 +327,8 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 		mainInfo.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
 
 		// 添加额外参数
-		mainInfo.extraParams["aid"] = extractJsonValue(data, "aid").toString();
-		mainInfo.extraParams["cid"] = extractJsonValue(data, "cid").toString();
-		mainInfo.extraParams["bvid"] = mainInfo.videoId;
+		mainInfo.extraParams["avid"] = extractJsonValue(data, "data.aid").toString();
+		mainInfo.extraParams["cid"] = extractJsonValue(data, "data.cid").toString();
 
 		// 解析统计数据
 		QJsonObject statData = extractJsonValue(data, "data.stat").toJsonObject();
@@ -299,10 +367,8 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 				pageInfo.uploadDate = pageObj["ctime"].toInteger() ? QDateTime::fromSecsSinceEpoch(pageObj["ctime"].toInteger()) : mainInfo.uploadDate;
 
 				// 添加分P特定参数
-				pageInfo.extraParams["aid"] = mainInfo.extraParams["aid"];
-				pageInfo.extraParams["bvid"] = mainInfo.videoId;
+				pageInfo.extraParams["avid"] = mainInfo.extraParams["aid"];
 				pageInfo.extraParams["cid"] = QString::number(pageObj["cid"].toVariant().toLongLong());
-				pageInfo.extraParams["page"] = QString::number(pageObj["page"].toInt());
 
 				videoList.append(pageInfo);
 			}
@@ -344,11 +410,8 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 					episodeInfo.likeCount = episodeStat["like"].toVariant().toLongLong();
 					episodeInfo.platformId = m_modInfo.modId;
 					// 添加合集视频参数
-					episodeInfo.extraParams["aid"] = QString::number(episodeObj["aid"].toVariant().toLongLong());
-					episodeInfo.extraParams["bvid"] = episodeInfo.videoId;
+					episodeInfo.extraParams["avid"] = QString::number(episodeObj["aid"].toVariant().toLongLong());
 					episodeInfo.extraParams["cid"] = QString::number(episodeObj["cid"].toVariant().toLongLong());
-					episodeInfo.extraParams["season_id"] = QString::number(ugcSeason["id"].toVariant().toLongLong());
-					episodeInfo.extraParams["episode_id"] = QString::number(episodeObj["id"].toVariant().toLongLong());
 
 					videoList.append(episodeInfo);
 				}
@@ -449,6 +512,26 @@ QString ConfigVideoPlatform::extractVideoId(const QString& url)
 	return QString();
 }
 
+QVariantMap ConfigVideoPlatform::getQualityParams(const QString& qualityName, StreamType type) const
+{
+	QVariantMap params;
+
+	// 从 mod.json 获取质量映射
+	QVariantMap qualityMapping = m_modInfo.getQualityMapping(type);
+
+	// 获取指定画质的参数配置
+	QVariant qualityConfig = qualityMapping.value(qualityName);
+
+	if (qualityConfig.isValid() && qualityConfig.canConvert<QVariantMap>())
+	{
+		// 如果是对象形式，直接使用所有参数
+		params = qualityConfig.toMap();
+		params.remove("description"); // 移除 description 参数
+	}
+
+	return params;
+}
+
 QVariantMap ConfigVideoPlatform::buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request)
 {
 	QVariantMap params;
@@ -461,6 +544,15 @@ QVariantMap ConfigVideoPlatform::buildRequestParams(const VideoInfo& videoInfo, 
 	else if (m_modInfo.modId == "youtube") {
 		params["videoId"] = videoInfo.videoId;
 		// YouTube 参数构建
+	}
+
+	// 从配置文件获取画质参数
+	QVariantMap qualityParams = getQualityParams(request.quality, request.type);
+	params.insert(qualityParams);
+
+	// 如果请求中有额外参数，覆盖配置文件的参数
+	if (!request.extraParams.isEmpty()) {
+		params.insert(request.extraParams);
 	}
 
 	return params;

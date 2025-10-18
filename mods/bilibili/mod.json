@@ -39,6 +39,7 @@
   },
 
   "streamParser": {
+    "url": "data.durl.0.url",
     "video": {
       "urlPath": "data.dash.video.#.baseUrl",
       "qualityPath": "data.dash.video.#.id",
@@ -59,20 +60,97 @@
 
   "qualityMapping": {
     "video": {
-      "8K": 127,
-      "4K": 126,
-      "1080p60": 116,
-      "1080p+": 112,
-      "1080p": 80,
-      "720p60": 74,
-      "720p": 64,
-      "480p": 32,
-      "360p": 16
+      "8K": {
+        "qn": 127,
+        "fnval": 4048,
+        "fourk": 1,
+        "platform": "pc",
+        "description": "8K超高清"
+      },
+      "Dolby": {
+        "qn": 126,
+        "fnval": 4048,
+        "fourk": 1,
+        "platform": "pc",
+        "description": "杜比视界"
+      },
+      "HDR": {
+        "qn": 125,
+        "fnval": 4048,
+        "fourk": 1,
+        "platform": "pc",
+        "description": "HDR真彩色"
+      },
+      "4K": {
+        "qn": 120,
+        "fnval": 4048,
+        "fourk": 1,
+        "platform": "pc",
+        "description": "4K超清"
+      },
+      "1080p60": {
+        "qn": 116,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "1080P 60帧"
+      },
+      "1080p+": {
+        "qn": 112,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "1080P 高码率"
+      },
+      "1080p": {
+        "qn": 80,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "1080P 高清"
+      },
+      "720p60": {
+        "qn": 74,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "720P 60帧"
+      },
+      "720p": {
+        "qn": 64,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "720P 高清"
+      },
+      "480p": {
+        "qn": 32,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "480P 清晰"
+      },
+      "360p": {
+        "qn": 16,
+        "fnval": 4048,
+        "fourk": 0,
+        "platform": "pc",
+        "description": "360P 流畅"
+      }
     },
     "audio": {
-      "high": 30280,
-      "medium": 30232,
-      "low": 30216
+      "high": {
+        "qn": 30280,
+        "description": "192K 高音质"
+      },
+      "medium": {
+        "qn": 30232,
+        "description": "132K 中等音质"
+      },
+      "low": {
+        "qn": 30216,
+        "description": "64K 低音质"
+      }
     }
   },
 

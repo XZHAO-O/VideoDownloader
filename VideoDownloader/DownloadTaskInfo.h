@@ -4,10 +4,12 @@
 #include <QDateTime>
 #include "ApplicationState.h"
 #include "VideoDownloadRequest.h"
+#include "ModInfo.h"
 
 struct DownloadTaskInfo {
 	QString taskId;
 	VideoDownloadRequest request;
+	StreamRequest streamRequest;
 	DownloadStatus status;
 	qint64 downloadedBytes;
 	qint64 totalBytes;
