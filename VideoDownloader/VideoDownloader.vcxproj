@@ -107,6 +107,7 @@
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
+    <ClCompile Include="CookieManageUtil.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
@@ -114,6 +115,7 @@
     <ClCompile Include="DownloadOrchestrationService.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="EventBus.cpp" />
+    <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
     <ClCompile Include="MediaProcessingService.cpp" />
     <ClCompile Include="ModCardModel.cpp" />
@@ -364,6 +366,7 @@
     <QtMoc Include="ConfigModManager.h" />
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
+    <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadCardState.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
@@ -373,6 +376,7 @@
     <QtMoc Include="IMediaProcessor.h" />
     <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
+    <QtMoc Include="LoginManager.h" />
     <ClInclude Include="MediaInfo.h" />
     <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />

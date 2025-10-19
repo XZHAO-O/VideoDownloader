@@ -126,7 +126,7 @@ bool ConfigModManager::loadMod(const QString& configPath)
 
 	// 创建平台实例
 	if (enabled) {
-		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_networkManager);
+		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory", "mods").toString(), m_networkManager);
 		m_platforms[modInfo.modId] = platform;
 		LOG_INFO("ModManager", "Loaded mod: %s v%s",
 			modInfo.name.toUtf8().constData(),
@@ -223,7 +223,7 @@ bool ConfigModManager::enableMod(const QString& modId)
 	m_mods[modId] = modInfo;
 
 	// 创建平台实例
-	auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_networkManager);
+	auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory", "mods").toString(), m_networkManager);
 	m_platforms[modId] = platform;
 
 	// 更新配置

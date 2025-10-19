@@ -9,6 +9,7 @@
 #include "ModInfo.h"
 #include "INetworkManager.h"
 #include "LogSystem.h"
+#include "LoginManager.h"
 
 class ConfigManager;
 
@@ -17,9 +18,7 @@ class ConfigVideoPlatform : public QObject
 	Q_OBJECT
 
 public:
-	explicit ConfigVideoPlatform(const ModInfo& modInfo,
-		QSharedPointer<INetworkManager> networkManager,
-		QObject* parent = nullptr);
+	explicit ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager, QObject* parent = nullptr);
 
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
@@ -29,10 +28,13 @@ public:
 	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
 	QUrl parseVideoPlayUrl(const QJsonObject& data);
 
-	// 二维码登录功能
-	QUrl startQRCodeLogin();
-	void stopQRCodeLogin();
-	bool isQRCodeLoginActive() const;
+	// 登录相关功能（委托给 LoginManager）
+	QUrl startQRCodeLogin() { return m_loginManager->startQRCodeLogin(); }
+	void stopQRCodeLogin() { m_loginManager->stopQRCodeLogin(); }
+	bool isQRCodeLoginActive() const { return m_loginManager->isQRCodeLoginActive(); }
+	bool isLoggedIn() const { return m_loginManager->isLoggedIn(); }
+	QVariantMap getCookie() const { return m_loginManager->getCookie(); }
+	void clearCookies() { m_loginManager->clearCookies(); }
 
 	QString getModId() const { return m_modInfo.modId; }
 	QString getName() const { return m_modInfo.name; }
@@ -45,14 +47,11 @@ signals:
 	void searchResultsReceived(const SearchResult& results);
 	void errorOccurred(const QString& error);
 
-	// 二维码登录相关信号
-	void qrCodeGenerated(const QPixmap& qrCodePixmap, const QString& qrCodeKey);
+	// 登录相关信号（转发 LoginManager 的信号）
 	void qrCodeLoginStatusChanged(const QString& status, int code);
 	void qrCodeLoginSuccess(const QVariantMap& authData);
 	void qrCodeLoginFailed(const QString& error);
-
-private slots:
-	void onQRCodePollTimeout();
+	void loginStateChanged(bool isLoggedIn);
 
 private:
 	// 内部方法
@@ -64,18 +63,8 @@ private:
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);
 	QList<VideoInfo> parseVideoInfo(const QJsonObject& data);
 
-	// 二维码登录相关方法
-	QUrl generateQRCode();
-	void pollQRCodeStatus();
-	void handleQRCodeLoginSuccess(const QJsonObject& data);
-	QVariantMap getQRCodeConfig() const;
-	int getQRStatusCode(const QString& status);
-
-	// 二维码登录相关成员变量
-	QTimer* m_qrCodePollTimer;
-	QString m_qrCodeKey;
-	bool m_isQRCodeLoginActive;
-
+private:
 	ModInfo m_modInfo;
 	QSharedPointer<INetworkManager> m_networkManager;
+	QScopedPointer<LoginManager> m_loginManager;
 };

@@ -400,6 +400,12 @@
     <ClCompile Include="QRCodeLoginWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="CookieManageUtil.cpp">
+      <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -711,6 +717,9 @@
     <QtMoc Include="QRCodeLoginWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
+    <QtMoc Include="LoginManager.h">
+      <Filter>Core</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QtAntDesign.ui">
@@ -762,6 +771,9 @@
     </ClInclude>
     <ClInclude Include="ModInfo.h">
       <Filter>Core\Mod</Filter>
+    </ClInclude>
+    <ClInclude Include="CookieManageUtil.h">
+      <Filter>Core\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
