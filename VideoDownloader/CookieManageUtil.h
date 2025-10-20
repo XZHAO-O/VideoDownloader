@@ -1,15 +1,5 @@
 #pragma once
 
-#include <QString>
-#include <QByteArray>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QDir>
-#include <QCryptographicHash>
-#include <QDebug>
-#include <QStandardPaths>
-#include <QCoreApplication>
-#include <QDateTime>
 #include <QVariantMap>
 
 class CookieManageUtil

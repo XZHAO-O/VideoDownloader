@@ -1,10 +1,9 @@
-// MediaProcessingService.cpp
 #include "MediaProcessingService.h"
-#include <QProcess>
-#include <QStandardPaths>
-#include <QDir>
+
 #include <QtConcurrent\QtConcurrent>
+
 #include "LogSystem.h"
+#include "ConfigManager.h"
 
 MediaProcessingService::MediaProcessingService(QSharedPointer<ConfigManager> configManager,
 	QObject* parent)

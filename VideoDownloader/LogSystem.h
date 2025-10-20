@@ -1,13 +1,8 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
 #include <QFile>
 #include <QTextStream>
-#include <QDateTime>
 #include <QMutex>
-#include <QDir>
-#include <memory>
 
 class LogSystem : public QObject
 {

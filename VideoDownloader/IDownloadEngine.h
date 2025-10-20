@@ -1,9 +1,8 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
 #include <QUrl>
-#include <QFuture>
+#include <QVariantMap>
+
 #include "ApplicationState.h"
 
 class IDownloadEngine : public QObject

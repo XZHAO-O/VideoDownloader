@@ -521,7 +521,6 @@ void DownloadCard::updateTextColors()
 	// 更新标题颜色
 	m_titleLabel->setStyleSheet(QString("QLabel{"
 		"font-size: 14px;"
-		"font-weight: bold;"
 		"color: %1;"
 		"}").arg(theme.primaryTextColor.name()));
 

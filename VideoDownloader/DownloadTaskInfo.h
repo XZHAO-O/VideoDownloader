@@ -1,8 +1,5 @@
 #pragma once
 
-#include <QString>
-#include <QDateTime>
-#include "ApplicationState.h"
 #include "VideoDownloadRequest.h"
 #include "ModInfo.h"
 

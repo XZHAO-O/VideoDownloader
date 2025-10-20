@@ -1,5 +1,7 @@
 #include "EventBus.h"
 
+#include <QSharedPointer>
+
 QSharedPointer<EventBus> EventBus::s_instance = nullptr;
 
 QSharedPointer<EventBus> EventBus::instance()

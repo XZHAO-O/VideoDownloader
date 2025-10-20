@@ -1,9 +1,7 @@
 #include "ConfigManager.h"
-#include <QFile>
+
 #include <QJsonDocument>
 #include <QDir>
-#include <QDebug>
-#include <QStandardPaths>
 
 ConfigManager::ConfigManager(const QString& configDir, QObject* parent)
 	: QObject(parent)

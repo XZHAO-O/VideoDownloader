@@ -1,38 +1,30 @@
 #include "DownloadPage.h"
-#include <QVBoxLayout>
-#include <QLabel>
+
+#include "AntScrollArea.h"
+#include "SkeletonWidget.h"
 #include "AntToggleButton.h"
-#include "SlideStackedWidget.h"
+#include "MaterialTabWidget.h"
 #include "MaterialProgressBar.h"
-#include <QList>
-#include <QTimer>
-#include <QScrollArea>
-#include <QRegularExpression>
-#include <QApplication>
 #include "MaterialSpinner.h"
-#include "AntRadioButton.h"
 #include "AntSlider.h"
 #include "NoDataWidget.h"
 #include "AnimatedNumber.h"
 #include "AntButton.h"
 #include "NotificationManager.h"
-#include "AntNumberInput.h"
-#include "AntDoubleNumberInput.h"
 #include "AntComboBox.h"
 #include "TagWidget.h"
 #include "CardWidget.h"
-#include "QrCodeWidget.h"
 #include "FlowLayout.h"
-#include "DrawerWidget.h"
 #include "BadgeWidget.h"
 #include "AntChatListView.h"
-#include "AntCellWidget.h"
-#include "StyleSheet.h"
-#include "PaginationWidget.h"
-#include "AntTreeView.h"
 #include "DownloadCard.h"
 #include "DownloadManager.h"
 #include "ApplicationController.h"
+#include "PlatformAggregatorService.h"
+#include "ConfigVideoPlatform.h"
+#include "DownloadQueuePage.h"
+#include "DownloadingWidget.h"
+#include "DownloadedWidget.h"
 
 DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
 	: QWidget(parent)
@@ -124,12 +116,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	progress->startTestPattern();
 	// 圆形进度条
 	MaterialSpinner* spinner = new MaterialSpinner(QSize(40, 40), 4, DesignSystem::instance()->primaryColor(), this);
-
-	// 单选按钮
-	AntRadioButton* radioBtn1 = new AntRadioButton(this);
-	radioBtn1->setText("单选按钮1");
-	AntRadioButton* radioBtn2 = new AntRadioButton(this);
-	radioBtn2->setText("单选按钮2");
 
 	// 水平滑动条
 	AntSlider* slider = new AntSlider(0, 100, 30, this);
@@ -223,9 +209,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 
 	// 单层级下拉框
 	QLabel* comboLabel1 = new QLabel("下拉框", this);
-	QStringList topItems1 = { "水果", "蔬菜", "饮料", "汤", "零食", "烘焙", "速食" };
-	AntComboBox* combo1 = new AntComboBox("请选择", topItems1, this);
-	combo1->setFixedSize(185, 48);
 	// 多层级下拉框
 	QLabel* comboLabel2 = new QLabel("多层级下拉框", this);
 	QStringList topItems2 = { "水果", "蔬菜", "饮料" };
@@ -240,22 +223,16 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	// 让下拉框遮罩跟随页面大小变化
 	connect(this, &DownloadPage::resized, this, [=](int w, int h)
 		{
-			combo1->getMask()->resize(w, h);
 			combo2->getMask()->resize(w, h);
 		});
 
 	// 下拉框子菜单定位
-	connect(this, &DownloadPage::windowMoved, this, [combo1, combo2](QPoint globalPos)
+	connect(this, &DownloadPage::windowMoved, this, [combo2](QPoint globalPos)
 		{
-			auto movePopups = [globalPos, combo1, combo2](AntComboBox* combo)
+			auto movePopups = [globalPos, combo2](AntComboBox* combo)
 				{
 					for (PopupViewController* popup : combo->popupViewList())
 					{
-						// 单层级下拉框
-						if (combo == combo1)
-						{
-							combo->popupViewList()[0]->follow(combo1);
-						}
 						// 多层下级拉框
 						if (combo == combo2)
 						{
@@ -264,7 +241,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 						}
 					}
 				};
-			movePopups(combo1);
 			movePopups(combo2);
 		});
 
@@ -313,12 +289,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	card->setImageFile(":/Imgs/gpt.jpg");
 	card->setFixedSize(320, 200);
 	QLabel* cardLabel = new QLabel("卡片", this);
-
-	// 二维码
-	QrCodeWidget* qrCode = new QrCodeWidget(this);
-	qrCode->setMinimumSize(QSize(240, 240));
-	qrCode->setData(QString("https://ant-design.antgroup.com/index-cn"));
-	QLabel* qrCodeLabel = new QLabel("二维码", this);
 
 	// 徽章
 	// 创建徽章和标签列表
@@ -390,8 +360,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	// 第二行布局
 	row2Layout->addWidget(labelList[3]);
 	row2Layout->addWidget(animNum);
-	row2Layout->addWidget(radioBtn1);
-	row2Layout->addWidget(radioBtn2);
 	row2Layout->addWidget(labelList[2]);
 	row2Layout->addWidget(slider);
 	row2Layout->addStretch();
@@ -402,7 +370,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 
 	// 第五行布局
 	row5Layout->addWidget(comboLabel1);
-	row5Layout->addWidget(combo1);
 	row5Layout->addWidget(comboLabel2);
 	row5Layout->addWidget(combo2);
 	row5Layout->addStretch();
@@ -413,8 +380,6 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	// 第七行布局
 	row7Layout->addWidget(cardLabel);
 	row7Layout->addWidget(card);
-	row7Layout->addWidget(qrCodeLabel);
-	row7Layout->addWidget(qrCode);
 	row7Layout->addStretch();
 
 	QHBoxLayout* row8Layout = new QHBoxLayout();

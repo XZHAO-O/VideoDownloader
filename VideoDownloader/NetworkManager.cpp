@@ -1,15 +1,17 @@
 #include "NetworkManager.h"
-#include "ConfigManager.h"
-#include "LogSystem.h"
-#include "EventBus.h"
+
 #include <QJsonDocument>
-#include <QJsonObject>
-#include <QUrlQuery>
-#include <QStandardPaths>
-#include <QSslError>
-#include <QFutureInterface>
 #include <QRandomGenerator>
 #include <QEventLoop>
+#include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkCookieJar>
+#include <QNetworkProxy>
+#include <QAuthenticator>
+
+#include "ConfigManager.h"
+#include "LogSystem.h"
 
 NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: QObject(parent)

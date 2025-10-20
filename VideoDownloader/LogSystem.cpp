@@ -1,5 +1,7 @@
 #include "LogSystem.h"
-#include <QCoreApplication>
+
+#include <QDateTime>
+#include <QDir>
 
 LogSystem& LogSystem::instance()
 {

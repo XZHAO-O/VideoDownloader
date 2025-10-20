@@ -1,17 +1,18 @@
-// ModManagerPage.cpp
 #include "ModManagerPage.h"
-#include <QVBoxLayout>
+
 #include <QDir>
-#include <QMessageBox>
-#include <QFileDialog>
 #include <QDesktopServices>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QCoreApplication>
+
 #include "MaterialTabWidget.h"
 #include "AntScrollArea.h"
 #include "NoDataWidget.h"
 #include "NotificationManager.h"
+#include "PlatformAggregatorService.h"
+#include "ApplicationController.h"
+#include "ConfigModManager.h"
+#include "ModCardModel.h"
+#include "ModCardWidget.h"
+#include "ModInfo.h"
 
 ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
@@ -222,22 +223,22 @@ void ModManagerPage::onUninstallClicked()
 
 	QString modName = senderWidget->model()->name();
 
-	QMessageBox::StandardButton reply;
-	reply = QMessageBox::question(this, "确认卸载",
-		QString("确定要卸载模组 \"%1\" 吗？").arg(modName),
-		QMessageBox::Yes | QMessageBox::No);
+	//QMessageBox::StandardButton reply;
+	//reply = QMessageBox::question(this, "确认卸载",
+	//	QString("确定要卸载模组 \"%1\" 吗？").arg(modName),
+	//	QMessageBox::Yes | QMessageBox::No);
 
-	if (reply == QMessageBox::Yes) {
-		if (m_modManager->unloadMod(modId)) {
-			NotificationManager::instance()->showNotification("模组已卸载: " + modName);
-			// 卸载后从UI中移除
-			removeModTab(modId);
-			refreshTabs();
-		}
-		else {
-			NotificationManager::instance()->showNotification("卸载模组失败: " + m_modManager->getLastError());
-		}
-	}
+	//if (reply == QMessageBox::Yes) {
+	//	if (m_modManager->unloadMod(modId)) {
+	//		NotificationManager::instance()->showNotification("模组已卸载: " + modName);
+	//		// 卸载后从UI中移除
+	//		removeModTab(modId);
+	//		refreshTabs();
+	//	}
+	//	else {
+	//		NotificationManager::instance()->showNotification("卸载模组失败: " + m_modManager->getLastError());
+	//	}
+	//}
 }
 
 void ModManagerPage::initUI()

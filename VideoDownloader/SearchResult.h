@@ -1,8 +1,5 @@
 #pragma once
 
-#include <QString>
-#include <QList>
-#include <QUrl>
 #include "VideoInfo.h"
 
 // 搜索条目

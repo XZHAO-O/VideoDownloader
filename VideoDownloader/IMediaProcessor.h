@@ -1,9 +1,8 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
 #include <QImage>
 #include <QFuture>
+
 #include "MediaInfo.h"
 
 class IMediaProcessor : public QObject

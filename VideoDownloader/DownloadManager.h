@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QObject>
-#include <QMap>
 #include <QQueue>
-#include <QSharedPointer>
-#include "DownloadTaskInfo.h"
-#include "VideoDownloadRequest.h"
 
-// 前向声明，避免循环依赖
+#include "DownloadTaskInfo.h"
+
+class VideoDownloadRequest;
 class ApplicationController;
 
 class DownloadManager : public QObject

@@ -1,14 +1,11 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
-#include "ui_QtAntDesign.h"
 #include <QHoverEvent>
+
+#include "ui_QtAntDesign.h"
 #include "CircularAvatar.h"
 #include "CustomToolButton.h"
-#include <QLabel>
-#include <QTimer>
-#include <QEvent>
-#include <QSharedPointer>
 #include "ApplicationController.h"
 #include "AntInput.h"
 #include "DownloadManager.h"
@@ -119,8 +116,5 @@ private:
 	int m_titleLeftTotalWidthPhysicalPixels = 0;
 	int m_titleBarHeightPhysicalPixels = 0;
 
-	AntInput* antInput = nullptr;
-
-	//ApplicationController
 	QSharedPointer<ApplicationController> appController;
 };

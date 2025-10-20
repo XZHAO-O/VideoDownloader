@@ -1,21 +1,17 @@
 #pragma once
 
 #include "INetworkManager.h"
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkCookieJar>
+
+#include <QSslError>
+#include <QNetworkRequest>
 #include <QNetworkCookie>
-#include <QNetworkProxy>
-#include <QAuthenticator>
-#include <QFuture>
-#include <QMutex>
-#include <QTimer>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QRandomGenerator>
-#include <QDateTime>
-#include <memory>
+
+class QNetworkAccessManager;
+class QNetworkProxy;
+class QNetworkReply;
+class QNetworkCookieJar;
+class QAuthenticator;
+class QTimer;
 
 class ConfigManager;
 

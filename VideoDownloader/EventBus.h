@@ -2,12 +2,6 @@
 
 #include <QObject>
 #include <QMap>
-#include <QList>
-#include <QString>
-#include <QVariant>
-#include <QMetaObject>
-#include <QMetaMethod>
-#include <typeinfo>
 
 class EventBus : public QObject
 {

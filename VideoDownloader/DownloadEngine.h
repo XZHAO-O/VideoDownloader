@@ -1,20 +1,22 @@
 #pragma once
 
 #include "IDownloadEngine.h"
-#include "ConfigManager.h"
-#include "LogSystem.h"
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QFile>
-#include <QTimer>
-#include <QThreadPool>
+
 #include <QRunnable>
-#include <QMutex>
-#include <QWaitCondition>
 #include <QQueue>
-#include <QRandomGenerator>
-#include <memory>
+#include <QDateTime>
+#include <QMutex>
+
+#include "ApplicationState.h"
+
+class QFile;
+class QThreadPool;
+class QNetworkAccessManager;
+class QNetworkReply;
+class QTimer;
+
+class LogSystem;
+class ConfigManager;
 
 class DownloadEngine : public IDownloadEngine
 {

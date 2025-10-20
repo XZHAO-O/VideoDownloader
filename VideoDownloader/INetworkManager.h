@@ -1,8 +1,5 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
-#include <QVariantMap>
 #include <QFuture>
 
 struct NetworkResponse {

@@ -1,13 +1,15 @@
 #pragma once
 
-#include <QObject>
-#include <QSharedPointer>
-#include <QFuture>
-#include "ConfigModManager.h"  // 替换 ModManager.h
-#include "NetworkManager.h"    // 替换 INetworkManager.h
-#include "MediaProcessingService.h"
-#include "DownloadRecordRepository.h"
+#include <QUrl>
+#include <QDateTime>
+
+#include "VideoInfo.h"
 #include "VideoDownloadRequest.h"
+
+class ConfigModManager;
+class NetworkManager;
+class MediaProcessingService;
+class DownloadRecordRepository;
 
 class DownloadOrchestrationService : public QObject
 {

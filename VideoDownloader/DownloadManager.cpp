@@ -1,8 +1,12 @@
 #include "DownloadManager.h"
+
+#include <QDir>
+#include <QStandardPaths>
+#include <QTimer>
+
 #include "ApplicationController.h"
 #include "DownloadOrchestrationService.h"
-#include <QStandardPaths>
-#include <QDir>
+#include "LogSystem.h"
 
 DownloadManager::DownloadManager(QSharedPointer<ApplicationController> appController,
 	QObject* parent)

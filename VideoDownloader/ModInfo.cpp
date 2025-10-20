@@ -1,7 +1,6 @@
 #include "ModInfo.h"
+
 #include <QJsonArray>
-#include <QFileInfo>
-#include <QDir>
 
 ModInfo ModInfo::fromJson(const QJsonObject& json, const QString& filePath)
 {

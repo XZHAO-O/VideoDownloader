@@ -1,12 +1,5 @@
 #pragma once
 
-#include <QObject>
-#include <QMap>
-#include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QFile>
 #include "DownloadRecord.h"
 
 class DownloadRecordRepository : public QObject

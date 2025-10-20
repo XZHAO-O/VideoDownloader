@@ -1,8 +1,6 @@
 #pragma once
 
-#include <QString>
 #include <QDateTime>
-#include <QMetaType>
 
 // 下载开始事件
 struct DownloadStartedEvent {

@@ -1,4 +1,9 @@
 #include "DownloadRecordRepository.h"
+
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonArray>
+
 #include "LogSystem.h"
 
 class DownloadRecordRepository::Impl {

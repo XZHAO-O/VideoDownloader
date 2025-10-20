@@ -1,18 +1,12 @@
-// ConfigModManager.h
 #pragma once
 
-#include <QObject>
-#include <QMap>
-#include <QList>
 #include <QFuture>
-#include <QRegularExpression>
-#include <QSharedPointer>
-#include <QtConcurrent/QtConcurrent>
-#include "ModInfo.h"
-#include "ConfigVideoPlatform.h"
-#include "INetworkManager.h"
-#include "LogSystem.h"
 
+#include "ModInfo.h"
+#include "SearchResult.h"
+
+class ConfigVideoPlatform;
+class INetworkManager;
 class ConfigManager;
 
 class ConfigModManager : public QObject

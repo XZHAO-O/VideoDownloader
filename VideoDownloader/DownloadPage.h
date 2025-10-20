@@ -1,19 +1,17 @@
 #pragma once
 
-#include <QWidget>
-#include <QEvent>
-#include "MaterialTabWidget.h"
-#include "DownloadQueuePage.h"
-#include "DownloadingWidget.h"
-#include "DownloadedWidget.h"
-#include "AntScrollArea.h"
-#include "CarouselWidget.h"
-#include "SkeletonWidget.h"
+#include <QDateTime>
+
 #include "AntProfileTable.h"
-#include "TabContentWidget.h"
-#include "AntTabWidgetContainer.h"
-#include "DownloadManager.h"
 #include "VideoInfo.h"
+
+class AntScrollArea;
+class SkeletonWidget;
+class AntTabWidgetContainer;
+class MaterialTabWidget;
+class DownloadCardContainerWidget;
+class DownloadTaskInfo;
+class DownloadManager;
 
 class DownloadPage : public QWidget
 {

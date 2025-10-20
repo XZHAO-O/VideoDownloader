@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QString>
 #include <QUrl>
 #include <QDateTime>
 #include <QRandomGenerator>
+
 #include "ApplicationState.h"
 
 struct VideoDownloadRequest {

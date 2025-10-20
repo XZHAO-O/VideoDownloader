@@ -1,9 +1,6 @@
 #pragma once
 
-#include <QString>
-#include <QDateTime>
 #include <QJsonObject>
-#include <QUuid>
 
 struct DownloadRecord {
 	QString id;

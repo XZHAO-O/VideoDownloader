@@ -1,10 +1,5 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
-#include <QUrl>
-#include <QDateTime>
-#include <QVersionNumber>
 #include "ModInfo.h"
 
 class ModCardModel : public QObject

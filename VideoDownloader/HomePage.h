@@ -1,13 +1,15 @@
 #pragma once
 
 #include <QWidget>
-#include <QSharedPointer>
-#include "FramelessVideoWindow.h"
-#include "AntInput.h"
-#include "ApplicationController.h"
-#include "DownloadManager.h"
-#include "SearchResultsWidget.h"
-#include "ConfigModManager.h"
+#include <QUrl>
+#include <QDateTime>
+
+#include "VideoInfo.h"
+
+class AntInput;
+class ApplicationController;
+class ConfigModManager;
+class SearchResultsWidget;
 
 class HomePage : public QWidget
 {
@@ -33,7 +35,6 @@ private:
 	void getVideoList(const QString& searchText);
 	void loadMockSearchData();
 
-	FramelessVideoWindow* videoWindow = nullptr;
 	AntInput* antInput = nullptr;
 	SearchResultsWidget* m_searchResultsWidget = nullptr;
 

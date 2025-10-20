@@ -1,12 +1,11 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
 #include <QUrl>
 #include <QDateTime>
-#include <QSize>
+
 #include "DownloadCardState.h"
-#include "DownloadTaskInfo.h"
+
+class DownloadTaskInfo;
 
 class DownloadCardModel : public QObject
 {

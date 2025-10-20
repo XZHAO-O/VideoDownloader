@@ -1,16 +1,13 @@
 #pragma once
 
-#include <QObject>
 #include <QFuture>
-#include <QJsonObject>
 #include <QJsonArray>
-#include <QJsonDocument>
-#include <QRegularExpression>
-#include "ModInfo.h"
-#include "INetworkManager.h"
-#include "LogSystem.h"
-#include "LoginManager.h"
 
+#include "ModInfo.h"
+#include "LoginManager.h"
+#include "SearchResult.h"
+
+class INetworkManager;
 class ConfigManager;
 
 class ConfigVideoPlatform : public QObject

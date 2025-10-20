@@ -1,10 +1,6 @@
 #pragma once
 
-#include <QObject>
 #include <QJsonObject>
-#include <QMap>
-#include <QString>
-#include <QVariant>
 
 class ConfigManager : public QObject
 {

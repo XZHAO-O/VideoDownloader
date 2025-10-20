@@ -1,23 +1,27 @@
 #pragma once
 
-#include <QObject>
-#include <QSharedPointer>
-#include "ConfigModManager.h"  // 替换 ModManager.h
-#include "VideoInfo.h"
+#include <QFuture>
+#include <QUrl>
+#include <QDateTime>
+
 #include "SearchResult.h"
+#include "ApplicationState.h"
+
+class ConfigModManager;
+class ConfigVideoPlatform;
 
 class PlatformAggregatorService : public QObject
 {
 	Q_OBJECT
 
 public:
-	explicit PlatformAggregatorService(QSharedPointer<ConfigModManager> modManager,  // 修改参数类型
+	explicit PlatformAggregatorService(QSharedPointer<ConfigModManager> modManager,
 		QObject* parent = nullptr);
 
 	// 平台查询
 	QList<QString> getAvailablePlatforms() const;
-	QSharedPointer<ConfigVideoPlatform> getPlatform(const QString& platformId) const;  // 修改返回类型
-	QSharedPointer<ConfigVideoPlatform> getPlatformForUrl(const QUrl& url) const;  // 修改返回类型
+	QSharedPointer<ConfigVideoPlatform> getPlatform(const QString& platformId) const;
+	QSharedPointer<ConfigVideoPlatform> getPlatformForUrl(const QUrl& url) const;
 
 	// 视频信息获取
 	QList<VideoInfo> getVideoInfo(const QUrl& videoUrl);
@@ -36,5 +40,5 @@ public:
 	QFuture<QList<VideoInfo>> getBatchVideoInfo(const QList<QUrl>& videoUrls);
 
 private:
-	QSharedPointer<ConfigModManager> m_modManager;  // 修改类型
+	QSharedPointer<ConfigModManager> m_modManager;
 };

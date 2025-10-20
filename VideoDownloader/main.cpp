@@ -1,7 +1,8 @@
 #include <QApplication>
-#include "VideoDownloader.h"
 #include <QFontDatabase>
 #include <QDir>
+
+#include "VideoDownloader.h"
 
 int main(int argc, char* argv[])
 {

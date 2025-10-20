@@ -1,5 +1,12 @@
 #include "CookieManageUtil.h"
 
+#include <QDir>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QCryptographicHash>
+#include <QStandardPaths>
+#include <QCoreApplication>
+
 bool CookieManageUtil::saveCookies(const QString& modId, const QString& configDir,
 	bool loginStatus, const QVariantMap& cookieMap)
 {

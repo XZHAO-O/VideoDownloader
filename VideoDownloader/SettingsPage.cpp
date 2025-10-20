@@ -1,9 +1,20 @@
 #include "SettingsPage.h"
+
+#include <QLabel>
+#include <QLineEdit>
 #include <QFileDialog>
 #include <QStandardPaths>
-#include <QDir>
-#include <QFormLayout>
 #include <QButtonGroup>
+#include <QDesktopServices>
+
+#include "AntButton.h"
+#include "AntToggleButton.h"
+#include "AntRadioButton.h"
+#include "AntComboBox.h"
+#include "MaterialTabWidget.h"
+#include "LogSystem.h"
+#include "ApplicationController.h"
+#include "ConfigManager.h"
 
 // 定义默认配置常量
 const QMap<QString, QVariant> SettingsPage::DEFAULT_SETTINGS = {

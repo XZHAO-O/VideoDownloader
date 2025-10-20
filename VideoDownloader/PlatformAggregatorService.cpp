@@ -1,7 +1,11 @@
 #include "PlatformAggregatorService.h"
+
 #include <QtConcurrent\QtConcurrent>
-#include "LogSystem.h"
+
 #include "ModInfo.h"
+#include "LogSystem.h"
+#include "ConfigModManager.h"
+#include "ConfigVideoPlatform.h"
 
 PlatformAggregatorService::PlatformAggregatorService(QSharedPointer<ConfigModManager> modManager,
 	QObject* parent)

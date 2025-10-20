@@ -1,11 +1,6 @@
 #pragma once
 
-#include <QString>
-#include <QUrl>
-#include <QDateTime>
-#include <QList>
-#include <QImage>
-#include "ApplicationState.h"
+#include <QVariantMap>
 
 // 视频流信息
 struct StreamInfo {

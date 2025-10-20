@@ -1,8 +1,18 @@
 #include "ApplicationController.h"
-#include "DownloadManager.h"
-#include <QCoreApplication>
-#include <QStandardPaths>
+
 #include <QDir>
+#include <QStandardPaths>
+
+#include "DownloadManager.h"
+#include "ConfigManager.h"
+#include "ConfigModManager.h"
+#include "LogSystem.h"
+#include "EventBus.h"
+#include "NetworkManager.h"
+#include "DownloadOrchestrationService.h"
+#include "PlatformAggregatorService.h"
+#include "MediaProcessingService.h"
+#include "DownloadRecordRepository.h"
 
 ApplicationController::ApplicationController(QObject* parent)
 	: QObject(parent)

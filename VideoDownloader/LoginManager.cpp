@@ -1,8 +1,13 @@
 #include "LoginManager.h"
+
 #include <QUrlQuery>
 #include <QJsonDocument>
-#include <QRegularExpression>
 #include <QJsonArray>
+#include <QTimer>
+
+#include "INetworkManager.h"
+#include "LogSystem.h"
+#include "CookieManageUtil.h"
 
 LoginManager::LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager, QObject* parent)
 	: QObject(parent)

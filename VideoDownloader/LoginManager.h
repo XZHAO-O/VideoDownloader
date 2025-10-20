@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QObject>
-#include <QTimer>
-#include <QJsonObject>
 #include <QVariantMap>
+
 #include "ModInfo.h"
-#include "INetworkManager.h"
-#include "LogSystem.h"
-#include "CookieManageUtil.h"
+
+class INetworkManager;
 
 class LoginManager : public QObject
 {

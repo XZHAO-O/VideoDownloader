@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QObject>
-#include <QSharedPointer>
-#include <QFuture>
-#include <QTemporaryFile>  // 添加这个包含
 #include "IMediaProcessor.h"
-#include "ConfigManager.h"
 
-class MediaProcessingService : public IMediaProcessor  // 只继承 IMediaProcessor
+class ConfigManager;
+
+class MediaProcessingService : public IMediaProcessor
 {
 	Q_OBJECT
 
@@ -15,7 +12,6 @@ public:
 	explicit MediaProcessingService(QSharedPointer<ConfigManager> configManager,
 		QObject* parent = nullptr);
 
-	// IMediaProcessor 接口实现
 	QFuture<bool> mergeVideoAudio(const QString& videoPath,
 		const QString& audioPath,
 		const QString& outputPath) override;

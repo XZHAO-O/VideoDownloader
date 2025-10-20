@@ -1,9 +1,15 @@
 #include "DownloadEngine.h"
-#include <QNetworkRequest>
+
 #include <QDir>
-#include <QThread>
-#include <QFuture>
-#include <QFutureWatcher>
+#include <QRandomGenerator>
+#include <QThreadPool>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QTimer>
+
+#include "ApplicationState.h"
+#include "LogSystem.h"
+#include "ConfigManager.h"
 
 DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: IDownloadEngine(parent)  // 现在可以正确调用基类构造函数

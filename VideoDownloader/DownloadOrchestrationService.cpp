@@ -1,7 +1,9 @@
 #include "DownloadOrchestrationService.h"
+
 #include <QtConcurrent\QtConcurrent>
+
 #include "LogSystem.h"
-#include "ModInfo.h"
+#include "DownloadRecordRepository.h"
 
 DownloadOrchestrationService::DownloadOrchestrationService(
 	QSharedPointer<ConfigModManager> modManager,

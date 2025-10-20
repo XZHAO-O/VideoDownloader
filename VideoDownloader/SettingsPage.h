@@ -1,23 +1,19 @@
 #pragma once
 
 #include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGroupBox>
-#include <QLabel>
-#include <QMessageBox>
-#include <QLineEdit>
-#include <QDesktopServices>
-#include <QApplication>
-#include "ApplicationController.h"
-#include "ConfigManager.h"
-#include "DesignSystem.h"
-#include "AntButton.h"
-#include "AntToggleButton.h"
-#include "AntRadioButton.h"
-#include "AntComboBox.h"
-#include "MaterialTabWidget.h"
-#include "LogSystem.h"
+
+class QLabel;
+class QVBoxLayout;
+class QHBoxLayout;
+class QLineEdit;
+
+class ApplicationController;
+class ConfigManager;
+class MaterialTabWidget;
+class AntToggleButton;
+class AntRadioButton;
+class AntComboBox;
+class AntButton;
 
 class SettingsPage : public QWidget
 {

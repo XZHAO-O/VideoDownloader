@@ -1,8 +1,10 @@
 #include "VideoDownloader.h"
+
 #include <qevent.h>
 #include <qlayout.h>
 #include <qpainter.h>
 #include <qscreen.h>
+
 #include "StyleSheet.h"
 #include "AntMessageManager.h"
 #include "AntTooltipManager.h"
@@ -11,10 +13,6 @@
 #include "DownloadPage.h"
 #include "ModManagerPage.h"
 #include "SettingsPage.h"
-#include <QToolButton>
-#include <QLabel>
-#include <QShowEvent>
-#include <QWindow>
 #include "NotificationManager.h"
 #include "DesignSystem.h"
 #include "TransparentMask.h"

@@ -1,10 +1,10 @@
 #include "ConfigModManager.h"
+
+#include <QtConcurrent/QtConcurrent>
+
+#include "LogSystem.h"
 #include "ConfigManager.h"
-#include <QDir>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <algorithm>
+#include "ConfigVideoPlatform.h"
 
 ConfigModManager::ConfigModManager(QSharedPointer<ConfigManager> configManager,
 	QSharedPointer<INetworkManager> networkManager,

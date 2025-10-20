@@ -1,18 +1,16 @@
 #pragma once
 
 #include <QWidget>
-#include <QSharedPointer>
-#include <QMap>
-#include "MaterialTabWidget.h"
-#include "ConfigModManager.h"
-#include "ModCardModel.h"
-#include "ModCardWidget.h"
-#include "AntScrollArea.h"
-#include "NoDataWidget.h"
-#include "ModInfo.h"
-#include "ApplicationController.h"
 
 class QVBoxLayout;
+class DialogViewController;
+class MaterialTabWidget;
+class NoDataWidget;
+class ApplicationController;
+class ConfigModManager;
+class ModCardModel;
+class ModCardWidget;
+class ModInfo;
 
 class ModManagerPage : public QWidget
 {

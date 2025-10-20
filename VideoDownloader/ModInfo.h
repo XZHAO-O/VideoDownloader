@@ -1,13 +1,6 @@
 #pragma once
 
-#include <QString>
-#include <QStringList>
 #include <QJsonObject>
-#include <QDateTime>
-#include <QVariant>
-#include <QRegularExpression>
-#include "VideoInfo.h"
-#include "SearchResult.h"
 
 // 流类型枚举
 enum class StreamType {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QString>
-#include <QSize>
 #include <QJsonObject>
 #include <QJsonArray>
 

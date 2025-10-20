@@ -1,17 +1,16 @@
 #include "HomePage.h"
-#include <QLayout>
-#include <QApplication>
-#include <QScreen>
-#include "DesignSystem.h"
-#include "StyleSheet.h"
+
 #include "AntButton.h"
+#include "AntInput.h"
+#include "ApplicationController.h"
 #include "LogSystem.h"
+#include "PlatformAggregatorService.h"
+#include "SearchResultsWidget.h"
 
 HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
 	, m_configModManager(appController->getConfigModManager())
-	, videoWindow(nullptr)
 	, antInput(nullptr)
 	, m_searchResultsWidget(nullptr)
 {

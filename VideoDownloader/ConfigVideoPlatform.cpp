@@ -1,9 +1,10 @@
 #include "ConfigVideoPlatform.h"
-#include "ConfigManager.h"
-#include <QUrlQuery>
-#include <QJsonArray>
+
 #include <QtConcurrent/QtConcurrent>
-#include <QRegularExpression>
+
+#include "LogSystem.h"
+#include "ConfigManager.h"
+#include "INetworkManager.h"
 
 ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager,
 	QObject* parent)

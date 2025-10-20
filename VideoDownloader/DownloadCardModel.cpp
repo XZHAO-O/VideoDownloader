@@ -1,5 +1,6 @@
 #include "DownloadCardModel.h"
-#include <QFileInfo>
+
+#include "DownloadTaskInfo.h"
 
 DownloadCardModel::DownloadCardModel(QObject* parent)
 	: QObject(parent)

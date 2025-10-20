@@ -1,7 +1,6 @@
 #include "ModCardModel.h"
+
 #include <QDir>
-#include <QFileInfo>
-#include <QJsonObject>
 
 ModCardModel::ModCardModel(QObject* parent)
 	: QObject(parent)

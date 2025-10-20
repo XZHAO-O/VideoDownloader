@@ -2,18 +2,19 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include "ConfigManager.h"
-#include "LogSystem.h"
-#include "EventBus.h"
-#include "ConfigModManager.h"  // 替换 ModManager.h
-#include "NetworkManager.h"
-#include "DownloadOrchestrationService.h"
-#include "PlatformAggregatorService.h"
-#include "MediaProcessingService.h"
-#include "DownloadRecordRepository.h"
 
-// 前向声明，避免循环依赖
+#include "ApplicationState.h"
+
+class LogSystem;
+class EventBus;
+class NetworkManager;
 class DownloadManager;
+class ConfigManager;
+class ConfigModManager;
+class DownloadOrchestrationService;
+class PlatformAggregatorService;
+class MediaProcessingService;
+class DownloadRecordRepository;
 
 class ApplicationController : public QObject
 {
