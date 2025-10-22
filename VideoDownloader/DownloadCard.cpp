@@ -17,6 +17,7 @@
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
 	, m_model(model)
+	, m_networkManager(new QNetworkAccessManager(this))
 {
 	setObjectName("DownloadCard");
 	// 移除固定大小，使用尺寸策略
@@ -40,6 +41,148 @@ DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* par
 
 DownloadCard::~DownloadCard()
 {
+	qDebug() << "=== DownloadCard Destroying - Third Party Components ===";
+
+	// 强制清理 AntButton 组件
+	if (m_downloadBtn) {
+		qDebug() << "Cleaning AntButton - download";
+		cleanupAntButton(m_downloadBtn);
+		m_downloadBtn = nullptr;
+	}
+
+	if (m_videoDownloadBtn) {
+		qDebug() << "Cleaning AntButton - video";
+		cleanupAntButton(m_videoDownloadBtn);
+		m_videoDownloadBtn = nullptr;
+	}
+
+	if (m_audioDownloadBtn) {
+		qDebug() << "Cleaning AntButton - audio";
+		cleanupAntButton(m_audioDownloadBtn);
+		m_audioDownloadBtn = nullptr;
+	}
+
+	if (m_closeBtn) {
+		qDebug() << "Cleaning AntButton - close";
+		cleanupAntButton(m_closeBtn);
+		m_closeBtn = nullptr;
+	}
+
+	if (m_pauseBtn) {
+		qDebug() << "Cleaning AntButton - pause";
+		cleanupAntButton(m_pauseBtn);
+		m_pauseBtn = nullptr;
+	}
+
+	if (m_deleteBtn) {
+		qDebug() << "Cleaning AntButton - delete";
+		cleanupAntButton(m_deleteBtn);
+		m_deleteBtn = nullptr;
+	}
+
+	if (m_openFolderBtn) {
+		qDebug() << "Cleaning AntButton - open folder";
+		cleanupAntButton(m_openFolderBtn);
+		m_openFolderBtn = nullptr;
+	}
+
+	if (m_copyUrlBtn) {
+		qDebug() << "Cleaning AntButton - copy url";
+		cleanupAntButton(m_copyUrlBtn);
+		m_copyUrlBtn = nullptr;
+	}
+
+	if (m_openUrlBtn) {
+		qDebug() << "Cleaning AntButton - open url";
+		cleanupAntButton(m_openUrlBtn);
+		m_openUrlBtn = nullptr;
+	}
+
+	// 清理 AntComboBox 组件
+	if (m_videoQualityCombo) {
+		qDebug() << "Cleaning AntComboBox - video quality";
+		cleanupAntComboBox(m_videoQualityCombo);
+		m_videoQualityCombo = nullptr;
+	}
+
+	if (m_audioQualityCombo) {
+		qDebug() << "Cleaning AntComboBox - audio quality";
+		cleanupAntComboBox(m_audioQualityCombo);
+		m_audioQualityCombo = nullptr;
+	}
+
+	// 清理 MaterialProgressBar 组件
+	if (m_progressBar) {
+		qDebug() << "Cleaning MaterialProgressBar";
+		cleanupMaterialProgressBar(m_progressBar);
+		m_progressBar = nullptr;
+	}
+
+	qDebug() << "=== DownloadCard Destroyed ===";
+}
+
+void DownloadCard::cleanupAntButton(AntButton* button)
+{
+	if (!button) return;
+
+	// 强制断开所有连接
+	button->disconnect();
+
+	// 清除样式表
+	button->setStyleSheet("");
+
+	// 清除文本
+	button->setText("");
+
+	// 清除图标
+	button->setIcon(QIcon());
+
+	// 从父控件中移除
+	button->setParent(nullptr);
+
+	// 立即删除
+	delete button;
+}
+
+void DownloadCard::cleanupAntComboBox(AntComboBox* comboBox)
+{
+	if (!comboBox) return;
+
+	// 强制断开所有连接
+	comboBox->disconnect();
+
+	// 清除所有项
+	//comboBox->clear();
+
+	// 清除样式表
+	comboBox->setStyleSheet("");
+
+	// 从父控件中移除
+	comboBox->setParent(nullptr);
+
+	// 立即删除
+	delete comboBox;
+}
+
+void DownloadCard::cleanupMaterialProgressBar(MaterialProgressBar* progressBar)
+{
+	if (!progressBar) return;
+
+	// 强制断开所有连接
+	progressBar->disconnect();
+
+	// 停止所有动画
+	// 如果 MaterialProgressBar 有停止动画的方法，调用它
+	 //progressBar->stopAnimation();
+
+	// 清除样式表
+	progressBar->setStyleSheet("");
+
+	// 从父控件中移除
+	progressBar->setParent(nullptr);
+
+	// 立即删除
+	delete progressBar;
 }
 
 void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
@@ -133,11 +276,14 @@ void DownloadCard::onCoverClicked()
 	if (m_model && m_model->state() == DownloadCardState::Downloaded) {
 		emit previewClicked();
 
-		// 创建预览窗口
-		if (!m_previewWindow) {
-			m_previewWindow = QSharedPointer<VideoPreviewWindow>::create();
+		// 如果预览窗口已存在，先关闭它
+		if (m_previewWindow && !m_previewWindow.isNull()) {
+			m_previewWindow->close();
+			m_previewWindow.clear();
 		}
 
+		// 创建新的预览窗口
+		m_previewWindow = QSharedPointer<VideoPreviewWindow>::create();
 		m_previewWindow->setVideoFile(m_model->filePath());
 		m_previewWindow->show();
 	}
@@ -495,8 +641,10 @@ void DownloadCard::updateUI()
 
 	// 加载封面图片（保持原有代码）
 	if (m_model->coverUrl().isValid()) {
-		QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-		connect(manager, &QNetworkAccessManager::finished, this, [this](QNetworkReply* reply) {
+		QNetworkRequest request(m_model->coverUrl());
+		QNetworkReply* reply = m_networkManager->get(request);
+
+		connect(reply, &QNetworkReply::finished, this, [this, reply]() {
 			if (reply->error() == QNetworkReply::NoError) {
 				QPixmap pixmap;
 				pixmap.loadFromData(reply->readAll());
@@ -505,11 +653,7 @@ void DownloadCard::updateUI()
 				}
 			}
 			reply->deleteLater();
-			sender()->deleteLater();
 			});
-
-		QNetworkRequest request(m_model->coverUrl());
-		manager->get(request);
 	}
 }
 

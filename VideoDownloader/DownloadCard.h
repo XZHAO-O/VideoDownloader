@@ -4,6 +4,8 @@
 #include <QSharedPointer>
 #include "DownloadCardModel.h"
 #include "VideoPreviewWindow.h"
+#include "QNetworkAccessManager.h"
+#include <QComboBox>
 
 class QLabel;
 class QPushButton;
@@ -20,6 +22,12 @@ class DownloadCard : public QWidget
 public:
 	explicit DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent = nullptr);
 	~DownloadCard();
+
+	void cleanupMaterialProgressBar(MaterialProgressBar* progressBar);
+
+	void cleanupAntButton(AntButton* button);
+
+	void cleanupAntComboBox(AntComboBox* comboBox);
 
 	QSharedPointer<DownloadCardModel> model() const { return m_model; }
 	void setModel(QSharedPointer<DownloadCardModel> model);
@@ -100,4 +108,6 @@ private:
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
 	bool m_hovered = false;
+
+	QNetworkAccessManager* m_networkManager = nullptr;
 };

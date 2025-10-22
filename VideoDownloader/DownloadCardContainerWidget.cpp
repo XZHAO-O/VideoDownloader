@@ -185,15 +185,25 @@ void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskI
 		});
 
 	// 连接删除信号
-	connect(downloadCard, &DownloadCard::deleteClicked, this, [this, downloadCard]() {
+	connect(downloadCard, &DownloadCard::deleteClicked, this, [this, downloadCard, downloadTaskInfo]() {
+		// 断开所有连接
+		downloadCard->disconnect();
 		// 从布局中移除并删除卡片
 		m_scrollLayout->removeWidget(downloadCard);
 		m_downloadCards.removeOne(downloadCard);
-		downloadCard->deleteLater();
+		m_downloadTasks.removeOne(downloadTaskInfo);
+		delete downloadCard;
 		updateVisibility();
 		});
 
-	updateVisibility();
+	if (m_downloadCards.size() == 1)
+	{
+		updateVisibility();
+	}
+	//m_downloadCards.removeOne(downloadCard);
+	//m_downloadTasks.removeOne(downloadTaskInfo);
+	//delete downloadCard;
+
 }
 
 void DownloadCardContainerWidget::updateVisibility()

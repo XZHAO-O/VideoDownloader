@@ -87,9 +87,10 @@ void HomePage::onNextButtonClicked()
 {
 	QList<int> selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
 	QList<VideoInfo> selectedVideoInfoList;
-	for (int index : selectedIndexes)
+	for (size_t i = 0; i < videoInfoList.size(); i++)
 	{
-		selectedVideoInfoList.append(videoInfoList[index]);
+		if (selectedIndexes.contains(i))
+			selectedVideoInfoList.append(videoInfoList[i]);
 	}
 
 	// 隐藏搜索结果组件
@@ -97,11 +98,11 @@ void HomePage::onNextButtonClicked()
 
 	// 清空搜索框
 	antInput->clear();
+	videoInfoList.clear();
+	m_searchResultsWidget->clearAll();
 
 	// 发出导航信号
 	emit navigateToDownloadRequested(selectedVideoInfoList);
-
-	qDebug() << "导航到下载队列页面，选中了" << m_searchResultsWidget->getSelectedCount() << "个项目";
 }
 
 void HomePage::updateSearchResultsPosition()

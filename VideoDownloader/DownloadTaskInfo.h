@@ -26,6 +26,10 @@ struct DownloadTaskInfo {
 	{
 	}
 
+	bool operator==(const DownloadTaskInfo& other) const {
+		return taskId == other.taskId;
+	}
+
 	// 更新进度
 	void updateProgress(qint64 downloaded, qint64 total) {
 		downloadedBytes = downloaded;

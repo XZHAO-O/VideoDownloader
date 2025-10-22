@@ -9,7 +9,7 @@ class MaterialProgressBar : public QProgressBar
 	Q_OBJECT
 public:
 	explicit MaterialProgressBar(QWidget* parent = nullptr);
-
+	~MaterialProgressBar();
 	QSize sizeHint() const override;
 	void setProgressAnimated(int targetValue);
 	// 设置进度

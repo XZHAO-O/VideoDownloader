@@ -79,7 +79,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 		if (doc.isNull()) {
 			throw std::runtime_error("Invalid JSON response");
 		}
-		//qDebug() << doc.toJson();
+
 		QList<VideoInfo> videoInfoList = parseVideoInfo(doc.object());
 		for (VideoInfo& videoInfo : videoInfoList)
 		{
@@ -163,7 +163,6 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
-	qDebug() << "JSON Document:" << doc.toJson();
 
 	// 获取对象
 	QJsonObject obj = doc.object();

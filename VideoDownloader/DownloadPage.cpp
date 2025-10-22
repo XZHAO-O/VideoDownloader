@@ -455,7 +455,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
 		//taskInfo.streamRequest.extraParams["qn"] = "80";
 		//根据请求参数获取视频地址
-		getVideoPlayUrl(taskInfo);
+		//getVideoPlayUrl(taskInfo);
 		//taskInfo.videoId = videoInfo.videoId;
 
 		// 创建卡片模型

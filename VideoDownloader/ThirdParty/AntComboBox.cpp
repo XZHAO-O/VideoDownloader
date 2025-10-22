@@ -17,21 +17,23 @@ AntComboBox::AntComboBox(QString showText, QStringList itemTextList, QWidget* pa
 {
 	m_arrowRenderer = new QSvgRenderer(QStringLiteral(":/Imgs/downArrow.svg"), this);
 
-	// 二级列表足够了
+	// 创建弹出框 - 二级列表足够了
 	PopupViewController* popupView1 = new PopupViewController(popupHeight, enableMultiLevel, this);
 	PopupViewController* popupView2 = new PopupViewController(popupHeight, false, this);
 	m_popups.append(popupView1);
 	m_popups.append(popupView2);
-	m_popup1 = popupView1;
-	m_popup2 = popupView2;
+
+	// 获取弹出框引用以便在lambda中使用
+	PopupViewController* popup1 = m_popups[0];
+	PopupViewController* popup2 = m_popups[1];
 
 	for (PopupViewController* popupView : m_popups)
 	{
-		connect(popupView, &PopupViewController::itemSelected, this, [this, popupView](const QModelIndex& idx)
+		connect(popupView, &PopupViewController::itemSelected, this, [this, popup1, popup2](const QModelIndex& idx)
 			{
 				PopupViewController* senderPopup = qobject_cast<PopupViewController*>(sender());
 
-				if (senderPopup == m_popup1)
+				if (senderPopup == popup1)
 				{
 					// 如果启用多级列表
 					if (m_enableMultiLevel)
@@ -40,26 +42,26 @@ AntComboBox::AntComboBox(QString showText, QStringList itemTextList, QWidget* pa
 
 						if (m_subModels.contains(m_firstLevelSelectedText))
 						{
-							m_popup2->popup->setModel(m_subModels[m_firstLevelSelectedText]);
+							popup2->popup->setModel(m_subModels[m_firstLevelSelectedText]);
 						}
 
-						m_popup2->showAnimated(mapToGlobal(QPoint(width(), height())), width());
+						popup2->showAnimated(mapToGlobal(QPoint(width(), height())), width());
 					}
 					else
 					{
 						setCurrentText(idx.data().toString());
 						m_isChangeTextColor = false;
-						m_popup1->hideAnimated();
+						popup1->hideAnimated();
 						DesignSystem::instance()->getTransparentMask()->hide();
 					}
 				}
-				else if (senderPopup == m_popup2)
+				else if (senderPopup == popup2)
 				{
 					QString text = m_firstLevelSelectedText + " / " + idx.data().toString();
 					setCurrentText(text);
 					m_isChangeTextColor = false;
-					m_popup1->hideAnimated();
-					m_popup2->hideAnimated();
+					popup1->hideAnimated();
+					popup2->hideAnimated();
 					resetState();
 					DesignSystem::instance()->getTransparentMask()->hide();
 				}
@@ -89,7 +91,7 @@ AntComboBox::AntComboBox(QString showText, QStringList itemTextList, QWidget* pa
 		}
 		model1->appendRow(item);
 	}
-	m_popup1->popup->setModel(model1);
+	popup1->popup->setModel(model1);
 
 	// 如果启用多级列表，则设置二级列表
 	if (m_enableMultiLevel)
@@ -106,12 +108,12 @@ AntComboBox::AntComboBox(QString showText, QStringList itemTextList, QWidget* pa
 		}
 	}
 
-	connect(DesignSystem::instance()->getTransparentMask(), &TransparentMask::clickedOutside, this, [this]()
+	connect(DesignSystem::instance()->getTransparentMask(), &TransparentMask::clickedOutside, this, [this, popup1, popup2]()
 		{
-			m_popup1->raise();
-			m_popup2->raise();
-			m_popup1->hideAnimated();
-			if (m_enableMultiLevel) m_popup2->hideAnimated();
+			popup1->raise();
+			popup2->raise();
+			popup1->hideAnimated();
+			if (m_enableMultiLevel) popup2->hideAnimated();
 			resetState();
 			DesignSystem::instance()->getTransparentMask()->hide();
 		});
@@ -126,6 +128,36 @@ AntComboBox::AntComboBox(QString showText, QStringList itemTextList, QWidget* pa
 
 AntComboBox::~AntComboBox()
 {
+	if (m_arrowRenderer)
+	{
+		delete m_arrowRenderer;
+		m_arrowRenderer = nullptr;
+	}
+	if (m_popups.size() > 0)
+	{
+		for (PopupViewController* popup : m_popups)
+		{
+			if (popup)
+			{
+				m_popups.removeOne(popup);
+
+				delete popup;
+				popup = nullptr;
+			}
+		}
+	}
+	if (m_subModels.size() > 0)
+	{
+		for (auto it = m_subModels.begin(); it != m_subModels.end(); ++it)
+		{
+			m_subModels.remove(it.key());
+			if (it.value())
+			{
+				delete it.value();
+				it.value() = nullptr;
+			}
+		}
+	}
 }
 
 void AntComboBox::resetState()
@@ -141,7 +173,7 @@ void AntComboBox::setCurrentText(const QString& text)
 	if (m_text != text) {
 		m_text = text;
 		update();
-		emit currentTextChanged(text);  // 添加这行
+		emit currentTextChanged(text);
 	}
 }
 
@@ -235,10 +267,14 @@ void AntComboBox::mousePressEvent(QMouseEvent* event)
 		update();
 		DesignSystem::instance()->getTransparentMask()->show();
 		DesignSystem::instance()->getTransparentMask()->raise();
-		m_popup1->raise();
-		if (m_enableMultiLevel) m_popup2->raise();
+
+		PopupViewController* popup1 = m_popups[0];
+		PopupViewController* popup2 = m_popups[1];
+
+		popup1->raise();
+		if (m_enableMultiLevel) popup2->raise();
 		QPoint popupPos = mapToGlobal(QPoint(0, height()));
-		m_popup1->showAnimated(popupPos, width());
+		popup1->showAnimated(popupPos, width());
 	}
 }
 

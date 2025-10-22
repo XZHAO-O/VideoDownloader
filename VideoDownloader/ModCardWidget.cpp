@@ -323,7 +323,7 @@ void ModCardWidget::updateUI()
 	m_toggleButton->setChecked(m_model->enabled());
 
 	// 加载图标
-	qDebug() << "Loading icon for mod: " << m_model->iconPath();
+	//qDebug() << "Loading icon for mod: " << m_model->iconPath();
 	if (!m_model->iconPath().isEmpty() && QFile::exists(m_model->iconPath())) {
 		QPixmap icon(m_model->iconPath());
 		if (!icon.isNull()) {

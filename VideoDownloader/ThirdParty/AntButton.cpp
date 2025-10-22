@@ -31,6 +31,23 @@ AntButton::~AntButton()
 	{
 		delete m_svgRenderer; // 清理SVG渲染器
 	}
+	if (m_ripples.size() > 0)
+	{
+		for (auto ripple : m_ripples)
+		{
+			m_ripples.removeOne(ripple);
+			if (ripple)
+			{
+				delete ripple;
+				ripple = nullptr;
+			}
+		}
+	}
+	if (m_ripp)
+	{
+		delete m_ripp;
+		m_ripp = nullptr;
+	}
 }
 
 void AntButton::setSvgIcon(const QString& iconPath)

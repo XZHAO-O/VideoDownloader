@@ -45,6 +45,20 @@ MaterialProgressBar::MaterialProgressBar(QWidget* parent)
 		});
 }
 
+MaterialProgressBar::~MaterialProgressBar()
+{
+	if (m_animation)
+	{
+		delete m_animation;
+		m_animation = nullptr;
+	}
+	if (m_indeterminateAnimation)
+	{
+		delete m_indeterminateAnimation;
+		m_indeterminateAnimation = nullptr;
+	}
+}
+
 QSize MaterialProgressBar::sizeHint() const
 {
 	return QSize(200, 10);
