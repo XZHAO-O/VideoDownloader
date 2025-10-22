@@ -4,19 +4,52 @@
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
 #include <QDir>
+#include <QFileInfo>
+#include <QDesktopServices>
 
-DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
+DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager,
+	ContainerState state,
+	QWidget* parent)
 	: QWidget(parent)
 	, m_downloadManager(downloadManager)
+	, m_containerState(state)
 	, m_mainLayout(nullptr)
 	, m_scrollArea(nullptr)
 	, m_scrollWidget(nullptr)
 	, m_scrollLayout(nullptr)
 	, m_noDataWidget(nullptr)
-	, m_noDataText("暂无任务") // 默认文本
+	, m_currentSpeed(0)
 {
-	// 注意：不要在构造函数中调用任何虚函数
-	// updateTaskList() 和 initUI() 将在派生类构造函数中调用
+	// 根据状态设置无数据文本
+	switch (m_containerState) {
+	case ContainerState::DownloadReady:
+		m_noDataText = "暂无待下载任务";
+		break;
+	case ContainerState::Downloading:
+		m_noDataText = "暂无下载任务";
+		break;
+	case ContainerState::Downloaded:
+		m_noDataText = "暂无已下载任务";
+		break;
+	}
+
+	initUI();
+	updateTaskList();
+
+	// 连接信号
+	if (m_downloadManager) {
+		connect(m_downloadManager.get(), &DownloadManager::downloadAdded,
+			this, &DownloadCardContainerWidget::onDownloadAdded);
+		connect(m_downloadManager.get(), &DownloadManager::downloadStatusChanged,
+			this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
+			this, &DownloadCardContainerWidget::onDownloadCompleted);
+		connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
+			this, &DownloadCardContainerWidget::onDownloadFailed);
+		connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
+			this, &DownloadCardContainerWidget::onDownloadProgress);
+		connect(m_downloadManager.get(), &DownloadManager::downloadSpeedUpdated, this, &DownloadCardContainerWidget::onDownloadSpeedUpdated);
+	}
 }
 
 DownloadCardContainerWidget::~DownloadCardContainerWidget()
@@ -45,7 +78,7 @@ void DownloadCardContainerWidget::initUI()
 
 	// 创建暂无数据组件
 	m_noDataWidget = new NoDataWidget(this);
-	m_noDataWidget->setText(m_noDataText); // 使用成员变量而不是虚函数
+	m_noDataWidget->setText(m_noDataText);
 	m_noDataWidget->hide();
 	m_mainLayout->addWidget(m_noDataWidget);
 }
@@ -61,7 +94,7 @@ void DownloadCardContainerWidget::updateTaskList()
 
 	// 获取任务列表
 	if (m_downloadManager) {
-		auto tasks = getTaskList(); // 现在这是安全的，因为对象已经完全构造
+		auto tasks = getTaskList();
 		for (const auto& task : tasks) {
 			addTaskCard(task);
 		}
@@ -70,7 +103,6 @@ void DownloadCardContainerWidget::updateTaskList()
 	updateVisibility();
 }
 
-// 其他方法保持不变...
 void DownloadCardContainerWidget::addTaskCard(const DownloadTaskInfo& taskInfo)
 {
 	auto model = QSharedPointer<DownloadCardModel>::create(taskInfo);
@@ -95,6 +127,101 @@ void DownloadCardContainerWidget::removeTaskCard(const QString& taskId)
 	}
 
 	updateVisibility();
+}
+
+QList<DownloadTaskInfo> DownloadCardContainerWidget::getTaskList() const
+{
+	if (!m_downloadManager) {
+		return QList<DownloadTaskInfo>();
+	}
+
+	switch (m_containerState) {
+	case ContainerState::DownloadReady:
+		return m_downloadManager->getQueuedDownloads();
+
+	case ContainerState::Downloading: {
+		auto tasks = m_downloadManager->getActiveDownloads();
+		QList<DownloadTaskInfo> filteredTasks;
+		for (const auto& task : tasks) {
+			if (task.status == Downloading || task.status == Paused) {
+				filteredTasks.append(task);
+			}
+		}
+		return filteredTasks;
+	}
+
+	case ContainerState::Downloaded: {
+		auto tasks = m_downloadManager->getCompletedDownloads();
+		QList<DownloadTaskInfo> filteredTasks;
+		for (const auto& task : tasks) {
+			if (task.status == Completed || task.status == Failed) {
+				filteredTasks.append(task);
+			}
+		}
+		return filteredTasks;
+	}
+	}
+
+	return QList<DownloadTaskInfo>();
+}
+
+void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo)
+{
+	switch (m_containerState) {
+	case ContainerState::DownloadReady:
+		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				m_downloadManager->resumeDownload(taskInfo.taskId);
+			}
+			});
+
+		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				m_downloadManager->cancelDownload(taskInfo.taskId);
+			}
+			});
+		break;
+
+	case ContainerState::Downloading:
+		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				m_downloadManager->pauseDownload(taskInfo.taskId);
+			}
+			});
+
+		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				m_downloadManager->resumeDownload(taskInfo.taskId);
+			}
+			});
+
+		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				m_downloadManager->cancelDownload(taskInfo.taskId);
+			}
+			});
+		break;
+
+	case ContainerState::Downloaded:
+		connect(card, &DownloadCard::openFolderClicked, this, [this, taskInfo]() {
+			// 打开文件所在文件夹
+			QFileInfo fileInfo(taskInfo.request.outputPath);
+			QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
+			});
+
+		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo]() {
+			if (m_downloadManager) {
+				// 从已完成列表中移除
+				removeTaskCard(taskInfo.taskId);
+			}
+			});
+		break;
+	}
+}
+
+QString DownloadCardContainerWidget::getNoDataText() const
+{
+	return m_noDataText;
 }
 
 void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
@@ -214,7 +341,14 @@ void DownloadCardContainerWidget::onDownloadAdded(const QString& taskId)
 	if (m_downloadManager) {
 		auto taskInfo = m_downloadManager->getDownloadInfo(taskId);
 		if (!m_taskCards.contains(taskId)) {
-			addTaskCard(taskInfo);
+			// 检查任务是否应该显示在当前容器中
+			auto taskList = getTaskList();
+			for (const auto& task : taskList) {
+				if (task.taskId == taskId) {
+					addTaskCard(taskInfo);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -226,10 +360,10 @@ void DownloadCardContainerWidget::onDownloadRemoved(const QString& taskId)
 
 void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 {
-	// 基类默认实现，派生类可以重写
 	if (m_downloadManager) {
 		auto taskInfo = m_downloadManager->getDownloadInfo(taskId);
-		// 如果任务不在当前列表应该显示的状态中，移除卡片
+
+		// 检查任务是否应该显示在当前容器中
 		auto taskList = getTaskList();
 		bool shouldShow = false;
 		for (const auto& task : taskList) {
@@ -245,5 +379,96 @@ void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 		else if (shouldShow && !m_taskCards.contains(taskId)) {
 			addTaskCard(taskInfo);
 		}
+		else if (shouldShow && m_taskCards.contains(taskId)) {
+			// 更新现有卡片状态
+			auto card = m_taskCards[taskId];
+			auto model = card->model();
+			if (model) {
+				switch (taskInfo.status) {
+				case Queued:
+					model->setState(DownloadCardState::Pending);
+					break;
+				case Downloading:
+					model->setState(DownloadCardState::Downloading);
+					break;
+				case Completed:
+					model->setState(DownloadCardState::Downloaded);
+					break;
+				case Failed:
+					model->setState(DownloadCardState::Error);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+}
+
+void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId, const QString& filePath)
+{
+	onDownloadStatusChanged(taskId);
+}
+
+void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const QString& error)
+{
+	onDownloadStatusChanged(taskId);
+}
+
+void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total)
+{
+	updateTaskProgress(taskId, downloaded, total);
+}
+
+void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
+{
+	m_currentSpeed = bytesPerSecond;
+
+	// 更新所有卡片的下载速度
+	for (auto card : m_taskCards) {
+		auto model = card->model();
+		if (model && model->state() == DownloadCardState::Downloading) {
+			model->setDownloadSpeed(bytesPerSecond);
+		}
+	}
+}
+
+void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total)
+{
+	if (m_taskCards.contains(taskId)) {
+		auto card = m_taskCards[taskId];
+		auto model = card->model();
+		if (model) {
+			int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
+			model->setProgress(progress);
+			model->setDownloadSpeed(m_currentSpeed);
+		}
+	}
+}
+
+void DownloadCardContainerWidget::setState(ContainerState state)
+{
+	if (m_containerState != state) {
+		m_containerState = state;
+
+		// 更新无数据文本
+		switch (m_containerState) {
+		case ContainerState::DownloadReady:
+			m_noDataText = "暂无待下载任务";
+			break;
+		case ContainerState::Downloading:
+			m_noDataText = "暂无下载任务";
+			break;
+		case ContainerState::Downloaded:
+			m_noDataText = "暂无已下载任务";
+			break;
+		}
+
+		if (m_noDataWidget) {
+			m_noDataWidget->setText(m_noDataText);
+		}
+
+		// 更新任务列表
+		updateTaskList();
 	}
 }

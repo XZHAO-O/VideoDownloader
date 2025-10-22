@@ -328,12 +328,6 @@
     <ClCompile Include="MaterialTabWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadingWidget.cpp">
-      <Filter>Ui\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="DownloadedWidget.cpp">
-      <Filter>Ui\Widgets</Filter>
-    </ClCompile>
     <ClCompile Include="ApplicationController.cpp">
       <Filter>app</Filter>
     </ClCompile>
@@ -342,9 +336,6 @@
     </ClCompile>
     <ClCompile Include="DownloadRecordRepository.cpp">
       <Filter>Storage</Filter>
-    </ClCompile>
-    <ClCompile Include="DownloadQueuePage.cpp">
-      <Filter>Ui\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Core\Config</Filter>
@@ -688,15 +679,6 @@
       <Filter>Core\models</Filter>
     </QtMoc>
     <QtMoc Include="VideoPreviewWindow.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadQueuePage.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadingWidget.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadedWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
     <QtMoc Include="ModCardModel.h">

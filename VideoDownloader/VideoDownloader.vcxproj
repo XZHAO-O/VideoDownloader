@@ -137,16 +137,8 @@
     <QtUic Include="VideoDownloader.ui" />
     <QtMoc Include="VideoDownloader.h" />
     <ClCompile Include="ApplicationController.cpp" />
-    <ClCompile Include="DownloadedWidget.cpp" />
-    <ClCompile Include="DownloadingWidget.cpp" />
     <ClCompile Include="DownloadManager.cpp" />
     <ClCompile Include="DownloadPage.cpp" />
-    <ClCompile Include="DownloadQueuePage.cpp">
-      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
-      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
-      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
-      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
-    </ClCompile>
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="MaterialTabBar.cpp" />
     <ClCompile Include="MaterialTabWidget.cpp" />
@@ -396,9 +388,6 @@
     <QtMoc Include="SettingsPage.h" />
     <QtMoc Include="MaterialTabBar.h" />
     <QtMoc Include="MaterialTabWidget.h" />
-    <QtMoc Include="DownloadedWidget.h" />
-    <QtMoc Include="DownloadingWidget.h" />
-    <QtMoc Include="DownloadQueuePage.h" />
     <QtMoc Include="ApplicationController.h" />
     <QtMoc Include="DownloadManager.h" />
     <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h" />

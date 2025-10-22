@@ -22,9 +22,7 @@
 #include "ApplicationController.h"
 #include "PlatformAggregatorService.h"
 #include "ConfigVideoPlatform.h"
-#include "DownloadQueuePage.h"
-#include "DownloadingWidget.h"
-#include "DownloadedWidget.h"
+#include "DownloadCardContainerWidget.h"
 
 DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
 	: QWidget(parent)
@@ -60,12 +58,12 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	// 暂无数据
 	NoDataWidget* noData = new NoDataWidget(this);
 
-	downloadQueuePage = new DownloadQueuePage(m_downloadManager, this);  // 传递参数
-	downloadingWidget = new DownloadingWidget(m_downloadManager, this);  // 传递参数
-	downloadedWidget = new DownloadedWidget(m_downloadManager, this);    // 传递参数
+	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::DownloadReady, this);  // 传递参数
+	downloadingWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloading, this);  // 传递参数
+	downloadedWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloaded, this);    // 传递参数
 
 	// 添加标签项
-	tabWidget->addTab(downloadQueuePage, "待下载");
+	tabWidget->addTab(downloadReadyWidget, "待下载");
 	tabWidget->addTab(downloadingWidget, "下载中");
 	tabWidget->addTab(downloadedWidget, "已下载");
 	tabWidget->addTab(scrollArea1, "常用控件");
@@ -470,7 +468,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		cardModel->setState(DownloadCardState::Pending);
 
 		// 创建卡片
-		downloadQueuePage->addDownloadCard(taskInfo, new DownloadCard(cardModel, this));
+		downloadReadyWidget->addDownloadCard(taskInfo, new DownloadCard(cardModel, this));
 	}
 }
 
