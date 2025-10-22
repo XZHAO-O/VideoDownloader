@@ -129,6 +129,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="SearchResultsWidget.cpp" />
+    <ClCompile Include="SingleLevelComboBox.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
     <QtRcc Include="VideoDownloader.qrc" />
@@ -386,6 +387,7 @@
     <QtMoc Include="QRCodeLoginWidget.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
+    <QtMoc Include="SingleLevelComboBox.h" />
     <ClInclude Include="VideoDownloadRequest.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />

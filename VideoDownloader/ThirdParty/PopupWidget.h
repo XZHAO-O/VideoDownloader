@@ -175,14 +175,20 @@ class PopupWidget : public QListView
 	Q_OBJECT
 
 public:
-	explicit PopupWidget(int height, bool enableMultiLevel, QWidget* parent = nullptr);
-	// 用于设置当前项
+	explicit PopupWidget(int maxHeight, bool enableMultiLevel, QWidget* parent = nullptr);
+
 	void setCurrentIndex(const QModelIndex& index);
+	// 新增：计算并返回自适应高度
+	int calculateAdaptiveHeight() const;
+	// 新增：设置固定尺寸并考虑自适应高度
+	void setFixedSizeWithAdaptiveHeight(int width, int maxHeight);
+
 signals:
 	void itemSelected(const QModelIndex& index);
+
 private:
 	ListViewStyle* m_style;
 	ListItemDelegate* m_itmeDele;
-	bool m_enableMultiLevel;	// 是否启用多级列表
-	int m_popupHeight;			// 弹出框的高度
+	bool m_enableMultiLevel;
+	int m_maxHeight;
 };

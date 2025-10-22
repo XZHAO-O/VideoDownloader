@@ -2,8 +2,8 @@
 #include "DesignSystem.h"
 #include <QGraphicsDropShadowEffect>
 
-PopupViewController::PopupViewController(int height, bool enableMultiLevel, QWidget* parent)
-	: QGraphicsView(parent), m_height(height), m_isVisible(false)
+PopupViewController::PopupViewController(int maxHeight, bool enableMultiLevel, QWidget* parent)
+	: QGraphicsView(parent), m_maxHeight(maxHeight), m_isVisible(false)
 {
 	setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground);
@@ -14,17 +14,15 @@ PopupViewController::PopupViewController(int height, bool enableMultiLevel, QWid
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-	// 关键性能优化
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 	setCacheMode(QGraphicsView::CacheNone);
 
-	// 设置图形代理
-	popup = new PopupWidget(height, enableMultiLevel, nullptr);
+	// 使用最大高度创建 PopupWidget
+	popup = new PopupWidget(m_maxHeight, enableMultiLevel, nullptr);
 	proxy = scene->addWidget(popup);
 	proxy->setCacheMode(QGraphicsItem::NoCache);
 
-	// 动画
-	scaleTransform = new QGraphicsScale();	// 支持三维缩放，它可以分别沿 X、Y、Z 三个轴设置缩放比例
+	scaleTransform = new QGraphicsScale();
 	proxy->setTransformations({ scaleTransform });
 
 	opacityAnim = new QPropertyAnimation(proxy, "opacity");
@@ -50,9 +48,10 @@ PopupViewController::PopupViewController(int height, bool enableMultiLevel, QWid
 				hide();
 			}
 		});
+
 	connect(popup, &PopupWidget::itemSelected, this, [this](const QModelIndex& idx)
 		{
-			emit itemSelected(idx);  // 转发选中信号
+			emit itemSelected(idx);
 		});
 }
 
@@ -60,12 +59,27 @@ PopupViewController::~PopupViewController()
 {
 }
 
+int PopupViewController::getActualHeight() const
+{
+	return popup->calculateAdaptiveHeight();
+}
+
 void PopupViewController::showAnimated(const QPoint& pos, int width)
 {
 	if (groupAnim->state() == QAbstractAnimation::Running)
-		return;  // 如果动画正在运行，直接返回
+		return;
 
-	// 设置视图场景尺寸
+	// 计算自适应高度
+	int actualHeight = getActualHeight();
+
+	// 使用新的方法设置尺寸，确保内容正确显示
+	setFixedSize(width, actualHeight);
+	setSceneRect(QRectF(0, 0, width, actualHeight));
+	popup->setFixedSizeWithAdaptiveHeight(width, m_maxHeight);
+
+	proxy->setTransformOriginPoint(QPointF(proxy->boundingRect().width() / 2, 0));
+	scaleTransform->setOrigin(QVector3D(proxy->boundingRect().width() / 2, 0, 0));
+
 	proxy->update();
 	show();
 	move(pos.x(), pos.y() - 3);
@@ -79,7 +93,7 @@ void PopupViewController::showAnimated(const QPoint& pos, int width)
 void PopupViewController::hideAnimated()
 {
 	if (groupAnim->state() == QAbstractAnimation::Running)
-		return;  // 如果动画正在运行，直接返回
+		return;
 
 	m_isVisible = false;
 	groupAnim->stop();
@@ -89,10 +103,11 @@ void PopupViewController::hideAnimated()
 
 void PopupViewController::updateSize(int width, int height)
 {
-	setFixedSize(width, m_height);
-	setSceneRect(QRectF(0, 0, width, m_height));
-	popup->setFixedSize(width, m_height);  // 确保popup大小正确
-	proxy->setTransformOriginPoint(QPointF(proxy->boundingRect().width() / 2, 0));	// 顶部中心
+	// 这里仍然使用最大高度，因为实际高度会在显示时计算
+	setFixedSize(width, m_maxHeight);
+	setSceneRect(QRectF(0, 0, width, m_maxHeight));
+	popup->setFixedSize(width, m_maxHeight);
+	proxy->setTransformOriginPoint(QPointF(proxy->boundingRect().width() / 2, 0));
 	scaleTransform->setOrigin(QVector3D(proxy->boundingRect().width() / 2, 0, 0));
 }
 
@@ -105,16 +120,16 @@ void PopupViewController::follow(QWidget* anchorWidget, AnchorPoint anchor)
 
 	switch (anchor)
 	{
-	case AnchorPoint::TopLeft:
+	case TopLeft:
 		globalPos = anchorWidget->mapToGlobal(rect.topLeft());
 		break;
-	case AnchorPoint::TopRight:
+	case TopRight:
 		globalPos = anchorWidget->mapToGlobal(rect.topRight());
 		break;
-	case AnchorPoint::BottomLeft:
+	case BottomLeft:
 		globalPos = anchorWidget->mapToGlobal(rect.bottomLeft());
 		break;
-	case AnchorPoint::BottomRight:
+	case BottomRight:
 		globalPos = anchorWidget->mapToGlobal(rect.bottomRight());
 		break;
 	}

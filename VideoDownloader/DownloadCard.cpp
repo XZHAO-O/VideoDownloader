@@ -10,9 +10,9 @@
 #include <QPixmap>
 #include <QDir>
 #include "AntButton.h"
-#include "AntComboBox.h"
 #include "MaterialProgressBar.h"
-#include "StyleSheet.h"
+#include "DesignSystem.h"
+#include "SingleLevelComboBox.h"
 
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
@@ -42,6 +42,28 @@ DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* par
 DownloadCard::~DownloadCard()
 {
 	qDebug() << "=== DownloadCard Destroying - Third Party Components ===";
+	if (m_videoQualityCombo)
+	{
+		m_videoQualityCombo->disconnect();
+		delete m_videoQualityCombo;
+
+	}
+	if (m_audioQualityCombo)
+	{
+		m_audioQualityCombo->disconnect();
+		delete m_audioQualityCombo;
+	}
+	// 清理 AntCellWidget 组件
+	//if (m_titleCell) {
+	//	qDebug() << "Cleaning AntCellWidget - title";
+	//	// 先清理内部的按钮
+	//	if (m_titleCell->getBtn()) {
+	//		cleanupAntButton(m_titleCell->getBtn());
+	//	}
+	//	m_titleCell->setParent(nullptr);
+	//	delete m_titleCell;
+	//	m_titleCell = nullptr;
+	//}
 
 	// 强制清理 AntButton 组件
 	if (m_downloadBtn) {
@@ -99,17 +121,17 @@ DownloadCard::~DownloadCard()
 	}
 
 	// 清理 AntComboBox 组件
-	if (m_videoQualityCombo) {
-		qDebug() << "Cleaning AntComboBox - video quality";
-		cleanupAntComboBox(m_videoQualityCombo);
-		m_videoQualityCombo = nullptr;
-	}
+	//if (m_videoQualityCombo) {
+	//	qDebug() << "Cleaning AntComboBox - video quality";
+	//	cleanupAntComboBox(m_videoQualityCombo);
+	//	m_videoQualityCombo = nullptr;
+	//}
 
-	if (m_audioQualityCombo) {
-		qDebug() << "Cleaning AntComboBox - audio quality";
-		cleanupAntComboBox(m_audioQualityCombo);
-		m_audioQualityCombo = nullptr;
-	}
+	//if (m_audioQualityCombo) {
+	//	qDebug() << "Cleaning AntComboBox - audio quality";
+	//	cleanupAntComboBox(m_audioQualityCombo);
+	//	m_audioQualityCombo = nullptr;
+	//}
 
 	// 清理 MaterialProgressBar 组件
 	if (m_progressBar) {
@@ -144,36 +166,12 @@ void DownloadCard::cleanupAntButton(AntButton* button)
 	delete button;
 }
 
-void DownloadCard::cleanupAntComboBox(AntComboBox* comboBox)
-{
-	if (!comboBox) return;
-
-	// 强制断开所有连接
-	comboBox->disconnect();
-
-	// 清除所有项
-	//comboBox->clear();
-
-	// 清除样式表
-	comboBox->setStyleSheet("");
-
-	// 从父控件中移除
-	comboBox->setParent(nullptr);
-
-	// 立即删除
-	delete comboBox;
-}
-
 void DownloadCard::cleanupMaterialProgressBar(MaterialProgressBar* progressBar)
 {
 	if (!progressBar) return;
 
 	// 强制断开所有连接
 	progressBar->disconnect();
-
-	// 停止所有动画
-	// 如果 MaterialProgressBar 有停止动画的方法，调用它
-	 //progressBar->stopAnimation();
 
 	// 清除样式表
 	progressBar->setStyleSheet("");
@@ -187,7 +185,7 @@ void DownloadCard::cleanupMaterialProgressBar(MaterialProgressBar* progressBar)
 
 void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 {
-	if (m_model == model) return;
+	if (m_model == model || !model) return;
 
 	if (m_model) {
 		disconnect(m_model.get(), nullptr, this, nullptr);
@@ -195,14 +193,12 @@ void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 
 	m_model = model;
 
-	if (m_model) {
-		connect(m_model.get(), &DownloadCardModel::stateChanged, this, &DownloadCard::onModelChanged);
-		connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
-		connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
-		connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::stateChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
 
-		onModelChanged();
-	}
+	onModelChanged();
 }
 
 QSize DownloadCard::sizeHint() const
@@ -415,8 +411,28 @@ void DownloadCard::initUI()
 	m_headerLayout->setSpacing(8);
 	m_headerLayout->setContentsMargins(0, 0, 0, 0);
 
-	m_titleLabel = new QLabel("视频标题", this);
-	// 标题样式将在updateUI中动态设置
+	// 使用 AntCellWidget 替换原来的 QLabel
+	m_titleCell = new AntCellWidget("视频标题", this);
+	// 设置标题样式 - 只让文字变色，不要背景
+	auto theme = DesignSystem::instance()->currentTheme();
+	m_titleCell->getBtn()->setStyleSheet(
+		QString("QPushButton {"
+			"    background-color: transparent;"
+			"    border: none;"
+			"    color: %1;"
+			"    font-size: 14px;"
+			"    font-weight: bold;"
+			"    text-align: left;"
+			"    padding: 0px;"
+			"    margin: 0px;"
+			"}"
+			"QPushButton:hover {"
+			"    color: %2;"
+			"    background-color: transparent;"
+			"}")
+		.arg(theme.primaryTextColor.name())
+		.arg(theme.primaryColor.name())
+	);
 
 	// 操作按钮容器
 	QWidget* actionWidget = new QWidget(this);
@@ -465,7 +481,7 @@ void DownloadCard::initUI()
 	m_actionLayout->addWidget(m_openUrlBtn);
 	m_actionLayout->addStretch();
 
-	m_headerLayout->addWidget(m_titleLabel, 1);
+	m_headerLayout->addWidget(m_titleCell, 1);
 	m_headerLayout->addWidget(actionWidget);
 
 	// 中间布局（大小信息 + 质量选择）
@@ -482,10 +498,12 @@ void DownloadCard::initUI()
 	qualityLayout->setSpacing(8);
 	qualityLayout->setContentsMargins(0, 0, 0, 0);
 
-	m_videoQualityCombo = new AntComboBox("画质", { "480p", "720p", "1080p", "4K", "原画" }, this);
+	QStringList qualityList = { "480p", "720p", "1080p", "4K", "原画", "8K" };
+	m_videoQualityCombo = new SingleLevelComboBox("画质", qualityList, this);
 	m_videoQualityCombo->setFixedSize(90, 28);
 
-	m_audioQualityCombo = new AntComboBox("音质", { "低音质", "中音质", "高音质", "无损" }, this);
+	QStringList audioQualityList = { "低音质", "中音质", "高音质", "无损" };
+	m_audioQualityCombo = new SingleLevelComboBox("音质", audioQualityList, this);
 	m_audioQualityCombo->setFixedSize(90, 28);
 
 	qualityLayout->addWidget(m_videoQualityCombo);
@@ -572,8 +590,8 @@ void DownloadCard::initConnections()
 	// 封面点击
 	connect(m_coverLabel, &QLabel::linkActivated, this, &DownloadCard::onCoverClicked);
 
-	// 标题点击
-	connect(m_titleLabel, &QLabel::linkActivated, this, &DownloadCard::onTitleClicked);
+	// 标题点击 - 使用 AntCellWidget 的按钮点击信号
+	connect(m_titleCell->getBtn(), &QPushButton::clicked, this, &DownloadCard::onTitleClicked);
 
 	// 质量选择 - 使用旧的连接语法避免信号问题
 	connect(m_videoQualityCombo, SIGNAL(currentTextChanged(QString)),
@@ -608,8 +626,8 @@ void DownloadCard::updateUI()
 	// 更新文本颜色
 	updateTextColors();
 
-	// 更新基本信息
-	m_titleLabel->setText(m_model->title());
+	// 更新基本信息 - 直接设置 AntCellWidget 的按钮文本
+	m_titleCell->getBtn()->setText(m_model->title());
 	m_sizeLabel->setText(QString("视频: %1  音频: %2")
 		.arg(m_model->formattedVideoSize())
 		.arg(m_model->formattedAudioSize()));
@@ -662,11 +680,25 @@ void DownloadCard::updateTextColors()
 {
 	auto theme = DesignSystem::instance()->currentTheme();
 
-	// 更新标题颜色
-	m_titleLabel->setStyleSheet(QString("QLabel{"
-		"font-size: 14px;"
-		"color: %1;"
-		"}").arg(theme.primaryTextColor.name()));
+	// 更新标题颜色 - 只让文字变色，不要背景
+	m_titleCell->getBtn()->setStyleSheet(
+		QString("QPushButton {"
+			"    background-color: transparent;"
+			"    border: none;"
+			"    color: %1;"
+			"    font-size: 14px;"
+			"    font-weight: bold;"
+			"    text-align: left;"
+			"    padding: 0px;"
+			"    margin: 0px;"
+			"}"
+			"QPushButton:hover {"
+			"    color: %2;"
+			"    background-color: transparent;"
+			"}")
+		.arg(theme.primaryTextColor.name())
+		.arg(theme.primaryColor.name())
+	);
 
 	// 更新大小信息颜色
 	m_sizeLabel->setStyleSheet(QString("QLabel{"
@@ -714,12 +746,11 @@ void DownloadCard::updatePendingUI()
 	m_progressLabel->setVisible(false);
 	m_speedLabel->setVisible(false);
 
-	// 让封面和标题可点击，使用动态颜色
-	auto theme = DesignSystem::instance()->currentTheme();
+	// 让封面可点击（保持原有逻辑）
 	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
-	m_titleLabel->setText(QString("<a href='preview' style='text-decoration:none; color:%1;'>%2</a>")
-		.arg(theme.primaryTextColor.name())
-		.arg(m_model->title()));
+
+	// 标题现在通过 AntCellWidget 自动支持点击和悬浮效果
+	// 不需要额外的设置
 }
 
 void DownloadCard::updateDownloadingUI()
@@ -737,10 +768,9 @@ void DownloadCard::updateDownloadedUI()
 	m_progressLabel->setVisible(false);
 	m_speedLabel->setVisible(false);
 
-	// 让封面和标题可点击，使用动态颜色
-	auto theme = DesignSystem::instance()->currentTheme();
+	// 让封面可点击（保持原有逻辑）
 	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
-	m_titleLabel->setText(QString("<a href='preview' style='text-decoration:none; color:%1;'>%2</a>")
-		.arg(theme.primaryTextColor.name())
-		.arg(m_model->title()));
+
+	// 标题现在通过 AntCellWidget 自动支持点击和悬浮效果
+	// 不需要额外的设置
 }

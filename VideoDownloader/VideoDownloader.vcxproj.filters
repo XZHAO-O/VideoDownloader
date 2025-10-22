@@ -72,6 +72,9 @@
     <Filter Include="Core\models">
       <UniqueIdentifier>{b1b5b8e6-a4e2-4c9e-9dc4-605272d48e24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Ui\Components">
+      <UniqueIdentifier>{a251c7cd-a822-435f-b20a-682f0ba7b356}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -370,20 +373,11 @@
     <ClCompile Include="DownloadCardModel.cpp">
       <Filter>Core\models</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadCard.cpp">
-      <Filter>Ui\Widgets</Filter>
-    </ClCompile>
     <ClCompile Include="VideoPreviewWindow.cpp">
-      <Filter>Ui\Widgets</Filter>
-    </ClCompile>
-    <ClCompile Include="SearchResultsWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="ModCardModel.cpp">
       <Filter>Core\Mod</Filter>
-    </ClCompile>
-    <ClCompile Include="ModCardWidget.cpp">
-      <Filter>Ui\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="ConfigModManager.cpp">
       <Filter>Core\Mod</Filter>
@@ -397,14 +391,26 @@
     <ClCompile Include="DownloadCardContainerWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="QRCodeLoginWidget.cpp">
-      <Filter>Ui\Widgets</Filter>
-    </ClCompile>
     <ClCompile Include="CookieManageUtil.cpp">
       <Filter>Core\Utils</Filter>
     </ClCompile>
     <ClCompile Include="LoginManager.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadCard.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="ModCardWidget.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SearchResultsWidget.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="QRCodeLoginWidget.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SingleLevelComboBox.cpp">
+      <Filter>Ui\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -681,9 +687,6 @@
     <QtMoc Include="DownloadCardModel.h">
       <Filter>Core\models</Filter>
     </QtMoc>
-    <QtMoc Include="DownloadCard.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
     <QtMoc Include="VideoPreviewWindow.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
@@ -696,14 +699,8 @@
     <QtMoc Include="DownloadedWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
-    <QtMoc Include="SearchResultsWidget.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
     <QtMoc Include="ModCardModel.h">
       <Filter>Core\Mod</Filter>
-    </QtMoc>
-    <QtMoc Include="ModCardWidget.h">
-      <Filter>Ui\Widgets</Filter>
     </QtMoc>
     <QtMoc Include="ConfigModManager.h">
       <Filter>Core\Mod</Filter>
@@ -714,11 +711,23 @@
     <QtMoc Include="DownloadCardContainerWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
-    <QtMoc Include="QRCodeLoginWidget.h">
-      <Filter>Ui\Widgets</Filter>
-    </QtMoc>
     <QtMoc Include="LoginManager.h">
       <Filter>Core</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadCard.h">
+      <Filter>Ui\Components</Filter>
+    </QtMoc>
+    <QtMoc Include="ModCardWidget.h">
+      <Filter>Ui\Components</Filter>
+    </QtMoc>
+    <QtMoc Include="SearchResultsWidget.h">
+      <Filter>Ui\Components</Filter>
+    </QtMoc>
+    <QtMoc Include="QRCodeLoginWidget.h">
+      <Filter>Ui\Components</Filter>
+    </QtMoc>
+    <QtMoc Include="SingleLevelComboBox.h">
+      <Filter>Ui\Components</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -763,9 +772,6 @@
     <ClInclude Include="MediaInfo.h">
       <Filter>Core\models</Filter>
     </ClInclude>
-    <ClInclude Include="DownloadCardState.h">
-      <Filter>Ui\Widgets</Filter>
-    </ClInclude>
     <ClInclude Include="ApplicationState.h">
       <Filter>app</Filter>
     </ClInclude>
@@ -774,6 +780,9 @@
     </ClInclude>
     <ClInclude Include="CookieManageUtil.h">
       <Filter>Core\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadCardState.h">
+      <Filter>Ui\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

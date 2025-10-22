@@ -7,6 +7,7 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 #include <QGraphicsScale>
+
 #include "PopupWidget.h"
 
 class PopupViewController : public QGraphicsView
@@ -14,7 +15,7 @@ class PopupViewController : public QGraphicsView
 	Q_OBJECT
 
 public:
-	enum  AnchorPoint
+	enum AnchorPoint
 	{
 		TopLeft,
 		TopRight,
@@ -22,20 +23,27 @@ public:
 		BottomRight
 	};
 
-	PopupViewController(int height, bool enableMultiLevel, QWidget* parent);
+	PopupViewController(int maxHeight, bool enableMultiLevel, QWidget* parent);
 	~PopupViewController();
+
 	void showAnimated(const QPoint& pos, int width);
 	void hideAnimated();
 	bool getVisible() { return m_isVisible; }
 	void updateSize(int width, int height);
 	void follow(QWidget* anchorWidget, AnchorPoint anchor = AnchorPoint::BottomLeft);
+
+	// 新增：获取实际高度
+	int getActualHeight() const;
+
 signals:
 	void itemSelected(const QModelIndex& index);
+
 public:
 	PopupWidget* popup = nullptr;
+
 private:
 	bool m_isVisible;
-	int m_height;
+	int m_maxHeight;
 	QGraphicsScene* scene = nullptr;
 	QGraphicsProxyWidget* proxy = nullptr;
 	QPropertyAnimation* scaleAnim = nullptr;

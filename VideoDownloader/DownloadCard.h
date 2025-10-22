@@ -5,15 +5,16 @@
 #include "DownloadCardModel.h"
 #include "VideoPreviewWindow.h"
 #include "QNetworkAccessManager.h"
-#include <QComboBox>
+#include "AntCellWidget.h"
 
 class QLabel;
 class QPushButton;
+class QHBoxLayout;
+class QVBoxLayout;
 class AntButton;
 class AntComboBox;
 class MaterialProgressBar;
-class QHBoxLayout;
-class QVBoxLayout;
+class SingleLevelComboBox;
 
 class DownloadCard : public QWidget
 {
@@ -26,8 +27,6 @@ public:
 	void cleanupMaterialProgressBar(MaterialProgressBar* progressBar);
 
 	void cleanupAntButton(AntButton* button);
-
-	void cleanupAntComboBox(AntComboBox* comboBox);
 
 	QSharedPointer<DownloadCardModel> model() const { return m_model; }
 	void setModel(QSharedPointer<DownloadCardModel> model);
@@ -75,7 +74,7 @@ private:
 	// UI组件
 	QLabel* m_coverLabel = nullptr;
 	QLabel* m_playIcon = nullptr;
-	QLabel* m_titleLabel = nullptr;
+	AntCellWidget* m_titleCell = nullptr;  // 改为 AntCellWidget
 	QLabel* m_sizeLabel = nullptr;
 	QLabel* m_timeLabel = nullptr;
 	QLabel* m_publisherLabel = nullptr;
@@ -92,8 +91,8 @@ private:
 	AntButton* m_copyUrlBtn = nullptr;
 	AntButton* m_openUrlBtn = nullptr;
 
-	AntComboBox* m_videoQualityCombo = nullptr;
-	AntComboBox* m_audioQualityCombo = nullptr;
+	SingleLevelComboBox* m_videoQualityCombo = nullptr;
+	SingleLevelComboBox* m_audioQualityCombo = nullptr;
 	MaterialProgressBar* m_progressBar = nullptr;
 
 	QWidget* m_coverContainer = nullptr;

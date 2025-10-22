@@ -200,10 +200,6 @@ void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskI
 	{
 		updateVisibility();
 	}
-	//m_downloadCards.removeOne(downloadCard);
-	//m_downloadTasks.removeOne(downloadTaskInfo);
-	//delete downloadCard;
-
 }
 
 void DownloadCardContainerWidget::updateVisibility()
