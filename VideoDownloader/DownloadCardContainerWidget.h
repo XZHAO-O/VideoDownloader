@@ -28,8 +28,7 @@ public:
 	virtual ~DownloadCardContainerWidget();
 
 	// 公共接口
-	void addDownloadCard(DownloadTaskInfo downloadTaskInfo, DownloadCard* downloadCard);
-	void updateTaskList();
+	void addDownloadCard(DownloadTaskInfo downloadTaskInfo);
 	void setState(ContainerState state);
 	ContainerState state() const { return m_containerState; }
 
@@ -41,21 +40,15 @@ protected:
 	AntScrollArea* m_scrollArea;
 	QWidget* m_scrollWidget;
 	QVBoxLayout* m_scrollLayout;
-	QMap<QString, DownloadCard*> m_taskCards;
-	QList<DownloadCard*> m_downloadCards; // 用于手动添加的卡片
-	QList<DownloadTaskInfo> m_downloadTasks; // 用于手动添加的任务
+	QList<DownloadCard*> m_downloadCards;
+	QList<DownloadTaskInfo> m_downloadTasks;
 	NoDataWidget* m_noDataWidget;
 	QString m_noDataText;
 
 	// 保护方法
 	void initUI();
-	void addTaskCard(const DownloadTaskInfo& taskInfo);
-	void removeTaskCard(const QString& taskId);
 	void downloadVideo(const QUrl& url);
 	void updateVisibility();
-
-	// 根据状态获取任务列表
-	QList<DownloadTaskInfo> getTaskList() const;
 
 	// 根据状态设置卡片连接
 	void setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo);

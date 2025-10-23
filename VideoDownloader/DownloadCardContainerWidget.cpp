@@ -34,7 +34,6 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	}
 
 	initUI();
-	updateTaskList();
 
 	// 连接信号
 	if (m_downloadManager) {
@@ -83,88 +82,6 @@ void DownloadCardContainerWidget::initUI()
 	m_mainLayout->addWidget(m_noDataWidget);
 }
 
-void DownloadCardContainerWidget::updateTaskList()
-{
-	// 清空当前卡片
-	for (auto card : m_taskCards) {
-		m_scrollLayout->removeWidget(card);
-		card->deleteLater();
-	}
-	m_taskCards.clear();
-
-	// 获取任务列表
-	if (m_downloadManager) {
-		auto tasks = getTaskList();
-		for (const auto& task : tasks) {
-			addTaskCard(task);
-		}
-	}
-
-	updateVisibility();
-}
-
-void DownloadCardContainerWidget::addTaskCard(const DownloadTaskInfo& taskInfo)
-{
-	auto model = QSharedPointer<DownloadCardModel>::create(taskInfo);
-	auto card = new DownloadCard(model, this);
-
-	// 在添加弹簧之前插入卡片
-	m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, card);
-	m_taskCards[taskInfo.taskId] = card;
-
-	// 设置卡片连接
-	setupCardConnections(card, taskInfo);
-
-	updateVisibility();
-}
-
-void DownloadCardContainerWidget::removeTaskCard(const QString& taskId)
-{
-	if (m_taskCards.contains(taskId)) {
-		auto card = m_taskCards.take(taskId);
-		m_scrollLayout->removeWidget(card);
-		card->deleteLater();
-	}
-
-	updateVisibility();
-}
-
-QList<DownloadTaskInfo> DownloadCardContainerWidget::getTaskList() const
-{
-	if (!m_downloadManager) {
-		return QList<DownloadTaskInfo>();
-	}
-
-	switch (m_containerState) {
-	case ContainerState::DownloadReady:
-		return m_downloadManager->getQueuedDownloads();
-
-	case ContainerState::Downloading: {
-		auto tasks = m_downloadManager->getActiveDownloads();
-		QList<DownloadTaskInfo> filteredTasks;
-		for (const auto& task : tasks) {
-			if (task.status == Downloading || task.status == Paused) {
-				filteredTasks.append(task);
-			}
-		}
-		return filteredTasks;
-	}
-
-	case ContainerState::Downloaded: {
-		auto tasks = m_downloadManager->getCompletedDownloads();
-		QList<DownloadTaskInfo> filteredTasks;
-		for (const auto& task : tasks) {
-			if (task.status == Completed || task.status == Failed) {
-				filteredTasks.append(task);
-			}
-		}
-		return filteredTasks;
-	}
-	}
-
-	return QList<DownloadTaskInfo>();
-}
-
 void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo)
 {
 	switch (m_containerState) {
@@ -175,10 +92,18 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 			}
 			});
 
-		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo]() {
+		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
 			if (m_downloadManager) {
 				m_downloadManager->cancelDownload(taskInfo.taskId);
 			}
+			// 断开所有连接
+			card->disconnect();
+			// 从布局中移除并删除卡片
+			m_scrollLayout->removeWidget(card);
+			m_downloadCards.removeOne(card);
+			m_downloadTasks.removeOne(taskInfo);
+			delete card;
+			updateVisibility();
 			});
 		break;
 
@@ -211,8 +136,6 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo]() {
 			if (m_downloadManager) {
-				// 从已完成列表中移除
-				removeTaskCard(taskInfo.taskId);
 			}
 			});
 		break;
@@ -299,29 +222,34 @@ void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
 		});
 }
 
-void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskInfo, DownloadCard* downloadCard)
+void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskInfo)
 {
+	auto model = QSharedPointer<DownloadCardModel>::create(downloadTaskInfo);
+	DownloadCard* downloadCard = new DownloadCard(model, this);
+
 	m_downloadTasks.append(downloadTaskInfo);
 	m_downloadCards.append(downloadCard);
 	// 在添加弹簧之前插入卡片
 	m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, downloadCard);
 
+	// 设置卡片连接
+	setupCardConnections(downloadCard, downloadTaskInfo);
 	// 连接信号
-	connect(downloadCard, &DownloadCard::downloadClicked, this, [this, downloadTaskInfo]() {
-		downloadVideo(downloadTaskInfo.request.videoPlayUrl);
-		});
+	//connect(downloadCard, &DownloadCard::downloadClicked, this, [this, downloadTaskInfo]() {
+	//	downloadVideo(downloadTaskInfo.request.videoPlayUrl);
+	//	});
 
-	// 连接删除信号
-	connect(downloadCard, &DownloadCard::deleteClicked, this, [this, downloadCard, downloadTaskInfo]() {
-		// 断开所有连接
-		downloadCard->disconnect();
-		// 从布局中移除并删除卡片
-		m_scrollLayout->removeWidget(downloadCard);
-		m_downloadCards.removeOne(downloadCard);
-		m_downloadTasks.removeOne(downloadTaskInfo);
-		delete downloadCard;
-		updateVisibility();
-		});
+	//// 连接删除信号
+	//connect(downloadCard, &DownloadCard::deleteClicked, this, [this, downloadCard, downloadTaskInfo]() {
+	//	// 断开所有连接
+	//	downloadCard->disconnect();
+	//	// 从布局中移除并删除卡片
+	//	m_scrollLayout->removeWidget(downloadCard);
+	//	m_downloadCards.removeOne(downloadCard);
+	//	m_downloadTasks.removeOne(downloadTaskInfo);
+	//	delete downloadCard;
+	//	updateVisibility();
+	//	});
 
 	if (m_downloadCards.size() == 1)
 	{
@@ -331,78 +259,24 @@ void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskI
 
 void DownloadCardContainerWidget::updateVisibility()
 {
-	bool hasTasks = !m_taskCards.isEmpty() || !m_downloadCards.isEmpty();
-	m_scrollArea->setVisible(hasTasks);
-	m_noDataWidget->setVisible(!hasTasks);
+	bool hasCards = !m_downloadCards.isEmpty();
+	m_scrollArea->setVisible(hasCards);
+	m_noDataWidget->setVisible(!hasCards);
 }
 
 void DownloadCardContainerWidget::onDownloadAdded(const QString& taskId)
 {
-	if (m_downloadManager) {
-		auto taskInfo = m_downloadManager->getDownloadInfo(taskId);
-		if (!m_taskCards.contains(taskId)) {
-			// 检查任务是否应该显示在当前容器中
-			auto taskList = getTaskList();
-			for (const auto& task : taskList) {
-				if (task.taskId == taskId) {
-					addTaskCard(taskInfo);
-					break;
-				}
-			}
-		}
-	}
+
 }
 
 void DownloadCardContainerWidget::onDownloadRemoved(const QString& taskId)
 {
-	removeTaskCard(taskId);
+
 }
 
 void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 {
-	if (m_downloadManager) {
-		auto taskInfo = m_downloadManager->getDownloadInfo(taskId);
 
-		// 检查任务是否应该显示在当前容器中
-		auto taskList = getTaskList();
-		bool shouldShow = false;
-		for (const auto& task : taskList) {
-			if (task.taskId == taskId) {
-				shouldShow = true;
-				break;
-			}
-		}
-
-		if (!shouldShow && m_taskCards.contains(taskId)) {
-			removeTaskCard(taskId);
-		}
-		else if (shouldShow && !m_taskCards.contains(taskId)) {
-			addTaskCard(taskInfo);
-		}
-		else if (shouldShow && m_taskCards.contains(taskId)) {
-			// 更新现有卡片状态
-			auto card = m_taskCards[taskId];
-			auto model = card->model();
-			if (model) {
-				switch (taskInfo.status) {
-				case Queued:
-					model->setState(DownloadCardState::Pending);
-					break;
-				case Downloading:
-					model->setState(DownloadCardState::Downloading);
-					break;
-				case Completed:
-					model->setState(DownloadCardState::Downloaded);
-					break;
-				case Failed:
-					model->setState(DownloadCardState::Error);
-					break;
-				default:
-					break;
-				}
-			}
-		}
-	}
 }
 
 void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId, const QString& filePath)
@@ -425,9 +299,11 @@ void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
 	m_currentSpeed = bytesPerSecond;
 
 	// 更新所有卡片的下载速度
-	for (auto card : m_taskCards) {
+	for (auto card : m_downloadCards)
+	{
 		auto model = card->model();
-		if (model && model->state() == DownloadCardState::Downloading) {
+		if (model && model->state() == DownloadCardState::Downloading)
+		{
 			model->setDownloadSpeed(bytesPerSecond);
 		}
 	}
@@ -435,15 +311,15 @@ void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
 
 void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total)
 {
-	if (m_taskCards.contains(taskId)) {
-		auto card = m_taskCards[taskId];
-		auto model = card->model();
-		if (model) {
-			int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
-			model->setProgress(progress);
-			model->setDownloadSpeed(m_currentSpeed);
-		}
-	}
+	//if (m_downloadCards.contains(taskId)) {
+	//	auto card = m_downloadCards[taskId];
+	//	auto model = card->model();
+	//	if (model) {
+	//		int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
+	//		model->setProgress(progress);
+	//		model->setDownloadSpeed(m_currentSpeed);
+	//	}
+	//}
 }
 
 void DownloadCardContainerWidget::setState(ContainerState state)
@@ -464,11 +340,9 @@ void DownloadCardContainerWidget::setState(ContainerState state)
 			break;
 		}
 
-		if (m_noDataWidget) {
+		if (m_noDataWidget)
+		{
 			m_noDataWidget->setText(m_noDataText);
 		}
-
-		// 更新任务列表
-		updateTaskList();
 	}
 }
