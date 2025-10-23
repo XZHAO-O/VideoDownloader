@@ -80,16 +80,23 @@ private:
 	QLabel* m_publisherLabel = nullptr;
 	QLabel* m_progressLabel = nullptr;
 	QLabel* m_speedLabel = nullptr;
+	QLabel* m_progressInfoLabel = nullptr; // 新增：进度信息标签（已下载/总共）
 
+	// 待下载状态按钮
 	AntButton* m_downloadBtn = nullptr;
 	AntButton* m_videoDownloadBtn = nullptr;
 	AntButton* m_audioDownloadBtn = nullptr;
 	AntButton* m_closeBtn = nullptr;
-	AntButton* m_pauseBtn = nullptr;
-	AntButton* m_deleteBtn = nullptr;
-	AntButton* m_openFolderBtn = nullptr;
-	AntButton* m_copyUrlBtn = nullptr;
-	AntButton* m_openUrlBtn = nullptr;
+
+	// 下载中状态按钮（独立实例）
+	AntButton* m_pauseBtn_downloading = nullptr;  // 下载中状态的暂停按钮
+	AntButton* m_openFolderBtn_downloading = nullptr; // 下载中状态的打开文件夹按钮
+	AntButton* m_deleteBtn_downloading = nullptr; // 下载中状态的删除按钮
+
+	// 已下载状态按钮（独立实例）
+	AntButton* m_openUrlBtn_downloaded = nullptr; // 已下载状态的打开链接按钮
+	AntButton* m_openFolderBtn_downloaded = nullptr; // 已下载状态的打开文件夹按钮
+	AntButton* m_deleteBtn_downloaded = nullptr; // 已下载状态的删除按钮
 
 	SingleLevelComboBox* m_videoQualityCombo = nullptr;
 	SingleLevelComboBox* m_audioQualityCombo = nullptr;

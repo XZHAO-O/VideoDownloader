@@ -392,7 +392,8 @@ DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWid
 	cardModel->setPublisher("视频发布者");
 	cardModel->setVideoSize(1024 * 1024 * 150); // 150MB
 	cardModel->setAudioSize(1024 * 1024 * 20);  // 20MB
-	cardModel->setState(DownloadCardState::Pending);
+	cardModel->setProgress(50);
+	cardModel->setState(DownloadCardState::Downloading);
 
 	// 创建卡片
 	auto downloadCard = new DownloadCard(cardModel, this);

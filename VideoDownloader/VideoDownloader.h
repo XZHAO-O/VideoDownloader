@@ -3,7 +3,7 @@
 #include <QtWidgets/QWidget>
 #include <QHoverEvent>
 
-#include "ui_QtAntDesign.h"
+#include "ui_VideoDownloader.h"
 #include "CircularAvatar.h"
 #include "CustomToolButton.h"
 #include "ApplicationController.h"
@@ -63,7 +63,7 @@ private:
 	#endif
 
 private:
-	Ui::QtAntDesignClass ui;
+	Ui::VideoDownloaderClass ui;
 	#ifdef Q_OS_WIN
 	HWND m_hwnd;
 	#endif

@@ -134,7 +134,6 @@
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
     <QtRcc Include="VideoDownloader.qrc" />
-    <QtUic Include="QtAntDesign.ui" />
     <QtUic Include="VideoDownloader.ui" />
     <QtMoc Include="VideoDownloader.h" />
     <ClCompile Include="ApplicationController.cpp" />

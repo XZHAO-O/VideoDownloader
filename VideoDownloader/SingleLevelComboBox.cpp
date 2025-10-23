@@ -21,7 +21,10 @@ SingleLevelComboBox::SingleLevelComboBox(QString showText, QStringList itemTextL
 		{
 			QString selectedText = idx.data().toString();
 			setCurrentText(selectedText);
-			m_isChangeTextColor = false;
+
+			// 重置状态
+			resetState();
+
 			m_popup->hideAnimated();
 			DesignSystem::instance()->getTransparentMask()->hide();
 		});
@@ -38,7 +41,7 @@ SingleLevelComboBox::SingleLevelComboBox(QString showText, QStringList itemTextL
 		{
 			m_popup->raise();
 			m_popup->hideAnimated();
-			resetState();
+			resetState(); // 确保在点击外部时也重置状态
 			DesignSystem::instance()->getTransparentMask()->hide();
 		});
 
@@ -59,7 +62,7 @@ void SingleLevelComboBox::resetState()
 	m_isPressed = false;
 	m_isChangeTextColor = false;
 	m_borderColor = DesignSystem::instance()->currentTheme().popupBorderColor;
-	update();
+	update(); // 确保界面更新
 }
 
 void SingleLevelComboBox::setCurrentText(const QString& text)
@@ -183,7 +186,7 @@ void SingleLevelComboBox::paintEvent(QPaintEvent*)
 	}
 
 	QFont font = p.font();
-	font.setPointSize(11);
+	font.setPointSize(10);
 	p.setFont(font);
 	QFontMetrics fm(font);
 

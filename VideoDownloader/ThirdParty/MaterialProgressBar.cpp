@@ -136,7 +136,8 @@ void MaterialProgressBar::paintEvent(QPaintEvent* event)
 		double progress = qBound(0.0, double(value() - minimum()) / double(maximum() - minimum()), 1.0);
 		double chunkWidth = rect.width() * progress;
 
-		QColor chunkColor = (progress > 0.5) ? QColor("#52c41a") : m_chunkColor;
+		//QColor chunkColor = (progress > 0.5) ? QColor("#52c41a") : m_chunkColor;
+		QColor chunkColor = QColor("#52c41a");
 
 		QRectF chunkRect = QRectF(rect.left(), rect.top(), chunkWidth, rect.height());
 		painter.setBrush(chunkColor);

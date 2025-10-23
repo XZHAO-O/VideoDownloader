@@ -25,7 +25,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 {
 	ui.setupUi(this);
 
-	setObjectName("QtAntDesign");
+	setObjectName("VideoDownloader");
 	#ifdef Q_OS_LINUX
 	setWindowFlags(Qt::FramelessWindowHint);
 	// 开启悬浮事件处理鼠标边界样式变化
@@ -77,7 +77,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	ui.navi_widget->setStyleSheet(StyleSheet::naviQss(DesignSystem::instance()->widgetBgColor()));
 	ui.titleBar->setStyleSheet(StyleSheet::titleBarQss());
 	ui.central->setStyleSheet(StyleSheet::centralQss());
-	//ui.titleBar->setFixedHeight(0);	//首页隐藏标题栏 实现沉浸感
+	ui.titleBar->setFixedHeight(m_titleBarHeight);	//为0隐藏标题栏
 
 	// 标题栏
 	QHBoxLayout* titleLay = new QHBoxLayout(ui.titleBar);
