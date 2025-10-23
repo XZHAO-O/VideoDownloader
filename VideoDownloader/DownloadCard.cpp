@@ -13,6 +13,7 @@
 #include "MaterialProgressBar.h"
 #include "DesignSystem.h"
 #include "SingleLevelComboBox.h"
+#include "AntTooltipManager.h"
 
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
@@ -452,7 +453,10 @@ void DownloadCard::initUI()
 
 	m_closeBtn = new AntButton("×", 10, this);
 	m_closeBtn->setFixedSize(32, 32);
-	m_closeBtn->setToolTip("删除");
+	//enterevent
+	//AntTooltipManager::instance()->showTooltip(m_closeBtn, "删除", AntTooltipManager::Position::Top);
+	// leaveevent
+	//AntTooltipManager::instance()->hideTooltip();
 
 	m_pauseBtn = new AntButton("暂停", 10, this);
 	m_pauseBtn->setFixedSize(70, 32);

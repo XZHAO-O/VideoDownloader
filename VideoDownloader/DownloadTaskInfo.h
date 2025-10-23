@@ -2,9 +2,11 @@
 
 #include "VideoDownloadRequest.h"
 #include "ModInfo.h"
+#include "VideoInfo.h"
 
 struct DownloadTaskInfo {
 	QString taskId;
+	VideoInfo videoInfo;
 	VideoDownloadRequest request;
 	StreamRequest streamRequest;
 	DownloadStatus status;

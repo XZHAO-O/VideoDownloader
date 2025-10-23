@@ -141,25 +141,27 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	DownloadPage* downloadPage = new DownloadPage(appController->getDownloadManager(), stackedWidget);
 
 	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
-		// 切换到下载页面
-		stackedWidget->setCurrentWidget(downloadPage);
 
-		// 设置下载页面的标签页为"待下载"
-		// 这里需要根据你的DownloadPage实现来设置当前标签页
-		// 例如：downloadPage->setCurrentTab(0);
-		downloadPage->createDownloadCards(selectedVideoInfoList);
+		// 延迟执行卡片创建和消息显示，确保UI已经更新
+		QTimer::singleShot(50, this, [this, downloadPage, selectedVideoInfoList]() {
+			// 切换到下载页面
+			stackedWidget->setCurrentWidget(downloadPage);
 
-		// 更新导航按钮状态
-		for (ButtonInfo& info : buttonInfos) {
-			if (info.page == downloadPage) {
-				info.button->setBtnChecked(true);
+			// 更新导航按钮状态（立即更新UI反馈）
+			for (ButtonInfo& info : buttonInfos) {
+				if (info.page == downloadPage) {
+					info.button->setBtnChecked(true);
+				}
+				else {
+					info.button->setBtnChecked(false);
+				}
 			}
-			else {
-				info.button->setBtnChecked(false);
-			}
-		}
+			// 创建下载卡片
+			downloadPage->createDownloadCards(selectedVideoInfoList);
 
-		qDebug() << "成功跳转到下载页面";
+			// 显示成功消息
+			AntMessageManager::instance()->showMessage(AntMessage::Success, "数据解析成功");
+			});
 		});
 
 

@@ -179,9 +179,14 @@ QString DownloadCardModel::formattedDuration() const
 void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 {
 	m_taskId = taskInfo.taskId;
-	m_title = taskInfo.request.videoPlayUrl.toString(); // 这里应该从VideoInfo获取实际标题
+	m_title = taskInfo.videoInfo.title;
+	m_coverUrl = taskInfo.videoInfo.thumbnailUrl;
+	m_duration = taskInfo.videoInfo.duration;
+	m_publishTime = taskInfo.videoInfo.uploadDate;
+	m_publisher = taskInfo.videoInfo.author;
 	m_progress = taskInfo.progressPercentage;
 	m_downloadSpeed = taskInfo.downloadSpeed;
+
 
 	// 根据状态设置卡片状态
 	switch (taskInfo.status) {
@@ -200,12 +205,6 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 	default:
 		m_state = DownloadCardState::Pending;
 		break;
-	}
-
-	// 这里应该从VideoInfo中获取更多信息
-	// 暂时使用占位数据
-	if (m_title.isEmpty()) {
-		m_title = "未知视频";
 	}
 
 	// 触发所有信号

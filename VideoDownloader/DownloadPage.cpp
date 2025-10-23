@@ -455,20 +455,20 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		//根据请求参数获取视频地址
 		//getVideoPlayUrl(taskInfo);
 		//taskInfo.videoId = videoInfo.videoId;
-
+		taskInfo.videoInfo = videoInfo;
 		// 创建卡片模型
-		auto cardModel = QSharedPointer<DownloadCardModel>::create();
-		cardModel->setTitle(videoInfo.title);
-		cardModel->setCoverUrl(videoInfo.thumbnailUrl);
-		cardModel->setDuration(videoInfo.duration);
-		cardModel->setPublishTime(videoInfo.uploadDate);
-		cardModel->setPublisher(videoInfo.author);
-		cardModel->setVideoSize(0);
-		cardModel->setAudioSize(0);
-		cardModel->setState(DownloadCardState::Pending);
+		//auto cardModel = QSharedPointer<DownloadCardModel>::create();
+		//cardModel->setTitle(videoInfo.title);
+		//cardModel->setCoverUrl(videoInfo.thumbnailUrl);
+		//cardModel->setDuration(videoInfo.duration);
+		//cardModel->setPublishTime(videoInfo.uploadDate);
+		//cardModel->setPublisher(videoInfo.author);
+		//cardModel->setVideoSize(0);
+		//cardModel->setAudioSize(0);
+		//cardModel->setState(DownloadCardState::Pending);
 
 		// 创建卡片
-		downloadReadyWidget->addDownloadCard(taskInfo, new DownloadCard(cardModel, this));
+		downloadReadyWidget->addDownloadCard(taskInfo);
 	}
 }
 

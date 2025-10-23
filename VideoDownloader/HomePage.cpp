@@ -6,6 +6,7 @@
 #include "LogSystem.h"
 #include "PlatformAggregatorService.h"
 #include "SearchResultsWidget.h"
+#include "AntMessageManager.h"
 
 HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
@@ -78,13 +79,15 @@ void HomePage::onSearchClicked()
 		m_searchResultsWidget->hide();
 		return;
 	}
-
+	AntMessageManager::instance()->showMessage(AntMessage::Info, "链接解析中...");
 	// 加载数据
 	getVideoList(searchText);
+	AntMessageManager::instance()->showMessage(AntMessage::Success, "解析成功！");
 }
 
 void HomePage::onNextButtonClicked()
 {
+	AntMessageManager::instance()->showMessage(AntMessage::Success, "数据解析中...");
 	QList<int> selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
 	QList<VideoInfo> selectedVideoInfoList;
 	for (size_t i = 0; i < videoInfoList.size(); i++)
@@ -139,6 +142,7 @@ void HomePage::getVideoList(const QString& searchText)
 	auto platformService = m_appController->getPlatformService();
 	if (!platformService) {
 		LOG_ERROR("HomePage", "平台服务未初始化");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, "平台服务未初始化！");
 		return;
 	}
 
@@ -146,6 +150,7 @@ void HomePage::getVideoList(const QString& searchText)
 	auto availablePlatforms = platformService->getAvailablePlatforms();
 	if (availablePlatforms.isEmpty()) {
 		LOG_ERROR("HomePage", "没有可用的视频平台，请检查Mod配置");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, "无匹配的视频平台！");
 		return;
 	}
 
@@ -156,6 +161,7 @@ void HomePage::getVideoList(const QString& searchText)
 	if (!videoInfoList[0].isValid())
 	{
 		m_searchResultsWidget->hide();
+		AntMessageManager::instance()->showMessage(AntMessage::Error, "视频链接不存在！");
 		return;
 	}
 	QStringList Titles;
