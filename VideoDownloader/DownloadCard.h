@@ -35,6 +35,8 @@ public:
 	QSize sizeHint() const override;
 	QSize minimumSizeHint() const override;
 
+	void updateUI();
+
 signals:
 	void downloadClicked();
 	void videoDownloadClicked();
@@ -65,7 +67,6 @@ private slots:
 private:
 	void initUI();
 	void initConnections();
-	void updateUI();
 	void updatePendingUI();
 	void updateDownloadingUI();
 	void updateDownloadedUI();

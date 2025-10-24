@@ -59,9 +59,33 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	// 暂无数据
 	NoDataWidget* noData = new NoDataWidget(this);
 
-	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::DownloadReady, this);  // 传递参数
-	downloadingWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloading, this);  // 传递参数
-	downloadedWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloaded, this);    // 传递参数
+	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::DownloadReady, this);
+	downloadingWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloading, this);
+	downloadedWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloaded, this);
+
+	// 连接任务状态改变信号
+	connect(downloadReadyWidget, &DownloadCardContainerWidget::taskStateChanged,
+		this, &DownloadPage::onTaskStateChanged);
+	connect(downloadingWidget, &DownloadCardContainerWidget::taskStateChanged,
+		this, &DownloadPage::onTaskStateChanged);
+	connect(downloadedWidget, &DownloadCardContainerWidget::taskStateChanged,
+		this, &DownloadPage::onTaskStateChanged);
+
+	// 连接下载管理器信号
+	if (m_downloadManager) {
+		connect(m_downloadManager.get(), &DownloadManager::downloadStarted,
+			this, &DownloadPage::onDownloadManagerStarted);
+		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
+			this, &DownloadPage::onDownloadManagerCompleted);
+		connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
+			downloadingWidget, &DownloadCardContainerWidget::onDownloadProgress);
+		connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
+			downloadingWidget, &DownloadCardContainerWidget::onDownloadFailed);
+		connect(m_downloadManager.get(), &DownloadManager::downloadPaused,
+			downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		connect(m_downloadManager.get(), &DownloadManager::downloadResumed,
+			downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);
+	}
 
 	// 添加标签项
 	tabWidget->addTab(downloadReadyWidget, "待下载");
@@ -211,11 +235,6 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	// 多层级下拉框
 	QLabel* comboLabel2 = new QLabel("多层级下拉框", this);
 	QStringList topItems2 = { "水果", "蔬菜", "饮料" };
-	//QMap<QString, QStringList> subItemMap = {
-	//	{ "水果", {"苹果", "香蕉", "西瓜"} },
-	//	{ "蔬菜", {"白菜", "萝卜", "西红柿"} },
-	//	{ "饮料", {"可乐", "雪碧", "果汁"} }
-	//};
 	AntComboBox* combo2 = new AntComboBox("请选择", topItems2, this);
 	combo2->setFixedSize(185, 48);
 
@@ -455,21 +474,12 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
 		//taskInfo.streamRequest.extraParams["qn"] = "80";
 		//根据请求参数获取视频地址
-		//getVideoPlayUrl(taskInfo);
+		getVideoPlayUrl(taskInfo);
 		//taskInfo.videoId = videoInfo.videoId;
 		taskInfo.videoInfo = videoInfo;
-		// 创建卡片模型
-		//auto cardModel = QSharedPointer<DownloadCardModel>::create();
-		//cardModel->setTitle(videoInfo.title);
-		//cardModel->setCoverUrl(videoInfo.thumbnailUrl);
-		//cardModel->setDuration(videoInfo.duration);
-		//cardModel->setPublishTime(videoInfo.uploadDate);
-		//cardModel->setPublisher(videoInfo.author);
-		//cardModel->setVideoSize(0);
-		//cardModel->setAudioSize(0);
-		//cardModel->setState(DownloadCardState::Pending);
+		taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
 
-		// 创建卡片
+		// 创建卡片并添加到待下载容器
 		downloadReadyWidget->addDownloadCard(taskInfo);
 	}
 }
@@ -515,4 +525,95 @@ void DownloadPage::initViewPage()
 
 	w2Lay->addWidget(listViewLab);
 	w2Lay->addWidget(chatList);
+}
+
+// 添加任务状态改变处理函数
+void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newState)
+{
+	DownloadTaskInfo taskInfo;
+	ContainerState sourceState = ContainerState::DownloadReady;
+
+	// 查找任务在哪个容器中
+	if (!(taskInfo = downloadReadyWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
+		sourceState = ContainerState::DownloadReady;
+	}
+	else if (!(taskInfo = downloadingWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
+		sourceState = ContainerState::Downloading;
+	}
+	else if (!(taskInfo = downloadedWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
+		sourceState = ContainerState::Downloaded;
+	}
+	else {
+		qDebug() << "Task not found:" << taskId;
+		return;
+	}
+
+	// 如果源状态和目标状态相同，不处理
+	if (sourceState == newState) {
+		return;
+	}
+
+	// 从源容器移除任务
+	switch (sourceState) {
+	case ContainerState::DownloadReady:
+		downloadReadyWidget->removeTask(taskId);
+		break;
+	case ContainerState::Downloading:
+		downloadingWidget->removeTask(taskId);
+		break;
+	case ContainerState::Downloaded:
+		downloadedWidget->removeTask(taskId);
+		break;
+	}
+
+	// 更新任务状态以匹配目标容器状态
+	switch (newState) {
+	case ContainerState::DownloadReady:
+		taskInfo.status = Queued;
+		break;
+	case ContainerState::Downloading:
+		taskInfo.status = Downloading;
+		break;
+	case ContainerState::Downloaded:
+		taskInfo.status = Completed;
+		break;
+	}
+
+	// 添加到目标容器
+	switch (newState) {
+	case ContainerState::DownloadReady:
+		downloadReadyWidget->transferTaskToThis(taskInfo);
+		break;
+	case ContainerState::Downloading:
+		downloadingWidget->transferTaskToThis(taskInfo);
+		// 如果是转移到下载中，开始下载
+		if (m_downloadManager && sourceState == ContainerState::DownloadReady) {
+			// 只有从待下载转移时才调用addDownload
+			m_downloadManager->addDownload(taskInfo);
+		}
+		break;
+	case ContainerState::Downloaded:
+		downloadedWidget->transferTaskToThis(taskInfo);
+		break;
+	}
+}
+
+// 处理下载管理器开始的信号
+void DownloadPage::onDownloadManagerStarted(const QString& taskId)
+{
+	// 确保卡片状态正确更新
+	downloadingWidget->onDownloadStarted(taskId);
+}
+
+// 处理下载管理器完成的信号
+void DownloadPage::onDownloadManagerCompleted(const QString& taskId, const QString& filePath)
+{
+	// 更新任务信息中的文件路径
+	DownloadTaskInfo taskInfo = downloadingWidget->getTaskInfo(taskId);
+	if (!taskInfo.taskId.isEmpty()) {
+		taskInfo.request.outputPath = filePath;
+		taskInfo.status = Completed;
+		// 转移到已下载容器
+		onTaskStateChanged(taskId, ContainerState::Downloaded);
+	}
 }

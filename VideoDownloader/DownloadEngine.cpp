@@ -29,7 +29,7 @@ void DownloadEngine::onAddDownload(const DownloadTaskInfo& taskInfo)
 	m_allTasks[taskInfo.taskId] = taskInfo;
 
 	emit downloadAdded(taskInfo.taskId);
-
+	locker.unlock();
 	// 立即尝试处理队列
 	processQueue();
 }
@@ -175,6 +175,7 @@ void DownloadItem::start()
 	if (m_isCanceled) return;
 
 	// 创建目录
+	qDebug() << m_taskInfo.request.outputPath;
 	QFileInfo fileInfo(m_taskInfo.request.outputPath);
 	QDir dir = fileInfo.absoluteDir();
 	if (!dir.exists()) {
@@ -246,6 +247,12 @@ void DownloadItem::onReadyRead()
 
 void DownloadItem::onFinished()
 {
+	qDebug() << "DownloadItem::onFinished";
+	// 写入剩余数据
+	if (m_reply->bytesAvailable() > 0) {
+		m_file->write(m_reply->readAll());
+	}
+
 	if (m_file) {
 		m_file->close();
 	}
@@ -263,16 +270,17 @@ void DownloadItem::onFinished()
 			m_file->remove(); // 删除不完整的文件
 		}
 	}
-
+	qDebug() << "DownloadItem::success";
 	emit finished(m_taskInfo.taskId);
 }
 
 void DownloadItem::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
+	qDebug() << "DownloadItem::onDownloadProgress: " << bytesReceived << " / " << bytesTotal;
 	m_downloadedBytes = bytesReceived;
 	m_totalBytes = bytesTotal;
 
-	emit progress(m_taskInfo.taskId, bytesReceived, bytesTotal);
+	emit progress(m_taskInfo.taskId, m_downloadedBytes, m_totalBytes);
 }
 
 void DownloadItem::onErrorOccurred(QNetworkReply::NetworkError error)

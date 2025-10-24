@@ -25,6 +25,8 @@ class DownloadCardModel : public QObject
 		Q_PROPERTY(QString filePath READ filePath WRITE setFilePath NOTIFY filePathChanged)
 		Q_PROPERTY(VideoQualityLevel videoQuality READ videoQuality WRITE setVideoQuality NOTIFY videoQualityChanged)
 		Q_PROPERTY(AudioQualityLevel audioQuality READ audioQuality WRITE setAudioQuality NOTIFY audioQualityChanged)
+		Q_PROPERTY(qint64 downloadedSize READ downloadedSize WRITE setDownloadedSize NOTIFY downloadedSizeChanged)
+		Q_PROPERTY(qint64 downloadSize READ downloadSize WRITE setDownloadSize NOTIFY downloadSizeChanged)
 
 public:
 	explicit DownloadCardModel(QObject* parent = nullptr);
@@ -45,6 +47,8 @@ public:
 	QString filePath() const { return m_filePath; }
 	VideoQualityLevel videoQuality() const { return m_videoQuality; }
 	AudioQualityLevel audioQuality() const { return m_audioQuality; }
+	qint64 downloadedSize() const { return m_downloadedSize; }
+	qint64 downloadSize() const { return m_downloadSize; }
 
 	// Setters
 	void setTaskId(const QString& taskId);
@@ -61,7 +65,8 @@ public:
 	void setFilePath(const QString& filePath);
 	void setVideoQuality(VideoQualityLevel quality);
 	void setAudioQuality(AudioQualityLevel quality);
-
+	void setDownloadedSize(qint64 downloadedSize);
+	void setDownloadSize(qint64 totalSize);
 	// 工具方法
 	QString formattedVideoSize() const;
 	QString formattedAudioSize() const;
@@ -87,6 +92,8 @@ signals:
 	void filePathChanged();
 	void videoQualityChanged();
 	void audioQualityChanged();
+	void downloadedSizeChanged();
+	void downloadSizeChanged();
 
 private:
 	QString m_taskId;
@@ -97,6 +104,8 @@ private:
 	QString m_publisher;
 	qint64 m_videoSize = 0;
 	qint64 m_audioSize = 0;
+	qint64 m_downloadSize;
+	qint64 m_downloadedSize;
 	DownloadCardState m_state = DownloadCardState::Pending;
 	int m_progress = 0;
 	qint64 m_downloadSpeed = 0;

@@ -183,6 +183,9 @@ void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 	connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
 	connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
 	connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::coverUrlChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::videoQualityChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::audioQualityChanged, this, &DownloadCard::onModelChanged);
 
 	onModelChanged();
 }
@@ -634,11 +637,9 @@ void DownloadCard::updateUI()
 	m_speedLabel->setText(m_model->formattedDownloadSpeed());
 
 	// 更新进度信息标签（已下载/总共）
-	qint64 totalSize = m_model->videoSize() + m_model->audioSize();
-	qint64 downloadedSize = totalSize * m_model->progress() / 100;
-	QString downloadedStr = DownloadTaskInfo::formatFileSize(downloadedSize);
-	QString totalStr = DownloadTaskInfo::formatFileSize(totalSize);
-	m_progressInfoLabel->setText(QString("%1/%2").arg(downloadedStr).arg(totalStr));
+	QString downloadedSize = DownloadTaskInfo::formatFileSize(m_model->downloadedSize());
+	QString totalSize = DownloadTaskInfo::formatFileSize(m_model->downloadSize());
+	m_progressInfoLabel->setText(QString("%1/%2").arg(downloadedSize).arg(totalSize));
 
 	// 根据状态更新UI
 	switch (m_model->state()) {
@@ -667,6 +668,7 @@ void DownloadCard::updateUI()
 				pixmap.loadFromData(reply->readAll());
 				if (!pixmap.isNull()) {
 					m_coverLabel->setPixmap(pixmap.scaled(140, 105, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+					//isCoverLoaded = true;
 				}
 			}
 			reply->deleteLater();

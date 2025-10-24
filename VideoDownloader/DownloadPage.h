@@ -4,12 +4,12 @@
 
 #include "AntProfileTable.h"
 #include "VideoInfo.h"
+#include "DownloadCardContainerWidget.h"
 
 class AntScrollArea;
 class SkeletonWidget;
 class AntTabWidgetContainer;
 class MaterialTabWidget;
-class DownloadCardContainerWidget;
 class DownloadTaskInfo;
 class DownloadManager;
 class ApplicationController;
@@ -26,14 +26,21 @@ public:
 
 	void createDownloadCards(QList<VideoInfo> videoInfoList);
 
-protected:
-	void resizeEvent(QResizeEvent* event) override;
-private:
-	void initViewPage();
 signals:
 	void resized(int w, int h);				// 用于通知其他组件调整大小
 	void windowMoved(QPoint globalPos);		// 窗口移动时发出信号
+
+protected:
+	void resizeEvent(QResizeEvent* event) override;
+
+private slots:
+	void onTaskStateChanged(const QString& taskId, ContainerState newState);
+	void onDownloadManagerCompleted(const QString& taskId, const QString& filePath);
+	void onDownloadManagerStarted(const QString& taskId);
+
 private:
+	void initViewPage();
+
 	QSharedPointer<ApplicationController> m_applicationController;
 	QSharedPointer<DownloadManager> m_downloadManager;
 	MaterialTabWidget* tabWidget = nullptr;

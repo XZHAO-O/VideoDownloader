@@ -34,8 +34,17 @@ public:
 	void setState(ContainerState state);
 	ContainerState state() const { return m_containerState; }
 
+	// 任务转移相关方法
+	void transferTaskToThis(const DownloadTaskInfo& taskInfo);
+	void removeTask(const QString& taskId);
+	DownloadTaskInfo getTaskInfo(const QString& taskId) const;
+
 	// 更新显示当前页的卡片
 	void updateCurrentPageCards();
+
+signals:
+	// 任务状态改变信号
+	void taskStateChanged(const QString& taskId, ContainerState newState);
 
 protected:
 	// 保护成员变量
@@ -73,7 +82,7 @@ protected:
 	// 清理当前显示的卡片
 	void clearCurrentCards();
 
-protected slots:
+public slots:
 	// 保护槽函数
 	void onDownloadAdded(const QString& taskId);
 	void onDownloadRemoved(const QString& taskId);
@@ -82,6 +91,7 @@ protected slots:
 	void onDownloadFailed(const QString& taskId, const QString& error);
 	void onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 	void onDownloadSpeedUpdated(qint64 bytesPerSecond);
+	void onDownloadStarted(const QString& taskId);
 
 	// 分页改变槽函数
 	void onPageChanged(int page);

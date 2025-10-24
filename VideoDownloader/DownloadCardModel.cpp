@@ -125,6 +125,22 @@ void DownloadCardModel::setAudioQuality(AudioQualityLevel quality)
 	}
 }
 
+void DownloadCardModel::setDownloadedSize(qint64 downloadedSize)
+{
+	if (m_downloadedSize != downloadedSize) {
+		m_downloadedSize = downloadedSize;
+		emit progressChanged();
+	}
+}
+
+void DownloadCardModel::setDownloadSize(qint64 totalSize)
+{
+	if (m_downloadSize != totalSize) {
+		m_downloadSize = totalSize;
+		emit progressChanged();
+	}
+}
+
 QString DownloadCardModel::formattedVideoSize() const
 {
 	return DownloadTaskInfo::formatFileSize(m_videoSize);
@@ -187,7 +203,6 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 	m_progress = taskInfo.progressPercentage;
 	m_downloadSpeed = taskInfo.downloadSpeed;
 
-
 	// 根据状态设置卡片状态
 	switch (taskInfo.status) {
 	case Queued:
@@ -201,6 +216,9 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 		break;
 	case Failed:
 		m_state = DownloadCardState::Error;
+		break;
+	case Paused:
+		m_state = DownloadCardState::Downloading; // 暂停状态也显示为下载中，但按钮显示为继续
 		break;
 	default:
 		m_state = DownloadCardState::Pending;

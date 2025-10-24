@@ -56,10 +56,19 @@ DownloadManager::~DownloadManager()
 
 void DownloadManager::addDownload(const DownloadTaskInfo& taskInfo)
 {
-	m_tasks[taskInfo.taskId] = taskInfo;
+	// 确保任务状态正确
+	DownloadTaskInfo updatedTaskInfo = taskInfo;
+	if (updatedTaskInfo.status != Queued && updatedTaskInfo.status != Downloading) {
+		updatedTaskInfo.status = Queued;
+	}
 
-	emit addDownloadRequested(taskInfo);
-	emit downloadAdded(taskInfo.taskId);
+	// 设置开始时间
+	updatedTaskInfo.startTime = QDateTime::currentDateTime();
+
+	m_tasks[updatedTaskInfo.taskId] = updatedTaskInfo;
+
+	emit addDownloadRequested(updatedTaskInfo);
+	emit downloadAdded(updatedTaskInfo.taskId);
 }
 
 void DownloadManager::pauseDownload(const QString& taskId)
