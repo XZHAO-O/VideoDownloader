@@ -41,24 +41,6 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	QWidget* w1 = new QWidget(this);
 	scrollArea1->addWidget(w1);
 
-	// 视图页
-	initViewPage();
-
-	// 流式布局
-	QWidget* w3 = new QWidget(this);
-	FlowLayout* flowLay = new FlowLayout(w3, 10, 6);
-	QIcon svgIcon(":/Imgs/git.svg");
-	for (int i = 0; i < 50; ++i)
-	{
-		QLabel* label = new QLabel(w3);
-		label->setFixedSize(50, 50);
-		label->setPixmap(svgIcon.pixmap(50, 50));
-		flowLay->addWidget(label);
-	}
-
-	// 暂无数据
-	NoDataWidget* noData = new NoDataWidget(this);
-
 	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::DownloadReady, this);
 	downloadingWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloading, this);
 	downloadedWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloaded, this);
@@ -92,9 +74,6 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	tabWidget->addTab(downloadingWidget, "下载中");
 	tabWidget->addTab(downloadedWidget, "已下载");
 	tabWidget->addTab(scrollArea1, "常用控件");
-	tabWidget->addTab(scrollArea2, "视图控件");
-	tabWidget->addTab(w3, "流式布局");
-	tabWidget->addTab(noData, "暂无数据");
 
 	// 主布局
 	QVBoxLayout* layout = new QVBoxLayout(this);
@@ -490,43 +469,6 @@ void DownloadPage::resizeEvent(QResizeEvent* event)
 	container->setMinimumHeight(static_cast<int>(width() * 9.0 / 16.0));
 }
 
-void DownloadPage::initViewPage()
-{
-	scrollArea2 = new AntScrollArea(AntScrollArea::ScrollVertical, this);
-	QWidget* w2 = new QWidget(this);
-	scrollArea2->addWidget(w2);
-
-	// 创建聊天项数据
-	QVector<AntChatListView::ChatItem> chatItems = {
-	{":/Imgs/bee.png", "张三", "你好，最近怎么样？", "10:30 AM", false},
-	{":/Imgs/bee.png", "李四", "我很好，谢谢！你呢？", "10:31 AM", true},
-	{":/Imgs/bee.png", "王五", "我们今天见面吗？", "10:32 AM", false},
-	{":/Imgs/bee.png", "赵六", "今天晚上有空吗？", "10:33 AM", false},
-	{":/Imgs/bee.png", "孙七", "今晚八点见！", "10:34 AM", true},
-	{":/Imgs/bee.png", "周八", "好的，八点见！", "10:35 AM", false},
-	{":/Imgs/bee.png", "吴九", "你最近在忙什么？", "10:36 AM", false},
-	{":/Imgs/bee.png", "郑十", "最近工作挺忙的，快累死了", "10:37 AM", true},
-	{":/Imgs/bee.png", "冯十一", "加油！工作顺利啊！", "10:38 AM", false},
-	{":/Imgs/bee.png", "陈十二", "谢谢，努力！", "10:39 AM", true}
-	};
-	// 创建你的自定义列表视图
-	AntChatListView* chatList = new AntChatListView(w2);
-	// 用数据创建模型
-	QStandardItemModel* listModel = chatList->createModel(chatItems);
-	// 给视图设置模型
-	chatList->setModel(listModel);
-	chatList->setFixedHeight(600);
-	// 视图页布局
-	QVBoxLayout* w2Lay = new QVBoxLayout(w2);
-	QLabel* listViewLab = new QLabel("列表视图", w2);
-	listViewLab->setFixedHeight(20);
-	w2Lay->setContentsMargins(10, 0, 10, 0);
-	w2Lay->setSpacing(10);
-
-	w2Lay->addWidget(listViewLab);
-	w2Lay->addWidget(chatList);
-}
-
 // 添加任务状态改变处理函数
 void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newState)
 {
@@ -539,9 +481,6 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 	}
 	else if (!(taskInfo = downloadingWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
 		sourceState = ContainerState::Downloading;
-	}
-	else if (!(taskInfo = downloadedWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
-		sourceState = ContainerState::Downloaded;
 	}
 	else {
 		qDebug() << "Task not found:" << taskId;
@@ -561,16 +500,10 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 	case ContainerState::Downloading:
 		downloadingWidget->removeTask(taskId);
 		break;
-	case ContainerState::Downloaded:
-		downloadedWidget->removeTask(taskId);
-		break;
 	}
 
 	// 更新任务状态以匹配目标容器状态
 	switch (newState) {
-	case ContainerState::DownloadReady:
-		taskInfo.status = Queued;
-		break;
 	case ContainerState::Downloading:
 		taskInfo.status = Downloading;
 		break;
@@ -581,9 +514,6 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 
 	// 添加到目标容器
 	switch (newState) {
-	case ContainerState::DownloadReady:
-		downloadReadyWidget->transferTaskToThis(taskInfo);
-		break;
 	case ContainerState::Downloading:
 		downloadingWidget->transferTaskToThis(taskInfo);
 		// 如果是转移到下载中，开始下载

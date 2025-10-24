@@ -30,6 +30,13 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		break;
 	case ContainerState::Downloading:
 		m_noDataText = "暂无下载任务";
+		// 连接下载管理器信号
+		connect(m_downloadManager.get(), &DownloadManager::downloadProgress, this, &DownloadCardContainerWidget::onDownloadProgress);
+		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
+		connect(m_downloadManager.get(), &DownloadManager::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
+		connect(m_downloadManager.get(), &DownloadManager::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
 		m_noDataText = "暂无已下载任务";
@@ -37,22 +44,6 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	}
 
 	initUI();
-
-	// 连接下载管理器信号
-	if (m_downloadManager) {
-		connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
-			this, &DownloadCardContainerWidget::onDownloadProgress);
-		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
-			this, &DownloadCardContainerWidget::onDownloadCompleted);
-		connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
-			this, &DownloadCardContainerWidget::onDownloadFailed);
-		connect(m_downloadManager.get(), &DownloadManager::downloadPaused,
-			this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadResumed,
-			this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadStarted,
-			this, &DownloadCardContainerWidget::onDownloadStarted);
-	}
 }
 
 DownloadCardContainerWidget::~DownloadCardContainerWidget()
@@ -98,6 +89,7 @@ void DownloadCardContainerWidget::initUI()
 		this, &DownloadCardContainerWidget::onPageChanged);
 
 	m_mainLayout->addWidget(m_paginationWidget);
+	updateVisibility();
 }
 
 void DownloadCardContainerWidget::onPageChanged(int page)
@@ -129,9 +121,6 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 
 		// 设置卡片连接
 		setupCardConnections(downloadCard, taskInfo);
-
-		// 强制更新UI状态
-		//downloadCard->updateUI();
 	}
 
 	updateVisibility();
@@ -403,8 +392,9 @@ void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskI
 {
 	m_downloadTasks.append(downloadTaskInfo);
 
+	int beforeTotalPages = m_paginationWidget->totalPages();
 	// 更新分页器总页数
-	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+	int totalPages = qMax(beforeTotalPages, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
 	m_paginationWidget->setTotalPages(totalPages);
 
 	// 如果当前页有空间，直接添加卡片
@@ -421,12 +411,12 @@ void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskI
 			m_downloadCards.append(downloadCard);
 			m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, downloadCard);
 			setupCardConnections(downloadCard, downloadTaskInfo);
-
-			// 强制更新UI
-			//downloadCard->updateUI();
 		}
 	}
-
+	if (m_noDataWidget->isVisible() || (beforeTotalPages == 1 && totalPages > 1))
+	{
+		updateVisibility();
+	}
 	updateVisibility();
 }
 

@@ -40,15 +40,15 @@ DownloadCard* DownloadCardPool::getCard(QSharedPointer<DownloadCardModel> model,
 	if (!targetPool->isEmpty())
 	{
 		card = targetPool->takeFirst();
+		// 设置模型和父控件
+		card->setModel(model);
+		card->setParent(parent);
 	}
 	else
 	{
 		// 池为空，创建新卡片
 		card = new DownloadCard(model, parent);
 	}
-	// 设置模型和父控件
-	card->setModel(model);
-	card->setParent(parent);
 	card->show(); // 显示卡片
 
 	return card;

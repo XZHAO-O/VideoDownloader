@@ -12,6 +12,7 @@ public:
 	void setTotalPages(int pages);
 	void setCurrentPage(int page);
 	int currentPage() const { return m_currentPage; }
+	int totalPages() const { return m_totalPages; }
 
 signals:
 	void currentPageChanged(int page);

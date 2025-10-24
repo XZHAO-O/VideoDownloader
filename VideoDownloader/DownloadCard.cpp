@@ -19,7 +19,6 @@
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
 	, m_model(model)
-	, m_networkManager(new QNetworkAccessManager(this))
 {
 	setObjectName("DownloadCard");
 	// 移除固定大小，使用尺寸策略
@@ -28,164 +27,37 @@ DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* par
 	setAttribute(Qt::WA_Hover, true);
 
 	initUI();
+	updateTextColors();
 	initConnections();
+	initModelConnections();
 
-	if (m_model) {
-		onModelChanged();
-	}
+	onModelChanged();
 
 	// 添加主题变化监听，使用与AntButton相同的模式
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]() {
+		updateTextColors();
 		update();
-		updateUI();
 		});
 }
 
 DownloadCard::~DownloadCard()
 {
 	qDebug() << "=== DownloadCard Destroying - Third Party Components ===";
-	if (m_videoQualityCombo)
-	{
-		m_videoQualityCombo->disconnect();
-		delete m_videoQualityCombo;
-
-	}
-	if (m_audioQualityCombo)
-	{
-		m_audioQualityCombo->disconnect();
-		delete m_audioQualityCombo;
-	}
-
-	// 强制清理 AntButton 组件
-	if (m_downloadBtn) {
-		qDebug() << "Cleaning AntButton - download";
-		cleanupAntButton(m_downloadBtn);
-		m_downloadBtn = nullptr;
-	}
-
-	if (m_videoDownloadBtn) {
-		qDebug() << "Cleaning AntButton - video";
-		cleanupAntButton(m_videoDownloadBtn);
-		m_videoDownloadBtn = nullptr;
-	}
-
-	if (m_audioDownloadBtn) {
-		qDebug() << "Cleaning AntButton - audio";
-		cleanupAntButton(m_audioDownloadBtn);
-		m_audioDownloadBtn = nullptr;
-	}
-
-	if (m_closeBtn) {
-		qDebug() << "Cleaning AntButton - close";
-		cleanupAntButton(m_closeBtn);
-		m_closeBtn = nullptr;
-	}
-
-	// 清理下载中状态按钮
-	if (m_pauseBtn_downloading) {
-		qDebug() << "Cleaning AntButton - pause_downloading";
-		cleanupAntButton(m_pauseBtn_downloading);
-		m_pauseBtn_downloading = nullptr;
-	}
-
-	if (m_openFolderBtn_downloading) {
-		qDebug() << "Cleaning AntButton - open folder_downloading";
-		cleanupAntButton(m_openFolderBtn_downloading);
-		m_openFolderBtn_downloading = nullptr;
-	}
-
-	if (m_deleteBtn_downloading) {
-		qDebug() << "Cleaning AntButton - delete_downloading";
-		cleanupAntButton(m_deleteBtn_downloading);
-		m_deleteBtn_downloading = nullptr;
-	}
-
-	// 清理已下载状态按钮
-	if (m_openUrlBtn_downloaded) {
-		qDebug() << "Cleaning AntButton - open url_downloaded";
-		cleanupAntButton(m_openUrlBtn_downloaded);
-		m_openUrlBtn_downloaded = nullptr;
-	}
-
-	if (m_openFolderBtn_downloaded) {
-		qDebug() << "Cleaning AntButton - open folder_downloaded";
-		cleanupAntButton(m_openFolderBtn_downloaded);
-		m_openFolderBtn_downloaded = nullptr;
-	}
-
-	if (m_deleteBtn_downloaded) {
-		qDebug() << "Cleaning AntButton - delete_downloaded";
-		cleanupAntButton(m_deleteBtn_downloaded);
-		m_deleteBtn_downloaded = nullptr;
-	}
-
-	// 清理 MaterialProgressBar 组件
-	if (m_progressBar) {
-		qDebug() << "Cleaning MaterialProgressBar";
-		cleanupMaterialProgressBar(m_progressBar);
-		m_progressBar = nullptr;
-	}
-
-	qDebug() << "=== DownloadCard Destroyed ===";
-}
-
-void DownloadCard::cleanupAntButton(AntButton* button)
-{
-	if (!button) return;
-
-	// 强制断开所有连接
-	button->disconnect();
-
-	// 清除样式表
-	button->setStyleSheet("");
-
-	// 清除文本
-	button->setText("");
-
-	// 清除图标
-	button->setIcon(QIcon());
-
-	// 从父控件中移除
-	button->setParent(nullptr);
-
-	// 立即删除
-	delete button;
-}
-
-void DownloadCard::cleanupMaterialProgressBar(MaterialProgressBar* progressBar)
-{
-	if (!progressBar) return;
-
-	// 强制断开所有连接
-	progressBar->disconnect();
-
-	// 清除样式表
-	progressBar->setStyleSheet("");
-
-	// 从父控件中移除
-	progressBar->setParent(nullptr);
-
-	// 立即删除
-	delete progressBar;
 }
 
 void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 {
 	if (m_model == model || !model) return;
 
-	if (m_model) {
+	if (m_model)
+	{
 		disconnect(m_model.get(), nullptr, this, nullptr);
 	}
 
 	m_model = model;
 
-	connect(m_model.get(), &DownloadCardModel::stateChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::coverUrlChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::videoQualityChanged, this, &DownloadCard::onModelChanged);
-	connect(m_model.get(), &DownloadCardModel::audioQualityChanged, this, &DownloadCard::onModelChanged);
+	//更新资源
+	m_isCoverLoaded = false;
 
 	onModelChanged();
 }
@@ -370,6 +242,8 @@ void DownloadCard::initUI()
 		"border: 1px solid %1;"
 		"}").arg(DesignSystem::instance()->borderColor().name()));
 	m_coverLabel->setScaledContents(true);
+	// 让封面可点击
+	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
 
 	m_playIcon = new QLabel(m_coverContainer);
 	m_playIcon->setFixedSize(40, 40);
@@ -614,13 +488,21 @@ void DownloadCard::initConnections()
 	connect(m_deleteBtn_downloaded, &AntButton::clicked, this, &DownloadCard::deleteClicked);
 }
 
+void DownloadCard::initModelConnections()
+{
+	connect(m_model.get(), &DownloadCardModel::stateChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::coverUrlChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::videoQualityChanged, this, &DownloadCard::onModelChanged);
+	connect(m_model.get(), &DownloadCardModel::audioQualityChanged, this, &DownloadCard::onModelChanged);
+}
+
 // 修改updateUI函数，在每次更新时动态设置颜色
 void DownloadCard::updateUI()
 {
 	if (!m_model) return;
-
-	// 更新文本颜色
-	updateTextColors();
 
 	// 更新基本信息 - 直接设置 AntCellWidget 的按钮文本
 	m_titleCell->getBtn()->setText(m_model->title());
@@ -631,15 +513,6 @@ void DownloadCard::updateUI()
 		.arg(m_model->formattedPublishTime())
 		.arg(m_model->formattedDuration()));
 	m_publisherLabel->setText(m_model->publisher());
-
-	// 更新进度信息
-	m_progressBar->setValue(m_model->progress());
-	m_speedLabel->setText(m_model->formattedDownloadSpeed());
-
-	// 更新进度信息标签（已下载/总共）
-	QString downloadedSize = DownloadTaskInfo::formatFileSize(m_model->downloadedSize());
-	QString totalSize = DownloadTaskInfo::formatFileSize(m_model->downloadSize());
-	m_progressInfoLabel->setText(QString("%1/%2").arg(downloadedSize).arg(totalSize));
 
 	// 根据状态更新UI
 	switch (m_model->state()) {
@@ -657,20 +530,24 @@ void DownloadCard::updateUI()
 		break;
 	}
 
-	// 加载封面图片（保持原有代码）
+	// 加载封面图片
+	if (m_isCoverLoaded)
+		return;
 	if (m_model->coverUrl().isValid()) {
+		QNetworkAccessManager* networkManager = new QNetworkAccessManager(this);
 		QNetworkRequest request(m_model->coverUrl());
-		QNetworkReply* reply = m_networkManager->get(request);
+		QNetworkReply* reply = networkManager->get(request);
 
-		connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+		connect(reply, &QNetworkReply::finished, this, [this, reply, networkManager]() {
 			if (reply->error() == QNetworkReply::NoError) {
 				QPixmap pixmap;
 				pixmap.loadFromData(reply->readAll());
 				if (!pixmap.isNull()) {
 					m_coverLabel->setPixmap(pixmap.scaled(140, 105, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-					//isCoverLoaded = true;
+					m_isCoverLoaded = true;
 				}
 			}
+			networkManager->deleteLater();
 			reply->deleteLater();
 			});
 	}
@@ -688,7 +565,6 @@ void DownloadCard::updateTextColors()
 			"    border: none;"
 			"    color: %1;"
 			"    font-size: 14px;"
-			"    font-weight: bold;"
 			"    text-align: left;"
 			"    padding: 0px;"
 			"    margin: 0px;"
@@ -750,16 +626,19 @@ void DownloadCard::updatePendingUI()
 	// 显示时间和发布者信息
 	m_timeLabel->setVisible(true);
 	m_publisherLabel->setVisible(true);
-
-	// 让封面可点击（保持原有逻辑）
-	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
-
-	// 标题现在通过 AntCellWidget 自动支持点击和悬浮效果
-	// 不需要额外的设置
 }
 
 void DownloadCard::updateDownloadingUI()
 {
+	// 更新进度信息
+	m_progressBar->setValue(m_model->progress());
+	m_speedLabel->setText(m_model->formattedDownloadSpeed());
+
+	// 更新进度信息标签（已下载/总共）
+	QString downloadedSize = DownloadTaskInfo::formatFileSize(m_model->downloadedSize());
+	QString totalSize = DownloadTaskInfo::formatFileSize(m_model->downloadSize());
+	m_progressInfoLabel->setText(QString("%1/%2").arg(downloadedSize).arg(totalSize));
+
 	m_playIcon->setVisible(false);
 	m_progressBar->setVisible(true);
 	m_progressInfoLabel->setVisible(true);
@@ -768,9 +647,6 @@ void DownloadCard::updateDownloadingUI()
 	// 隐藏时间和发布者信息
 	m_timeLabel->setVisible(false);
 	m_publisherLabel->setVisible(false);
-
-	// 封面不可点击
-	m_coverLabel->setText("");
 }
 
 void DownloadCard::updateDownloadedUI()
@@ -786,11 +662,5 @@ void DownloadCard::updateDownloadedUI()
 
 	// 更新时间标签显示下载完成时间
 	// 这里假设模型有下载完成时间，如果没有需要添加
-	// m_timeLabel->setText(QString("下载完成: %1").arg(m_model->formattedDownloadTime()));
-
-	// 让封面可点击（保持原有逻辑）
-	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
-
-	// 标题现在通过 AntCellWidget 自动支持点击和悬浮效果
-	// 不需要额外的设置
+	 //m_timeLabel->setText(QString("下载完成: %1").arg(m_model->formattedDownloadTime()));
 }

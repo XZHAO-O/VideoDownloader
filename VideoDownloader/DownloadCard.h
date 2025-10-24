@@ -67,6 +67,7 @@ private slots:
 private:
 	void initUI();
 	void initConnections();
+	void initModelConnections();
 	void updatePendingUI();
 	void updateDownloadingUI();
 	void updateDownloadedUI();
@@ -115,6 +116,5 @@ private:
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
 	bool m_hovered = false;
-
-	QNetworkAccessManager* m_networkManager = nullptr;
+	bool m_isCoverLoaded = false;
 };
