@@ -24,9 +24,10 @@
 #include "ConfigVideoPlatform.h"
 #include "DownloadCardContainerWidget.h"
 
-DownloadPage::DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent)
+DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent)
 	: QWidget(parent)
-	, m_downloadManager(downloadManager)
+	, m_applicationController(applicationController)
+	, m_downloadManager(applicationController->getDownloadManager())
 {
 	setObjectName("DownloadPage");
 	setFocusPolicy(Qt::ClickFocus);  // 设置焦点策略 点击空白处可以获取焦点
@@ -437,7 +438,7 @@ DownloadPage::~DownloadPage()
 
 void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 {
-	auto platformService = m_downloadManager->getAppController()->getPlatformService();
+	auto platformService = m_applicationController->getPlatformService();
 	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
 	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
 }

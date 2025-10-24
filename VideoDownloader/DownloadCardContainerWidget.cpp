@@ -39,17 +39,17 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 
 	// 连接信号
 	if (m_downloadManager) {
-		connect(m_downloadManager.get(), &DownloadManager::downloadAdded,
-			this, &DownloadCardContainerWidget::onDownloadAdded);
-		connect(m_downloadManager.get(), &DownloadManager::downloadStatusChanged,
-			this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
-			this, &DownloadCardContainerWidget::onDownloadCompleted);
-		connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
-			this, &DownloadCardContainerWidget::onDownloadFailed);
-		connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
-			this, &DownloadCardContainerWidget::onDownloadProgress);
-		connect(m_downloadManager.get(), &DownloadManager::downloadSpeedUpdated, this, &DownloadCardContainerWidget::onDownloadSpeedUpdated);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadAdded,
+		//	this, &DownloadCardContainerWidget::onDownloadAdded);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadStatusChanged,
+		//	this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
+		//	this, &DownloadCardContainerWidget::onDownloadCompleted);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
+		//	this, &DownloadCardContainerWidget::onDownloadFailed);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
+		//	this, &DownloadCardContainerWidget::onDownloadProgress);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadSpeedUpdated, this, &DownloadCardContainerWidget::onDownloadSpeedUpdated);
 	}
 }
 

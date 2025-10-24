@@ -1,110 +1,102 @@
 #pragma once
 
-#include "IDownloadEngine.h"
-
-#include <QRunnable>
+#include <QObject>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QQueue>
-#include <QDateTime>
+#include <QMap>
 #include <QMutex>
+#include <QFile>
+#include "DownloadTaskInfo.h"
 
-#include "ApplicationState.h"
+class DownloadItem;
 
-class QFile;
-class QThreadPool;
-class QNetworkAccessManager;
-class QNetworkReply;
-class QTimer;
-
-class LogSystem;
-class ConfigManager;
-
-class DownloadEngine : public IDownloadEngine
+class DownloadEngine : public QObject
 {
 	Q_OBJECT
 
 public:
-	explicit DownloadEngine(QSharedPointer<ConfigManager> configManager,
-		QObject* parent = nullptr);
+	explicit DownloadEngine(QObject* parent = nullptr);
 	~DownloadEngine();
 
-	// IDownloadEngine 接口实现
-	QString addTask(const DownloadTask& task) override;
-	bool removeTask(const QString& taskId) override;
-	bool pauseTask(const QString& taskId) override;
-	bool resumeTask(const QString& taskId) override;
-	bool cancelTask(const QString& taskId) override;
-
-	QList<QString> getActiveTasks() const override;
-	bool isTaskActive(const QString& taskId) const override;
-	qint64 getTaskProgress(const QString& taskId) const override;
-	qint64 getTaskTotalSize(const QString& taskId) const override;
-
-	void setMaxConcurrentDownloads(int count) override;
-	int maxConcurrentDownloads() const override;
-	void setDownloadSpeedLimit(qint64 bytesPerSecond) override;
-	qint64 downloadSpeedLimit() const override;
+public slots:
+	void onAddDownload(const DownloadTaskInfo& taskInfo);
+	void onPauseDownload(const QString& taskId);
+	void onResumeDownload(const QString& taskId);
+	void onCancelDownload(const QString& taskId);
+	void onSpeedLimitChanged(qint64 bytesPerSecond);
+	void onMaxConcurrentChanged(int max);
+	void onMaxThreadsChanged(int maxThreads);
 
 private slots:
-	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-	void onDownloadFinished();
-	void onReadyRead();
-	void processTaskQueue();
-	void updateSpeedStatistics();
+	void onDownloadItemFinished(const QString& taskId);
+
+signals:
+	void downloadAdded(const QString& taskId);
+	void downloadStarted(const QString& taskId);
+	void downloadPaused(const QString& taskId);
+	void downloadResumed(const QString& taskId);
+	void downloadCanceled(const QString& taskId);
+	void downloadCompleted(const QString& taskId, const QString& filePath);
+	void downloadFailed(const QString& taskId, const QString& error);
+	void downloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
 private:
-	struct DownloadTaskItem {
-		DownloadTask task;
-		QNetworkReply* reply = nullptr;
-		QFile* file = nullptr;
-		qint64 downloadedBytes = 0;
-		qint64 totalBytes = 0;
-		DownloadStatus status = Queued;
-		QDateTime startTime;
-		QDateTime lastUpdateTime;
-		qint64 lastDownloadedBytes = 0;
-		int retryCount = 0;
-		int maxRetries = 3;
-		QString errorString;
-
-		bool isValid() const {
-			return !task.taskId.isEmpty() &&
-				task.url.isValid() &&
-				!task.savePath.isEmpty();
-		}
-	};
-
-	class DownloadRunnable : public QRunnable {
-	public:
-		DownloadRunnable(DownloadEngine* engine, const QString& taskId);
-		void run() override;
-
-	private:
-		DownloadEngine* m_engine;
-		QString m_taskId;
-	};
-
-	bool startDownload(const QString& taskId);
-	bool stopDownload(const QString& taskId);
-	void cleanupTask(const QString& taskId);
-	void retryTask(const QString& taskId);
-	void completeTask(const QString& taskId, bool success);
-	void updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total);
-	qint64 calculateCurrentSpeed(const DownloadTaskItem& task) const;
-
-	QSharedPointer<ConfigManager> m_configManager;
-	LogSystem* m_logger;
+	void processQueue();
+	void startNextDownload(const DownloadTaskInfo& taskInfo);
+	void cleanupDownload(const QString& taskId);
 
 	QNetworkAccessManager* m_networkManager;
-	QThreadPool* m_threadPool;
-	QTimer* m_queueTimer;
-	QTimer* m_speedTimer;
 
-	mutable QMutex m_tasksMutex;
-	QMap<QString, DownloadTaskItem> m_tasks;
-	QQueue<QString> m_taskQueue;
+	QQueue<DownloadTaskInfo> m_downloadQueue;
+	QMap<QString, DownloadItem*> m_activeDownloads;
+	QMap<QString, DownloadTaskInfo> m_allTasks;
 
-	int m_maxConcurrentDownloads = 3;
-	qint64 m_downloadSpeedLimit = 0; // 0 means no limit
-	qint64 m_currentTotalSpeed = 0;
-	QMap<QString, qint64> m_taskSpeeds;
+	QMutex m_queueMutex;
+
+	int m_maxConcurrentDownloads;
+	int m_currentDownloads;
+	qint64 m_downloadSpeedLimit;
+	int m_maxThreadsPerDownload;
+};
+
+class DownloadItem : public QObject
+{
+	Q_OBJECT
+
+public:
+	DownloadItem(const DownloadTaskInfo& taskInfo, QNetworkAccessManager* manager, QObject* parent = nullptr);
+	~DownloadItem();
+
+	void start();
+	void pause();
+	void resume();
+	void cancel();
+
+	QString taskId() const { return m_taskInfo.taskId; }
+	DownloadStatus status() const { return m_taskInfo.status; }
+
+signals:
+	void finished(const QString& taskId);
+	void progress(const QString& taskId, qint64 downloaded, qint64 total);
+
+private slots:
+	void onReadyRead();
+	void onFinished();
+	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+	void onErrorOccurred(QNetworkReply::NetworkError error);
+
+private:
+	void cleanup();
+
+	DownloadTaskInfo m_taskInfo;
+	QNetworkAccessManager* m_networkManager;
+	QNetworkReply* m_reply;
+	QFile* m_file;
+
+	qint64 m_downloadedBytes;
+	qint64 m_totalBytes;
+
+	bool m_isPaused;
+	bool m_isCanceled;
 };

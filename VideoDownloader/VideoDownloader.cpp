@@ -138,7 +138,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	contentLay->addWidget(stackedWidget);
 	// 添加页面
 	HomePage* homePage = new HomePage(appController, stackedWidget);
-	DownloadPage* downloadPage = new DownloadPage(appController->getDownloadManager(), stackedWidget);
+	DownloadPage* downloadPage = new DownloadPage(appController, stackedWidget);
 
 	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
 

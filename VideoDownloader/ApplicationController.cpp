@@ -124,8 +124,7 @@ void ApplicationController::initializeServices()
 		m_modManager, m_networkManager, m_mediaService, m_recordRepository);
 
 	// 初始化下载管理器
-	m_downloadManager = QSharedPointer<DownloadManager>::create(
-		QSharedPointer<ApplicationController>(this, [](ApplicationController*) {}));
+	m_downloadManager = QSharedPointer<DownloadManager>::create();
 
 	LogSystem::instance().info("All services initialized", "Application");
 }

@@ -12,13 +12,14 @@ class MaterialTabWidget;
 class DownloadCardContainerWidget;
 class DownloadTaskInfo;
 class DownloadManager;
+class ApplicationController;
 
 class DownloadPage : public QWidget
 {
 	Q_OBJECT
 
 public:
-	DownloadPage(QSharedPointer<DownloadManager> downloadManager, QWidget* parent = nullptr);
+	DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent = nullptr);
 	~DownloadPage();
 
 	void getVideoPlayUrl(DownloadTaskInfo& taskInfo);
@@ -33,6 +34,7 @@ signals:
 	void resized(int w, int h);				// 用于通知其他组件调整大小
 	void windowMoved(QPoint globalPos);		// 窗口移动时发出信号
 private:
+	QSharedPointer<ApplicationController> m_applicationController;
 	QSharedPointer<DownloadManager> m_downloadManager;
 	MaterialTabWidget* tabWidget = nullptr;
 	DownloadCardContainerWidget* downloadReadyWidget = nullptr;

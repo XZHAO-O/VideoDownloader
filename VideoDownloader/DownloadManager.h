@@ -1,81 +1,71 @@
 #pragma once
 
+#include <QObject>
+#include <QSharedPointer>
+#include <QThread>
+#include <QMap>
 #include <QQueue>
-
 #include "DownloadTaskInfo.h"
 
-class VideoDownloadRequest;
-class ApplicationController;
+class DownloadEngine;
 
 class DownloadManager : public QObject
 {
 	Q_OBJECT
 
 public:
-	explicit DownloadManager(QSharedPointer<ApplicationController> appController,
-		QObject* parent = nullptr);
+	explicit DownloadManager(QObject* parent = nullptr);
+	~DownloadManager();
 
-	QSharedPointer<ApplicationController> getAppController() const;
-
-	// 下载操作
-	QString downloadVideo(const VideoDownloadRequest& request);
+	// 公共接口
+	void addDownload(const DownloadTaskInfo& taskInfo);
 	void pauseDownload(const QString& taskId);
 	void resumeDownload(const QString& taskId);
 	void cancelDownload(const QString& taskId);
 
-	void calculateAndEmitDownloadSpeed();
+	// 配置设置
+	void setMaxConcurrentDownloads(int max);
+	void setDownloadSpeedLimit(qint64 bytesPerSecond);
+	void setMaxThreadsPerDownload(int maxThreads);
 
-	void updateDownloadSpeed(qint64 bytesPerSecond);
-
-	// 批量操作
-	QList<QString> downloadBatch(const QList<VideoDownloadRequest>& requests);
-	void pauseAll();
-	void resumeAll();
-	void cancelAll();
-
-	// 查询操作
-	QList<DownloadTaskInfo> getActiveDownloads() const;
-	QList<DownloadTaskInfo> getCompletedDownloads() const;
-	QList<DownloadTaskInfo> getQueuedDownloads() const;
-	DownloadTaskInfo getDownloadInfo(const QString& taskId) const;
-
-	// 设置
-	void setMaxConcurrentDownloads(int count);
-	int getMaxConcurrentDownloads() const;
-	void setDefaultDownloadPath(const QString& path);
-	QString getDefaultDownloadPath() const;
+	// 获取任务信息
+	DownloadTaskInfo getTaskInfo(const QString& taskId) const;
+	QList<DownloadTaskInfo> getAllTasks() const;
 
 signals:
+	// 发送到工作线程的信号
+	void addDownloadRequested(const DownloadTaskInfo& taskInfo);
+	void pauseDownloadRequested(const QString& taskId);
+	void resumeDownloadRequested(const QString& taskId);
+	void cancelDownloadRequested(const QString& taskId);
+	void speedLimitChanged(qint64 bytesPerSecond);
+	void maxConcurrentChanged(int max);
+	void maxThreadsChanged(int maxThreads);
+
+	// 发送到UI线程的信号
 	void downloadAdded(const QString& taskId);
-	void downloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
-	void downloadCompleted(const QString& taskId, const QString& filePath);
-	void downloadFailed(const QString& taskId, const QString& error);
+	void downloadStarted(const QString& taskId);
 	void downloadPaused(const QString& taskId);
 	void downloadResumed(const QString& taskId);
-	void downloadCancelled(const QString& taskId);
-
-	// 添加缺失的信号
-	void downloadStatusChanged(const QString& taskId);
-	void downloadSpeedUpdated(qint64 bytesPerSecond);
+	void downloadCanceled(const QString& taskId);
+	void downloadCompleted(const QString& taskId, const QString& filePath);
+	void downloadFailed(const QString& taskId, const QString& error);
+	void downloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
 private slots:
-	void onOrchestrationProgress(const QString& taskId, qint64 downloaded, qint64 total);
-	void onOrchestrationCompleted(const QString& taskId, const QString& filePath);
-	void onOrchestrationFailed(const QString& taskId, const QString& error);
+	void onDownloadAdded(const QString& taskId);
+	void onDownloadStarted(const QString& taskId);
+	void onDownloadPaused(const QString& taskId);
+	void onDownloadResumed(const QString& taskId);
+	void onDownloadCanceled(const QString& taskId);
+	void onDownloadCompleted(const QString& taskId, const QString& filePath);
+	void onDownloadFailed(const QString& taskId, const QString& error);
+	void onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
 private:
-	void processQueue();
-	void startNextDownload();
-	void updateDownloadInfo(const QString& taskId, const DownloadTaskInfo& info);
-	void completeDownload(const QString& taskId, bool success, const QString& filePath = "");
+	QThread m_workerThread;
+	DownloadEngine* m_engine;
+	QMap<QString, DownloadTaskInfo> m_tasks;
 
-	QSharedPointer<ApplicationController> m_appController;
-	QMap<QString, DownloadTaskInfo> m_activeDownloads;
-	QMap<QString, DownloadTaskInfo> m_completedDownloads;
-	QMap<QString, DownloadTaskInfo> m_queuedDownloads;
-	QQueue<QString> m_downloadQueue;
-	int m_maxConcurrentDownloads = 3;
-	int m_currentDownloads = 0;
-	QString m_defaultDownloadPath;
-	QTimer* m_speedTimer;
+	QString generateTaskId() const;
 };
