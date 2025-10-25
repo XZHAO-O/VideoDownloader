@@ -37,12 +37,12 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.8.1</QtInstall>
-    <QtModules>core;gui;network;widgets;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
+    <QtModules>core;gui;network;widgets;concurrent;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.8.1</QtInstall>
-    <QtModules>core;gui;network;widgets;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
+    <QtModules>core;gui;network;widgets;concurrent;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">

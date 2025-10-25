@@ -2,6 +2,8 @@
 
 #include <QUrl>
 #include <QDateTime>
+#include <QUuid>
+#include <chrono>
 #include <QRandomGenerator>
 
 #include "ApplicationState.h"
@@ -27,10 +29,24 @@ struct VideoDownloadRequest {
 	}
 
 	// 生成唯一任务ID
-	static QString generateTaskId() {
-		return QString("task_%1_%2")
-			.arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz"))
-			.arg(QRandomGenerator::global()->generate() % 10000);
+	static QString generateTaskId()
+	{
+		using namespace std::chrono;
+
+		// 微秒级时间戳（性能与精度的平衡）
+		auto now = high_resolution_clock::now();
+		auto micros = duration_cast<microseconds>(now.time_since_epoch()).count();
+
+		// 紧凑型UUID（移除分隔符和连字符）
+		QString uuid = QUuid::createUuid().toString(QUuid::Id128);
+
+		// 额外随机数
+		uint32_t randomNum = QRandomGenerator::global()->generate();
+
+		return QString("task_%1_%2_%3")
+			.arg(micros)
+			.arg(uuid)
+			.arg(randomNum, 8, 16, QChar('0'));
 	}
 };
 

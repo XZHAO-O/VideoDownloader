@@ -1,7 +1,8 @@
 #include "QRCodeLoginWidget.h"
+
 #include <QVBoxLayout>
 #include <QLabel>
-#include "StyleSheet.h"
+
 #include "DesignSystem.h"
 
 QRCodeLoginWidget::QRCodeLoginWidget(QWidget* parent)

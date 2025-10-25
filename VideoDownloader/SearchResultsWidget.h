@@ -1,14 +1,16 @@
 #pragma once
 
 #include <QWidget>
-#include <QCheckBox>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QList>
-#include <QStandardItemModel>
-#include "AntButton.h"
-#include "AntChatListView.h"
+#include <QDateTime>
+#include <QUrl>
+
+#include "VideoInfo.h"
+
+class QCheckBox;
+class QStandardItemModel;
+class QLabel;
+class AntButton;
+class AntChatListView;
 
 class SearchResultsWidget : public QWidget
 {
@@ -19,6 +21,7 @@ public:
 	~SearchResultsWidget();
 
 	void addSearchResultItem(const QString& title, const QString& duration, const QString& author);
+	void addSearchResultItems(const QList<VideoInfo>& videoInfos); // 新增批量添加函数
 	void clearAll();
 	QList<int> getSelectedIndexes() const;
 	int getTotalItems() const;

@@ -403,6 +403,9 @@
     <ClCompile Include="SingleLevelComboBox.cpp">
       <Filter>Ui\Components</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadCardPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -711,11 +714,9 @@
     <QtMoc Include="SingleLevelComboBox.h">
       <Filter>Ui\Components</Filter>
     </QtMoc>
-  </ItemGroup>
-  <ItemGroup>
-    <QtUic Include="QtAntDesign.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
+    <QtMoc Include="DownloadCardPool.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\GaussianBlur.h">

@@ -1,13 +1,10 @@
 #pragma once
+
 #include <QWidget>
-#include <QColor>
-#include <QSvgRenderer>
-#include <QMouseEvent>
-#include <QList>
-#include <QMap>
-#include <QStandardItemModel>
+
 #include "DesignSystem.h"
-#include "PopupViewController.h"
+
+class PopupViewController;
 
 class SingleLevelComboBox : public QWidget
 {

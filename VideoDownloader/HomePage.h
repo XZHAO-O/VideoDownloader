@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QWidget>
-#include <QUrl>
 #include <QDateTime>
+#include <QUrl>
 
 #include "VideoInfo.h"
 
@@ -19,6 +19,9 @@ public:
 	HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent = nullptr);
 	~HomePage();
 
+signals:
+	void navigateToDownloadRequested(const QList<VideoInfo>& selectedVideoInfoList);
+
 protected:
 	void showEvent(QShowEvent* event) override;
 	void resizeEvent(QResizeEvent* event) override;
@@ -33,7 +36,8 @@ private:
 	void setupConnections();
 	void updateSearchResultsPosition();
 	void getVideoList(const QString& searchText);
-	void loadMockSearchData();
+	void processVideoList(const QList<VideoInfo>& videos);
+	void clearSearchData();
 
 	AntInput* antInput = nullptr;
 	SearchResultsWidget* m_searchResultsWidget = nullptr;
@@ -42,8 +46,6 @@ private:
 	QSharedPointer<ConfigModManager> m_configModManager;
 
 	QList<VideoInfo> videoInfoList;
-	bool searchChanged = false;
 
-signals:
-	void navigateToDownloadRequested(QList<VideoInfo> selectedVideoInfoList);
+	bool searchChanged = false;
 };

@@ -1,18 +1,17 @@
 #pragma once
 
 #include <QWidget>
-#include <QSharedPointer>
-#include "ModCardModel.h"
-#include "CircularAvatar.h"
-#include "DialogViewController.h"
-#include "ConfigVideoPlatform.h"
 
 class QLabel;
 class QPushButton;
-class AntButton;
-class AntToggleButton;
 class QHBoxLayout;
 class QVBoxLayout;
+class AntButton;
+class AntToggleButton;
+class DialogViewController;
+class CircularAvatar;
+class ModCardModel;
+class ConfigVideoPlatform;
 
 class ModCardWidget : public QWidget
 {

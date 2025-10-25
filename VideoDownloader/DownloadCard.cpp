@@ -1,19 +1,14 @@
 #include "DownloadCard.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+
 #include <QLabel>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QPixmap>
-#include <QDir>
+
 #include "AntButton.h"
-#include "MaterialProgressBar.h"
+#include "AntCellWidget.h"
 #include "DesignSystem.h"
-#include "SingleLevelComboBox.h"
 #include "AntTooltipManager.h"
+#include "MaterialProgressBar.h"
+#include "SingleLevelComboBox.h"
 #include "DownloadTaskInfo.h"
 
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)

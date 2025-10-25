@@ -1,13 +1,14 @@
 #include "SearchResultsWidget.h"
+
 #include <QLayout>
 #include <QCheckBox>
 #include <QLabel>
-#include <QMouseEvent>
-#include <QPainter>
 #include <QApplication>
+
 #include "DesignSystem.h"
 #include "StyleSheet.h"
 #include "AntButton.h"
+#include "AntChatListView.h"
 
 // 完全自定义的委托类，不依赖基类
 class SearchResultItemDelegate : public QStyledItemDelegate
@@ -87,10 +88,7 @@ public:
 
 		QRect titleRect(textRect.left(), textRect.top() + 12, textWidth, fmTitle.height());
 		painter->setFont(titleFont);
-
-		// 使用主题中的文字颜色
-		QColor textColor = theme.primaryTextColor;
-		painter->setPen(textColor);
+		painter->setPen(theme.primaryTextColor);
 
 		QString elidedTitle = fmTitle.elidedText(title, Qt::ElideRight, textWidth);
 		painter->drawText(titleRect, Qt::AlignLeft | Qt::AlignVCenter, elidedTitle);
@@ -102,10 +100,7 @@ public:
 
 		QRect metaRect(textRect.left(), titleRect.bottom() + 4, textWidth, fmMeta.height());
 		painter->setFont(metaFont);
-
-		// 使用主题中的次要文字颜色
-		QColor secondaryTextColor = theme.secondaryTextColor;
-		painter->setPen(secondaryTextColor);
+		painter->setPen(theme.secondaryTextColor);
 
 		painter->drawText(metaRect, Qt::AlignLeft | Qt::AlignVCenter, metaInfo);
 
@@ -253,6 +248,31 @@ void SearchResultsWidget::addSearchResultItem(const QString& title, const QStrin
 	m_listModel->appendRow(item);
 	m_totalItems++;
 
+	updateSelectedCount();
+	updateSelectAllCheckboxState();
+}
+
+void SearchResultsWidget::addSearchResultItems(const QList<VideoInfo>& videoInfos)
+{
+	// 批量添加搜索结果，提高性能
+	// 临时禁用视图更新以优化性能
+	m_searchResultsList->setUpdatesEnabled(false);
+
+	for (const VideoInfo& video : videoInfos) {
+		if (video.isValid()) {
+			QStandardItem* item = new QStandardItem();
+			item->setData(video.title, Qt::UserRole + 1);
+			item->setData(QString("%1 · %2").arg(video.duration).arg(video.author), Qt::UserRole + 2);
+			item->setData(false, Qt::UserRole + 5);
+			m_listModel->appendRow(item);
+			m_totalItems++;
+		}
+	}
+
+	// 重新启用视图更新
+	m_searchResultsList->setUpdatesEnabled(true);
+
+	// 只更新一次UI状态
 	updateSelectedCount();
 	updateSelectAllCheckboxState();
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QDateTime>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include "AntProfileTable.h"
 #include "VideoInfo.h"
@@ -55,4 +57,6 @@ private:
 	QStandardItemModel* tableModel = nullptr;
 	AntTabWidgetContainer* antTabContainer = nullptr;
 	QWidget* container = nullptr;
+
+	QMutex m_mutex;
 };

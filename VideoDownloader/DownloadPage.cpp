@@ -1,5 +1,9 @@
 #include "DownloadPage.h"
 
+#include <QtConcurrent\QtConcurrent>
+#include <QFuture>
+
+
 #include "AntScrollArea.h"
 #include "SkeletonWidget.h"
 #include "AntToggleButton.h"
@@ -444,24 +448,46 @@ void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 {
 	downloadReadyWidget->showLoading();
-	QList<DownloadTaskInfo> taskInfoList;
-	for (const auto& videoInfo : videoInfoList)
-	{
-		//创建任务信息
-		DownloadTaskInfo taskInfo;
-		taskInfo.taskId = taskInfo.request.generateTaskId();
-		taskInfo.request.platformId = videoInfo.platformId;
-		//存储请求参数到任务信息中
-		taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
 
-		//根据请求参数获取视频地址
-		getVideoPlayUrl(taskInfo);
+	// 创建任务列表
+	auto sharedTaskList = QSharedPointer<QList<DownloadTaskInfo>>::create();
+	sharedTaskList->reserve(videoInfoList.size());
 
-		taskInfo.videoInfo = videoInfo;
-		taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
-		taskInfoList.append(std::move(taskInfo));
-	}
-	downloadReadyWidget->addDownloadCards(std::move(taskInfoList));
+	// 使用信号槽来在主线程中处理结果
+	auto* watcher = new QFutureWatcher<DownloadTaskInfo>(this);
+
+	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::resultReadyAt, this,
+		[this, sharedTaskList, watcher](int index) {
+			// 这个槽会在主线程中被调用
+			DownloadTaskInfo taskInfo = watcher->resultAt(index);
+			sharedTaskList->append(taskInfo);
+		});
+
+	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::finished, this,
+		[this, watcher, sharedTaskList]() {
+			downloadReadyWidget->addDownloadCards(std::move(*sharedTaskList));
+			watcher->deleteLater();
+		});
+
+	// 使用 mapped 而不是 map，这样可以返回结果
+	QFuture<DownloadTaskInfo> future = QtConcurrent::mapped(videoInfoList,
+		[this](const VideoInfo& videoInfo) {
+			// 在 worker 线程中处理
+			DownloadTaskInfo taskInfo;
+			taskInfo.taskId = taskInfo.request.generateTaskId();
+			taskInfo.request.platformId = videoInfo.platformId;
+			taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
+
+			// 注意：getVideoPlayUrl 可能需要调整以支持多线程
+			getVideoPlayUrl(taskInfo);
+
+			taskInfo.videoInfo = videoInfo;
+			taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
+
+			return taskInfo;
+		});
+
+	watcher->setFuture(future);
 }
 
 void DownloadPage::resizeEvent(QResizeEvent* event)

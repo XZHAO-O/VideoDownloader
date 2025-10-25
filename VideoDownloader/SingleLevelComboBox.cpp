@@ -1,9 +1,8 @@
 #include "SingleLevelComboBox.h"
-#include <QPainter>
-#include <QFontMetrics>
-#include <QMouseEvent>
-#include <QStringListModel>
-#include "DesignSystem.h"
+
+#include <QStandardItemModel>
+
+#include "PopupViewController.h"
 
 SingleLevelComboBox::SingleLevelComboBox(QString showText, QStringList itemTextList, QWidget* parent, int popupHeight)
 	: QWidget(parent),

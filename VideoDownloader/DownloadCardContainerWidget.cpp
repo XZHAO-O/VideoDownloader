@@ -461,6 +461,7 @@ void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tas
 	int beforeTotalPages = m_paginationWidget->totalPages();
 
 	// 批量添加任务
+	m_downloadTasks.reserve(m_downloadTasks.size() + tasks.size());
 	for (auto&& task : tasks)
 	{
 		m_downloadTasks.append(std::move(task));

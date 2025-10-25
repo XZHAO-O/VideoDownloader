@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QDesktopServices>
+#include <QCoreApplication>
 
 #include "MaterialTabWidget.h"
 #include "AntScrollArea.h"

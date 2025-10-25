@@ -1,17 +1,16 @@
 #include "ModCardWidget.h"
+
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QPixmap>
 #include <QFileInfo>
-#include <QTextDocument>
+
 #include "AntButton.h"
 #include "AntToggleButton.h"
-#include "StyleSheet.h"
 #include "DesignSystem.h"
 #include "QrCodeWidget.h"
+#include "DialogViewController.h"
+#include "CircularAvatar.h"
+#include "ConfigVideoPlatform.h"
+#include "ModCardModel.h"
 
 ModCardWidget::ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, QWidget* parent)
 	: QWidget(parent)

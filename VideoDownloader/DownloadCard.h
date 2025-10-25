@@ -1,11 +1,9 @@
 #pragma once
 
 #include <QWidget>
-#include <QSharedPointer>
+
 #include "DownloadCardModel.h"
 #include "VideoPreviewWindow.h"
-#include "QNetworkAccessManager.h"
-#include "AntCellWidget.h"
 
 class QLabel;
 class QPushButton;
@@ -13,6 +11,7 @@ class QHBoxLayout;
 class QVBoxLayout;
 class AntButton;
 class AntComboBox;
+class AntCellWidget;
 class MaterialProgressBar;
 class SingleLevelComboBox;
 
