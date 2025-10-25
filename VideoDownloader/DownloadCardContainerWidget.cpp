@@ -455,8 +455,8 @@ void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tas
 {
 	if (tasks.isEmpty()) return;
 
-	// 开始批量操作前暂停UI更新
-	setUpdatesEnabled(false);
+	// 移除 setUpdatesEnabled(false)
+	// setUpdatesEnabled(false);
 
 	int beforeTotalPages = m_paginationWidget->totalPages();
 
@@ -470,7 +470,6 @@ void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tas
 	// 计算新的总页数
 	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
 
-	// 只有当总页数确实发生变化时才更新分页器
 	if (totalPages != beforeTotalPages)
 	{
 		m_paginationWidget->setTotalPages(totalPages);
@@ -479,8 +478,8 @@ void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tas
 	// 更新当前页的卡片
 	updateCurrentPageCards();
 
-	// 恢复UI更新
-	setUpdatesEnabled(true);
+	// 确保UI更新被启用
+	//setUpdatesEnabled(true);
 
 	// 隐藏加载指示器
 	m_spinner->setVisible(false);

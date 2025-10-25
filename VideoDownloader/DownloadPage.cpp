@@ -478,7 +478,7 @@ void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 			taskInfo.request.platformId = videoInfo.platformId;
 			taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
 
-			// 注意：getVideoPlayUrl 可能需要调整以支持多线程
+			// 网络请求，获取视频播放地址
 			getVideoPlayUrl(taskInfo);
 
 			taskInfo.videoInfo = videoInfo;
