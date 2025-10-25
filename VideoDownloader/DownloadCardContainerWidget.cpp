@@ -1,12 +1,18 @@
 #include "DownloadCardContainerWidget.h"
-#include <QScrollArea>
-#include <QNetworkRequest>
+
 #include <QNetworkReply>
-#include <QNetworkAccessManager>
 #include <QDir>
-#include <QFileInfo>
 #include <QDesktopServices>
-#include <algorithm>
+#include <QApplication>
+
+#include "MaterialSpinner.h"
+#include "PaginationWidget.h"
+#include "AntScrollArea.h"
+#include "NoDataWidget.h"
+#include "DesignSystem.h"
+#include "DownloadCard.h"
+#include "DownloadManager.h"
+#include "DownloadCardPool.h"
 
 DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager,
 	ContainerState state,
@@ -21,6 +27,7 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	, m_noDataWidget(nullptr)
 	, m_paginationWidget(nullptr)
 	, m_cardPool(new DownloadCardPool(this))
+	, m_spinner(nullptr)
 	, m_currentSpeed(0)
 {
 	// 根据状态设置无数据文本
@@ -58,6 +65,12 @@ void DownloadCardContainerWidget::initUI()
 	m_mainLayout->setContentsMargins(0, 0, 0, 0);
 	m_mainLayout->setSpacing(0);
 
+	// 创建加载指示器
+	m_spinner = new MaterialSpinner(QSize(40, 40), 4, DesignSystem::instance()->primaryColor(), this);
+	m_spinner->setVisible(false);  // 初始隐藏
+	m_spinner->setFixedSize(60, 60);  // 设置固定大小
+	m_spinner->setStyleSheet("background-color: rgba(255, 255, 255, 200); border-radius: 10px;");  // 半透明背景
+
 	// 创建滚动区域
 	m_scrollArea = new AntScrollArea(AntScrollArea::ScrollVertical, this);
 	m_scrollWidget = new QWidget(this);
@@ -83,12 +96,14 @@ void DownloadCardContainerWidget::initUI()
 	m_paginationWidget->setFixedHeight(50);
 	m_paginationWidget->setTotalPages(1);
 	m_paginationWidget->setCurrentPage(1);
+	m_paginationWidget->setVisible(false);
 
 	// 连接分页信号
 	connect(m_paginationWidget, &PaginationWidget::currentPageChanged,
 		this, &DownloadCardContainerWidget::onPageChanged);
 
 	m_mainLayout->addWidget(m_paginationWidget);
+
 	updateVisibility();
 }
 
@@ -115,7 +130,7 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 		// 从卡片池获取卡片
 		DownloadCard* downloadCard = m_cardPool->getCard(model, this);
 
-		m_downloadCards.append(downloadCard);
+		m_downloadCards.insert(taskInfo.taskId, downloadCard);
 		// 在添加弹簧之前插入卡片
 		m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, downloadCard);
 
@@ -129,8 +144,9 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 void DownloadCardContainerWidget::clearCurrentCards()
 {
 	// 断开所有连接并从布局中移除
-	for (auto card : m_downloadCards)
+	for (auto it = m_downloadCards.begin(); it != m_downloadCards.end(); ++it)
 	{
+		DownloadCard* card = it.value();
 		card->disconnect();
 		m_scrollLayout->removeWidget(card);
 		// 释放卡片到池中
@@ -174,8 +190,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片列表中移除
-			m_downloadCards.removeOne(card);
+			// 从当前显示的卡片映射中移除
+			m_downloadCards.remove(taskInfo.taskId);
 
 			// 从布局中移除卡片
 			m_scrollLayout->removeWidget(card);
@@ -205,7 +221,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 					DownloadCard* newCard = m_cardPool->getCard(model, m_scrollWidget);
 
 					if (newCard) {
-						m_downloadCards.append(newCard);
+						m_downloadCards.insert(nextTask.taskId, newCard);
 						m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, newCard);
 						setupCardConnections(newCard, nextTask);
 					}
@@ -238,8 +254,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片列表中移除
-			m_downloadCards.removeOne(card);
+			// 从当前显示的卡片映射中移除
+			m_downloadCards.remove(taskInfo.taskId);
 
 			// 从布局中移除卡片
 			m_scrollLayout->removeWidget(card);
@@ -284,8 +300,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片列表中移除
-			m_downloadCards.removeOne(card);
+			// 从当前显示的卡片映射中移除
+			m_downloadCards.remove(taskInfo.taskId);
 
 			// 从布局中移除卡片
 			m_scrollLayout->removeWidget(card);
@@ -388,44 +404,107 @@ void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
 		});
 }
 
-void DownloadCardContainerWidget::addDownloadCard(DownloadTaskInfo downloadTaskInfo)
+void DownloadCardContainerWidget::addDownloadCard(const DownloadTaskInfo& downloadTaskInfo)
 {
 	m_downloadTasks.append(downloadTaskInfo);
 
 	int beforeTotalPages = m_paginationWidget->totalPages();
 	// 更新分页器总页数
-	int totalPages = qMax(beforeTotalPages, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
-	m_paginationWidget->setTotalPages(totalPages);
+	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+
+	// 只有当总页数确实发生变化时才更新分页器
+	if (totalPages != beforeTotalPages)
+	{
+		m_paginationWidget->setTotalPages(totalPages);
+	}
 
 	// 如果当前页有空间，直接添加卡片
 	int currentPageStart = (m_currentPage - 1) * m_pageSize;
 	int currentPageEnd = currentPageStart + m_pageSize;
 	int newTaskIndex = m_downloadTasks.size() - 1;
 
-	if (newTaskIndex >= currentPageStart && newTaskIndex < currentPageEnd) {
+	if (newTaskIndex >= currentPageStart && newTaskIndex < currentPageEnd)
+	{
 		// 新任务在当前显示页，添加卡片
-		if (m_downloadCards.size() < m_pageSize) {
+		if (m_downloadCards.size() < m_pageSize)
+		{
 			auto model = QSharedPointer<DownloadCardModel>::create(downloadTaskInfo);
 			DownloadCard* downloadCard = m_cardPool->getCard(model, this);
 
-			m_downloadCards.append(downloadCard);
+			m_downloadCards.insert(downloadTaskInfo.taskId, downloadCard);
 			m_scrollLayout->insertWidget(m_scrollLayout->count() - 1, downloadCard);
 			setupCardConnections(downloadCard, downloadTaskInfo);
 		}
 	}
-	if (m_noDataWidget->isVisible() || (beforeTotalPages == 1 && totalPages > 1))
-	{
-		updateVisibility();
-	}
+
 	updateVisibility();
+}
+
+void DownloadCardContainerWidget::showLoading()
+{
+	// 显示加载指示器
+	m_spinner->setVisible(true);
+	m_spinner->raise();  // 确保在最上层
+	// 居中显示
+	m_spinner->move((width() - m_spinner->width()) / 2,
+		(height() - m_spinner->height()) / 2);
+}
+
+// 添加一个批量添加任务的方法，用于优化大量任务添加时的性能
+void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tasks)
+{
+	if (tasks.isEmpty()) return;
+
+	// 开始批量操作前暂停UI更新
+	setUpdatesEnabled(false);
+
+	int beforeTotalPages = m_paginationWidget->totalPages();
+
+	// 批量添加任务
+	for (auto&& task : tasks)
+	{
+		m_downloadTasks.append(std::move(task));
+	}
+
+	// 计算新的总页数
+	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+
+	// 只有当总页数确实发生变化时才更新分页器
+	if (totalPages != beforeTotalPages)
+	{
+		m_paginationWidget->setTotalPages(totalPages);
+	}
+
+	// 更新当前页的卡片
+	updateCurrentPageCards();
+
+	// 恢复UI更新
+	setUpdatesEnabled(true);
+
+	// 隐藏加载指示器
+	m_spinner->setVisible(false);
 }
 
 void DownloadCardContainerWidget::updateVisibility()
 {
-	bool hasCards = !m_downloadCards.isEmpty();
-	m_scrollArea->setVisible(hasCards);
-	m_noDataWidget->setVisible(!hasCards);
-	m_paginationWidget->setVisible(m_downloadTasks.size() > m_pageSize);
+	if (m_downloadCards.isEmpty())
+	{
+		m_scrollArea->setVisible(false);
+		m_noDataWidget->setVisible(true);
+	}
+	else
+	{
+		m_scrollArea->setVisible(true);
+		m_noDataWidget->setVisible(false);
+	}
+	bool visible = m_paginationWidget->isVisible();
+	if (m_paginationWidget->totalPages() > 1)
+	{
+		if (!visible)
+			m_paginationWidget->setVisible(true);
+	}
+	else if (visible)
+		m_paginationWidget->setVisible(false);
 }
 
 void DownloadCardContainerWidget::onDownloadAdded(const QString& taskId)
@@ -470,47 +549,68 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total)
 {
 	// 更新对应卡片的进度
-	for (auto card : m_downloadCards) {
-		if (card->model()->taskId() == taskId) {
-			int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
-			card->model()->setDownloadedSize(downloaded);
-			card->model()->setDownloadSize(total);
-			card->model()->setProgress(progress);
-			card->model()->setDownloadSpeed(m_currentSpeed);
+	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
+	if (card) {
+		int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
+		card->model()->setDownloadedSize(downloaded);
+		card->model()->setDownloadSize(total);
+		card->model()->setProgress(progress);
+		card->model()->setDownloadSpeed(m_currentSpeed);
 
-			// 强制更新UI
-			card->updateUI();
-			break;
-		}
+		// 强制更新UI
+		card->updateUI();
 	}
 }
 
 void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
 {
-	m_currentSpeed = bytesPerSecond;
+	//m_currentSpeed = bytesPerSecond;
+
+	//DownloadCard* card = m_downloadCards.value(taskId, nullptr);
+	//if (card) {
+	//	card->model()->setState(DownloadCardState::Downloading);
+	//	//card->updateUI();
+	//}
 
 	// 更新所有卡片的下载速度
-	for (auto card : m_downloadCards)
-	{
-		auto model = card->model();
-		if (model && model->state() == DownloadCardState::Downloading)
-		{
-			model->setDownloadSpeed(bytesPerSecond);
-			//card->updateUI();
+	//for (auto it = m_downloadCards.begin(); it != m_downloadCards.end(); ++it)
+	//{
+	//	DownloadCard* card = it.value();
+	//	auto model = card->model();
+	//	if (model && model->state() == DownloadCardState::Downloading)
+	//	{
+	//		model->setDownloadSpeed(bytesPerSecond);
+	//		//card->updateUI();
+	//	}
+	//}
+}
+
+void DownloadCardContainerWidget::onDownloadStarted(const QString& taskId)
+{
+	// 更新任务状态为下载中
+	for (auto& task : m_downloadTasks) {
+		if (task.taskId == taskId) {
+			task.status = Downloading;
+			break;
 		}
+	}
+
+	// 更新对应卡片的UI
+	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
+	if (card) {
+		card->model()->setState(DownloadCardState::Downloading);
+		//card->updateUI();
 	}
 }
 
 void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total)
 {
 	// 更新特定任务的进度
-	for (auto card : m_downloadCards) {
-		if (card->model()->taskId() == taskId) {
-			int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
-			card->model()->setProgress(progress);
-			//card->updateUI();
-			break;
-		}
+	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
+	if (card) {
+		int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
+		card->model()->setProgress(progress);
+		//card->updateUI();
 	}
 }
 
@@ -566,18 +666,12 @@ void DownloadCardContainerWidget::removeTask(const QString& taskId)
 		[taskId](const DownloadTaskInfo& task) { return task.taskId == taskId; });
 
 	if (it != m_downloadTasks.end()) {
-		// 查找对应的卡片
-		DownloadCard* cardToRemove = nullptr;
-		for (auto card : m_downloadCards) {
-			if (card->model()->taskId() == taskId) {
-				cardToRemove = card;
-				break;
-			}
-		}
+		// 从当前显示的卡片映射中查找并移除
+		DownloadCard* cardToRemove = m_downloadCards.value(taskId, nullptr);
 
 		if (cardToRemove) {
-			// 从当前显示的卡片列表中移除
-			m_downloadCards.removeOne(cardToRemove);
+			// 从当前显示的卡片映射中移除
+			m_downloadCards.remove(taskId);
 
 			// 从布局中移除卡片
 			m_scrollLayout->removeWidget(cardToRemove);
@@ -608,24 +702,4 @@ DownloadTaskInfo DownloadCardContainerWidget::getTaskInfo(const QString& taskId)
 	}
 
 	return DownloadTaskInfo();
-}
-
-void DownloadCardContainerWidget::onDownloadStarted(const QString& taskId)
-{
-	// 更新任务状态为下载中
-	for (auto& task : m_downloadTasks) {
-		if (task.taskId == taskId) {
-			task.status = Downloading;
-			break;
-		}
-	}
-
-	// 更新对应卡片的UI
-	for (auto card : m_downloadCards) {
-		if (card->model()->taskId() == taskId) {
-			card->model()->setState(DownloadCardState::Downloading);
-			//card->updateUI();
-			break;
-		}
-	}
 }

@@ -1,16 +1,16 @@
 #pragma once
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QScrollArea>
-#include <QMap>
-#include <QSharedPointer>
 #include "DownloadCard.h"
-#include "DownloadManager.h"
-#include "NoDataWidget.h"
-#include "AntScrollArea.h"
-#include "PaginationWidget.h"
-#include "DownloadCardPool.h"
+#include "DownloadTaskInfo.h"
+
+class QVBoxLayout;
+class NoDataWidget;
+class AntScrollArea;
+class PaginationWidget;
+class MaterialSpinner;
+class DownloadCardPool;
+class DownloadCard;
+class DownloadManager;
 
 // 容器状态枚举
 enum class ContainerState {
@@ -30,7 +30,9 @@ public:
 	virtual ~DownloadCardContainerWidget();
 
 	// 公共接口
-	void addDownloadCard(DownloadTaskInfo downloadTaskInfo);
+	void addDownloadCard(const DownloadTaskInfo& downloadTaskInfo);
+	void showLoading();
+	void addDownloadCards(QList<DownloadTaskInfo>&& tasks);
 	void setState(ContainerState state);
 	ContainerState state() const { return m_containerState; }
 
@@ -46,25 +48,21 @@ signals:
 	// 任务状态改变信号
 	void taskStateChanged(const QString& taskId, ContainerState newState);
 
-protected:
-	// 保护成员变量
-	QSharedPointer<DownloadManager> m_downloadManager;
-	ContainerState m_containerState;
-	QVBoxLayout* m_mainLayout;
-	AntScrollArea* m_scrollArea;
-	QWidget* m_scrollWidget;
-	QVBoxLayout* m_scrollLayout;
-	QList<DownloadCard*> m_downloadCards;        // 当前显示的卡片
-	QList<DownloadTaskInfo> m_downloadTasks;     // 所有任务信息
-	NoDataWidget* m_noDataWidget;
-	PaginationWidget* m_paginationWidget;        // 分页器
-	DownloadCardPool* m_cardPool;                // 卡片池
-	QString m_noDataText;
+public slots:
 
-	// 分页相关
-	int m_currentPage = 1;
-	int m_pageSize = 10; // 每页显示10个卡片
+	void onDownloadAdded(const QString& taskId);
+	void onDownloadRemoved(const QString& taskId);
+	void onDownloadStatusChanged(const QString& taskId);
+	void onDownloadCompleted(const QString& taskId, const QString& filePath);
+	void onDownloadFailed(const QString& taskId, const QString& error);
+	void onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
+	void onDownloadSpeedUpdated(qint64 bytesPerSecond);
+	void onDownloadStarted(const QString& taskId);
 
+	// 分页改变槽函数
+	void onPageChanged(int page);
+
+private:
 	// 保护方法
 	void initUI();
 	void downloadVideo(const QUrl& url);
@@ -82,21 +80,25 @@ protected:
 	// 清理当前显示的卡片
 	void clearCurrentCards();
 
-public slots:
-	// 保护槽函数
-	void onDownloadAdded(const QString& taskId);
-	void onDownloadRemoved(const QString& taskId);
-	void onDownloadStatusChanged(const QString& taskId);
-	void onDownloadCompleted(const QString& taskId, const QString& filePath);
-	void onDownloadFailed(const QString& taskId, const QString& error);
-	void onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
-	void onDownloadSpeedUpdated(qint64 bytesPerSecond);
-	void onDownloadStarted(const QString& taskId);
-
-	// 分页改变槽函数
-	void onPageChanged(int page);
-
-private:
 	void updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total);
+
+	QSharedPointer<DownloadManager> m_downloadManager;
+	ContainerState m_containerState;
+	QVBoxLayout* m_mainLayout;
+	AntScrollArea* m_scrollArea;
+	QWidget* m_scrollWidget;
+	QVBoxLayout* m_scrollLayout;
+	QMap<QString, DownloadCard*> m_downloadCards;        // 当前显示的卡片，使用taskId作为键
+	QList<DownloadTaskInfo> m_downloadTasks;     // 所有任务信息
+	NoDataWidget* m_noDataWidget;
+	PaginationWidget* m_paginationWidget;        // 分页器
+	DownloadCardPool* m_cardPool;                // 卡片池
+	MaterialSpinner* m_spinner;
+	QString m_noDataText;
+
+	// 分页相关
+	int m_currentPage = 1;
+	int m_pageSize = 10; // 每页显示10个卡片
+
 	qint64 m_currentSpeed;
 };

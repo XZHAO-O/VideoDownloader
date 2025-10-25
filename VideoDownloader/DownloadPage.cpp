@@ -441,8 +441,10 @@ void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
 }
 
-void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
+void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 {
+	downloadReadyWidget->showLoading();
+	QList<DownloadTaskInfo> taskInfoList;
 	for (const auto& videoInfo : videoInfoList)
 	{
 		//创建任务信息
@@ -451,16 +453,15 @@ void DownloadPage::createDownloadCards(QList<VideoInfo> videoInfoList)
 		taskInfo.request.platformId = videoInfo.platformId;
 		//存储请求参数到任务信息中
 		taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
-		//taskInfo.streamRequest.extraParams["qn"] = "80";
+
 		//根据请求参数获取视频地址
 		getVideoPlayUrl(taskInfo);
-		//taskInfo.videoId = videoInfo.videoId;
+
 		taskInfo.videoInfo = videoInfo;
 		taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
-
-		// 创建卡片并添加到待下载容器
-		downloadReadyWidget->addDownloadCard(taskInfo);
+		taskInfoList.append(std::move(taskInfo));
 	}
+	downloadReadyWidget->addDownloadCards(std::move(taskInfoList));
 }
 
 void DownloadPage::resizeEvent(QResizeEvent* event)
