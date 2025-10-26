@@ -247,7 +247,7 @@ void DownloadCard::initUI()
 		"border-radius: 20px;"
 		"}");
 	m_playIcon->setAlignment(Qt::AlignCenter);
-	m_playIcon->setPixmap(QPixmap(":/Imgs/play.svg").scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	m_playIcon->setPixmap(QPixmap(":/Imgs/play.png").scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 	m_playIcon->setVisible(false);
 
 	coverLayout->addWidget(m_coverLabel);

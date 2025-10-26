@@ -79,5 +79,6 @@
         <file>Imgs/nav_icon_avatar_nor.svg</file>
         <file>Imgs/github.png</file>
         <file>Imgs/goTo.svg</file>
+        <file>Imgs/play.png</file>
     </qresource>
 </RCC>

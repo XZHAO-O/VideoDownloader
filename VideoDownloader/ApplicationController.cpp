@@ -9,7 +9,6 @@
 #include "LogSystem.h"
 #include "EventBus.h"
 #include "NetworkManager.h"
-#include "DownloadOrchestrationService.h"
 #include "PlatformAggregatorService.h"
 #include "MediaProcessingService.h"
 #include "DownloadRecordRepository.h"
@@ -119,10 +118,6 @@ void ApplicationController::initializeServices()
 	// 初始化平台聚合服务
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
-	// 初始化下载编排服务
-	m_downloadService = QSharedPointer<DownloadOrchestrationService>::create(
-		m_modManager, m_networkManager, m_mediaService, m_recordRepository);
-
 	// 初始化下载管理器
 	m_downloadManager = QSharedPointer<DownloadManager>::create();
 
@@ -143,7 +138,6 @@ void ApplicationController::cleanup()
 {
 	// 逆序清理服务
 	m_downloadManager.clear();
-	m_downloadService.clear();
 	m_platformService.clear();
 	m_recordRepository.clear();
 	m_modManager.clear();

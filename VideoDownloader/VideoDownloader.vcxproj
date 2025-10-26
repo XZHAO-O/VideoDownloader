@@ -65,13 +65,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\QR-Code-generator-master;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\FastGaussianBlur-main;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\QR-Code-generator-master;$(ProjectDir)ThirdParty\FastGaussianBlur-main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\QR-Code-generator-master;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty\FastGaussianBlur-main;E:\CProject\VideoDownloader\VideoDownloader\ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\QR-Code-generator-master;$(ProjectDir)ThirdParty\FastGaussianBlur-main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -113,7 +113,6 @@
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadCardPool.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
-    <ClCompile Include="DownloadOrchestrationService.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="EventBus.cpp" />
     <ClCompile Include="LoginManager.cpp" />
@@ -352,7 +351,6 @@
     <QtMoc Include="ConfigManager.h" />
     <QtMoc Include="EventBus.h" />
     <ClInclude Include="ApplicationState.h" />
-    <QtMoc Include="DownloadOrchestrationService.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadCardModel.h" />
     <QtMoc Include="DownloadCard.h" />

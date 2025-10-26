@@ -59,7 +59,8 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 
 		// 发送请求
 		NetworkResponse response;
-		if (!params.isEmpty()) {
+		if (!params.isEmpty())
+		{
 			QUrl fullUrl(apiUrl);
 			QUrlQuery query;
 			for (auto it = params.begin(); it != params.end(); ++it) {
@@ -68,7 +69,8 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 			fullUrl.setQuery(query);
 			response = m_networkManager->get(fullUrl.toString(), headers);
 		}
-		else {
+		else
+		{
 			response = m_networkManager->get(apiUrl, headers);
 		}
 
@@ -110,29 +112,21 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 	if (isLoggedIn())
 	{
 		QVariantMap cookies = getCookie();
-		QStringList cookieList;
-		for (auto it = cookies.begin(); it != cookies.end(); ++it)
+		if (!cookies.isEmpty())
 		{
-			cookieList.append(it.key() + "=" + it.value().toString());
+			QStringList cookieList;
+			for (auto it = cookies.begin(); it != cookies.end(); ++it)
+			{
+				cookieList.append(it.key() + "=" + it.value().toString());
+			}
+			QString cookiesStr = cookieList.join("; ");
+			headers["Cookie"] = cookiesStr;
 		}
-		QString cookiesStr = cookieList.join("; ");
-		headers["Cookie"] = cookiesStr;
 	}
-	//QString cookies = getCookies();
-	//if (!cookies.isEmpty()) {
-	//	headers["Cookie"] = cookies;
-	//}
 
 	// 设置清晰度
 	//QVariantMap qualityMapping = m_modInfo.getQualityMapping(request.type);
 	//params["qn"] = qualityMapping.value(request.quality, 64); // 默认 720p
-
-
-	// 根据平台构建不同的参数
-	//request.extraParams["qn"] = 80;
-	//request.extraParams["type"] = "mp4";
-	//request.extraParams["platform"] = "html5";
-	//request.extraParams["high_quality"] = 1;
 
 	params.insert(request.extraParams);
 	QVariantMap requestParams = m_modInfo.getConfigValue("qualityMapping.video").toMap();
@@ -143,7 +137,8 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 
 	// 发送请求
 	NetworkResponse response;
-	if (!params.isEmpty()) {
+	if (!params.isEmpty())
+	{
 		QUrl fullUrl(apiUrl);
 		QUrlQuery query;
 		for (auto it = params.begin(); it != params.end(); ++it) {
@@ -152,7 +147,8 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 		fullUrl.setQuery(query);
 		response = m_networkManager->get(fullUrl.toString(), headers);
 	}
-	else {
+	else
+	{
 		response = m_networkManager->get(apiUrl, headers);
 	}
 
@@ -166,7 +162,6 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 	QJsonObject obj = doc.object();
 	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
 	LOG_INFO("ConfigVideoPlatform", "Video Play Url retrieved: %s", videoPlayUrl.toUtf8().constData());
-	//emit videoInfoReceived(videoInfo);
 
 	return videoPlayUrl;
 }
