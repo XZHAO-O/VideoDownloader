@@ -445,6 +445,13 @@ void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
 }
 
+void DownloadPage::getVideoCover(DownloadTaskInfo& taskInfo)
+{
+	auto platformService = m_applicationController->getPlatformService();
+	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
+	videoPlatfrom->getVideoCover(taskInfo);
+}
+
 void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 {
 	downloadReadyWidget->showLoading();
@@ -477,11 +484,11 @@ void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 			taskInfo.taskId = taskInfo.request.generateTaskId();
 			taskInfo.request.platformId = videoInfo.platformId;
 			taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
+			taskInfo.videoInfo = videoInfo;
 
 			// 网络请求，获取视频播放地址
 			getVideoPlayUrl(taskInfo);
-
-			taskInfo.videoInfo = videoInfo;
+			getVideoCover(taskInfo);
 			taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
 
 			return taskInfo;

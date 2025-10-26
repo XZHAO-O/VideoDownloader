@@ -91,7 +91,8 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 
 	LOG_DEBUG("Network", QString("GET request started: %1").arg(url));
 
-	QNetworkReply* reply = m_networkManager->get(request);
+	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+	QNetworkReply* reply = networkManager->get(request);
 	//handleReply(reply, context);
 	// 创建事件循环等待请求完成
 	QEventLoop loop;
@@ -101,12 +102,14 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 	// 检查错误
 	if (reply->error() != QNetworkReply::NoError) {
 		networkResponse.errorString = QString("Network error: %1").arg(reply->errorString());
+		networkManager->deleteLater();
 		reply->deleteLater();
 		return networkResponse;
 	}
 
 	// 读取响应
 	QByteArray data = reply->readAll();
+	networkManager->deleteLater();
 	reply->deleteLater();
 
 	networkResponse.success = true;

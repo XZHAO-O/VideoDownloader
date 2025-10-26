@@ -49,7 +49,6 @@ signals:
 	void taskStateChanged(const QString& taskId, ContainerState newState);
 
 public slots:
-
 	void onDownloadAdded(const QString& taskId);
 	void onDownloadRemoved(const QString& taskId);
 	void onDownloadStatusChanged(const QString& taskId);
@@ -77,8 +76,11 @@ private:
 	// 设置无数据文本
 	void setNoDataText(const QString& text) { m_noDataText = text; }
 
-	// 清理当前显示的卡片
+	// 清理当前显示的卡片（只隐藏，不删除）
 	void clearCurrentCards();
+
+	// 清理所有卡片（包括预创建的）
+	void clearAllCards();
 
 	void updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
@@ -99,6 +101,9 @@ private:
 	// 分页相关
 	int m_currentPage = 1;
 	int m_pageSize = 10; // 每页显示10个卡片
+
+	// 预创建的卡片列表
+	QList<DownloadCard*> m_precreatedCards;
 
 	qint64 m_currentSpeed;
 };

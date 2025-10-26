@@ -26,6 +26,8 @@ public:
 
 	void getVideoPlayUrl(DownloadTaskInfo& taskInfo);
 
+	void getVideoCover(DownloadTaskInfo& taskInfo);
+
 	void createDownloadCards(const QList<VideoInfo>& videoInfoList);
 
 signals:

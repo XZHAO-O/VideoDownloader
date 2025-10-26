@@ -9,6 +9,7 @@
 
 class INetworkManager;
 class ConfigManager;
+class DownloadTaskInfo;
 
 class ConfigVideoPlatform : public QObject
 {
@@ -19,6 +20,7 @@ public:
 
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
+	void getVideoCover(DownloadTaskInfo& taskInfo);
 	QUrl getVideoPlayUrl(StreamRequest& request);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);

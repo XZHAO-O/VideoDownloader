@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVariantMap>
+#include <QByteArray>
 
 // 视频流信息
 struct StreamInfo {
@@ -27,6 +28,7 @@ struct VideoInfo {
 	QString author;
 	QString description;
 	QUrl thumbnailUrl;
+	QByteArray cover;
 	QString duration; // seconds
 	QDateTime uploadDate;
 	qint64 viewCount;

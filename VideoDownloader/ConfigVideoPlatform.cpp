@@ -5,6 +5,7 @@
 #include "LogSystem.h"
 #include "ConfigManager.h"
 #include "INetworkManager.h"
+#include "DownloadTaskInfo.h"
 
 ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager,
 	QObject* parent)
@@ -80,16 +81,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 			throw std::runtime_error("Invalid JSON response");
 		}
 
-		QList<VideoInfo> videoInfoList = parseVideoInfo(doc.object());
-		for (VideoInfo& videoInfo : videoInfoList)
-		{
-			videoInfo.platformId = m_modInfo.modId;
-
-			LOG_INFO("ConfigVideoPlatform", "Video info retrieved: %s", videoInfo.title.toUtf8().constData());
-			emit videoInfoReceived(videoInfo);
-		}
-
-		return videoInfoList;
+		return parseVideoInfo(doc.object());
 
 	}
 	catch (const std::exception& e) {
@@ -97,6 +89,12 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 		emit errorOccurred(QString("Failed to get video info: %1").arg(e.what()));
 		throw;
 	}
+}
+
+void ConfigVideoPlatform::getVideoCover(DownloadTaskInfo& taskInfo)
+{
+	QVariantMap headers = m_modInfo.getRequestHeaders();
+	taskInfo.videoInfo.cover = m_networkManager->get(taskInfo.videoInfo.thumbnailUrl.toString(), headers).data;
 }
 
 QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
@@ -371,7 +369,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 			qint64 timestamp = pubdateValue.toLongLong();
 			mainInfo.uploadDate = QDateTime::fromSecsSinceEpoch(timestamp);
 		}
-
+		mainInfo.platformId = m_modInfo.modId;
 		videoList.append(mainInfo);
 
 		// 解析分P信息
@@ -398,6 +396,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 				pageInfo.extraParams["avid"] = mainInfo.extraParams["aid"];
 				pageInfo.extraParams["cid"] = QString::number(pageObj["cid"].toVariant().toLongLong());
 
+				pageInfo.platformId = m_modInfo.modId;
 				videoList.append(pageInfo);
 			}
 		}
@@ -441,6 +440,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 					episodeInfo.extraParams["avid"] = QString::number(episodeObj["aid"].toVariant().toLongLong());
 					episodeInfo.extraParams["cid"] = QString::number(episodeObj["cid"].toVariant().toLongLong());
 
+					episodeInfo.platformId = m_modInfo.modId;
 					videoList.append(episodeInfo);
 				}
 			}

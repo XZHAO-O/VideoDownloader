@@ -37,6 +37,14 @@ void DownloadCardModel::setCoverUrl(const QUrl& coverUrl)
 	}
 }
 
+void DownloadCardModel::setCover(const QByteArray& cover)
+{
+	if (m_cover != cover) {
+		m_cover = cover;
+		emit coverChanged();
+	}
+}
+
 void DownloadCardModel::setDuration(const QString& duration)
 {
 	if (m_duration != duration) {
@@ -197,6 +205,7 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 	m_taskId = taskInfo.taskId;
 	m_title = taskInfo.videoInfo.title;
 	m_coverUrl = taskInfo.videoInfo.thumbnailUrl;
+	m_cover = taskInfo.videoInfo.cover;
 	m_duration = taskInfo.videoInfo.duration;
 	m_publishTime = taskInfo.videoInfo.uploadDate;
 	m_publisher = taskInfo.videoInfo.author;

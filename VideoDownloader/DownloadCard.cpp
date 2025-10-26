@@ -528,24 +528,14 @@ void DownloadCard::updateUI()
 	// 加载封面图片
 	if (m_isCoverLoaded)
 		return;
-	if (m_model->coverUrl().isValid()) {
-		QNetworkAccessManager* networkManager = new QNetworkAccessManager(this);
-		QNetworkRequest request(m_model->coverUrl());
-		QNetworkReply* reply = networkManager->get(request);
-
-		connect(reply, &QNetworkReply::finished, this, [this, reply, networkManager]() {
-			if (reply->error() == QNetworkReply::NoError) {
-				QPixmap pixmap;
-				pixmap.loadFromData(reply->readAll());
-				if (!pixmap.isNull()) {
-					m_coverLabel->setPixmap(pixmap.scaled(140, 105, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-					m_isCoverLoaded = true;
-				}
-			}
-			networkManager->deleteLater();
-			reply->deleteLater();
-			});
+	const QByteArray& data = m_model->cover();
+	if (!data.isEmpty()) {
+		QPixmap pixmap;
+		pixmap.loadFromData(data);
+		m_coverLabel->setPixmap(pixmap.scaled(140, 105, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+		m_isCoverLoaded = true;
 	}
+
 }
 
 // 添加updateTextColors函数
