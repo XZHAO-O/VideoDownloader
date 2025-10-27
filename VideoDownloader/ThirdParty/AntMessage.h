@@ -6,12 +6,17 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 
+class AntMessageManager;
+
 class AntMessage : public QWidget
 {
 	Q_OBJECT
 		Q_PROPERTY(qreal customOpacity READ getCustomOpacity WRITE setCustomOpacity)
 public:
 	enum Type { Info, Success, Error, Warning };
+	enum Mode { Queue, Singleton };
+
+	friend AntMessageManager;
 
 	explicit AntMessage(QWidget* parent, Type type, const QString& message);
 	~AntMessage();

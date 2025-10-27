@@ -1,6 +1,5 @@
 #include "HomePage.h"
 
-#include <QSet>
 #include <QGridLayout>
 
 #include "AntButton.h"
@@ -34,7 +33,7 @@ void HomePage::setupUI()
 	QStringList listItems = {};
 	antInput = new AntInput(300, listItems, this);
 	antInput->setFixedSize(400, 50);
-	antInput->setPlaceholderText("搜索视频内容...");
+	antInput->setPlaceholderText("请输入链接");
 
 	// 创建搜索结果组件
 	m_searchResultsWidget = new SearchResultsWidget(this);
@@ -97,24 +96,15 @@ void HomePage::onSearchClicked()
 
 void HomePage::onNextButtonClicked()
 {
-	AntMessageManager::instance()->showMessage(AntMessage::Info, "数据解析中...");
+	AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, "数据解析中...");
 
 	const QList<int>& selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
-
-	if (selectedIndexes.isEmpty())
-		return;
-
-	// 使用QSet提高查找性能
-	const QSet<int> selectedSet(selectedIndexes.begin(), selectedIndexes.end());
 	QList<VideoInfo> selectedVideoInfoList;
 	selectedVideoInfoList.reserve(selectedIndexes.size()); // 预分配内存
 
-	for (int i = 0; i < videoInfoList.size(); ++i)
+	for (const auto& i : selectedIndexes)
 	{
-		if (selectedSet.contains(i))
-		{
-			selectedVideoInfoList.append(videoInfoList[i]);
-		}
+		selectedVideoInfoList.append(std::move(videoInfoList[i]));
 	}
 
 	// 隐藏搜索结果组件
@@ -154,11 +144,11 @@ void HomePage::getVideoList(const QString& searchText)
 	if (m_availablePlatforms.isEmpty())
 	{
 		LOG_ERROR("HomePage", "没有可用的视频平台");
-		AntMessageManager::instance()->showMessage(AntMessage::Error, "无匹配的视频平台！");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无匹配的视频平台！");
 		return;
 	}
 
-	AntMessageManager::instance()->showMessage(AntMessage::Info, "链接解析中...");
+	AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, "链接解析中...");
 	LOG_INFO("HomePage", "开始解析视频链接: %s", searchText.toUtf8().constData());
 
 	// 启动搜索(搜索请求超时处理未添加)
@@ -167,14 +157,14 @@ void HomePage::getVideoList(const QString& searchText)
 	if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
 	{
 		m_searchResultsWidget->hide();
-		AntMessageManager::instance()->showMessage(AntMessage::Error, "视频链接不存在！");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "视频链接不存在！");
 		return;
 	}
 
 	// 处理视频列表
 	processVideoList(videoInfoList);
 
-	AntMessageManager::instance()->showMessage(AntMessage::Success, "解析成功！");
+	AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, "解析成功！");
 }
 
 void HomePage::processVideoList(const QList<VideoInfo>& videos)

@@ -9,6 +9,7 @@
 #include "StyleSheet.h"
 #include "AntButton.h"
 #include "AntChatListView.h"
+#include "AntMessageManager.h"
 
 // 完全自定义的委托类，不依赖基类
 class SearchResultItemDelegate : public QStyledItemDelegate
@@ -374,6 +375,7 @@ void SearchResultsWidget::onSelectAllStateChanged(int state)
 void SearchResultsWidget::onNextButtonClicked()
 {
 	if (m_selectedIndexes.isEmpty()) {
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "请选择一个视频！");
 		return;
 	}
 	emit nextButtonClicked();
@@ -409,7 +411,6 @@ void SearchResultsWidget::updateSelectedCount()
 {
 	int selectedCount = m_selectedIndexes.size();
 	m_selectedCountLabel->setText(QString("已选择 %1/%2").arg(selectedCount).arg(m_totalItems));
-	m_nextButton->setEnabled(selectedCount > 0);
 }
 
 void SearchResultsWidget::updateSelectAllCheckboxState()
