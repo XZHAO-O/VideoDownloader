@@ -3,6 +3,7 @@
 #include <QWidget>
 
 class QVBoxLayout;
+class BubbleViewController;
 class DialogViewController;
 class MaterialTabWidget;
 class NoDataWidget;
@@ -17,10 +18,8 @@ class ModManagerPage : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ModManagerPage(QSharedPointer<ApplicationController> appController, QWidget* parent = nullptr);
+	explicit ModManagerPage(QSharedPointer<ApplicationController> appController, BubbleViewController* bubbleView, DialogViewController* dialogView, QWidget* parent = nullptr);
 	~ModManagerPage();
-
-	void addDialog(DialogViewController* dialog);
 
 protected:
 	void showEvent(QShowEvent* event) override;
@@ -62,5 +61,6 @@ private:
 	QMap<QString, int> m_modTabIndexes; // modId -> tab index
 	QMap<int, QString> m_tabIndexMods;  // tab index -> modId
 
+	BubbleViewController* m_bubbleView;
 	DialogViewController* m_dialogView;
 };

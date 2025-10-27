@@ -401,7 +401,7 @@
       <Filter>Ui\Components</Filter>
     </ClCompile>
     <ClCompile Include="DownloadCardPool.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -709,7 +709,7 @@
       <Filter>Ui\Components</Filter>
     </QtMoc>
     <QtMoc Include="DownloadCardPool.h">
-      <Filter>Header Files</Filter>
+      <Filter>Core</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

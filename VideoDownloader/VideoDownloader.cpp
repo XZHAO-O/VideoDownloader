@@ -18,6 +18,7 @@
 #include "TransparentMask.h"
 #include "MaskWidget.h"
 #include "ThemeSwitcher.h"
+#include "BubbleViewController.h"
 
 VideoDownloader::VideoDownloader(QWidget* parent)
 	: QWidget(parent)
@@ -126,10 +127,14 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	titleLay->addWidget(btnClose);
 	totalSpacingWidth = 2 * titleBarSpacing;	// 标题栏右侧3个控件中间2个间隔
 
+	// 对话框
+	DialogViewController* mDialog = new DialogViewController(false, this);
+	BubbleViewController* mBubble = new BubbleViewController(this);
+
 	// 导航栏添加控件
 	QVBoxLayout* naviLay = new QVBoxLayout(ui.navi_widget);;
 	ui.navi_widget->layout()->setContentsMargins(0, 0, 0, 0);
-	CircularAvatar* avatar = new CircularAvatar(QSize(42, 42), ":/Imgs/noLogin.svg", ":/Imgs/github.svg", ui.navi_widget);
+	CircularAvatar* avatar = new CircularAvatar(QSize(42, 42), ":/Imgs/noLogin.svg", ":/Imgs/github.svg", mBubble, mDialog, ui.navi_widget);
 	// 添加页面布局
 	QVBoxLayout* contentLay = new QVBoxLayout(ui.central);
 	contentLay->setContentsMargins(0, 0, 0, 0);
@@ -139,6 +144,8 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	// 添加页面
 	HomePage* homePage = new HomePage(appController, stackedWidget);
 	DownloadPage* downloadPage = new DownloadPage(appController, stackedWidget);
+	ModManagerPage* modManagerPage = new ModManagerPage(appController, mBubble, mDialog, stackedWidget);
+	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
 	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
 
@@ -163,10 +170,6 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 			AntMessageManager::instance()->showMessage(AntMessage::Success, "数据解析成功");
 			});
 		});
-
-
-	ModManagerPage* modManagerPage = new ModManagerPage(appController, stackedWidget);
-	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
 	stackedWidget->addWidget(homePage);
 	stackedWidget->addWidget(downloadPage);
@@ -271,13 +274,6 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 		{
 			NotificationManager::instance()->relayoutNotifications(w, h);
 		});
-
-	// 对话框
-	DialogViewController* mDialog = new DialogViewController(avatar->loginState(), this);	// 实际登录状态要服务器给予
-	avatar->addDialog(mDialog);
-	connect(mDialog, &DialogViewController::successLogin, avatar, &CircularAvatar::allowLogin);
-
-	modManagerPage->addDialog(mDialog);
 
 	// 信号连接
 	connect(btnMax, &QToolButton::clicked, this, [this]()

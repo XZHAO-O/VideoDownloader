@@ -15,9 +15,11 @@
 #include "ModCardWidget.h"
 #include "ModInfo.h"
 
-ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
+ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appController, BubbleViewController* bubbleView, DialogViewController* dialogView, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
+	, m_bubbleView(bubbleView)
+	, m_dialogView(dialogView)
 	, m_modManager(appController->getConfigModManager())
 {
 	setObjectName("ModManagerPage");
@@ -32,14 +34,6 @@ ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appControll
 
 ModManagerPage::~ModManagerPage()
 {
-}
-
-void ModManagerPage::addDialog(DialogViewController* dialog)
-{
-	m_dialogView = dialog;
-	for (auto tab : m_modTabs) {
-		tab->addDialog(dialog);
-	}
 }
 
 void ModManagerPage::showEvent(QShowEvent* event)
@@ -359,7 +353,7 @@ void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardMo
 	}
 	else {
 		// 创建新的卡片组件
-		ModCardWidget* cardWidget = new ModCardWidget(m_appController->getPlatformService()->getPlatform(modId), model, this);
+		ModCardWidget* cardWidget = new ModCardWidget(m_appController->getPlatformService()->getPlatform(modId), model, m_bubbleView, m_dialogView, this);
 		connect(cardWidget, &ModCardWidget::toggleClicked,
 			this, &ModManagerPage::onToggleClicked);
 		connect(cardWidget, &ModCardWidget::openFolderClicked,

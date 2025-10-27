@@ -6,26 +6,25 @@
 #include <qpainter.h>
 #include <qsvgrenderer.h>
 #include <QElapsedTimer>
-#include "BubbleViewController.h"
-#include "DialogViewController.h"
+
+#include "MaterialDialog.h"
+
+class BubbleViewController;
+class DialogViewController;
 
 class CircularAvatar : public QWidget
 {
 	Q_OBJECT
 
 public:
-	CircularAvatar(QSize size, QString prevImgPath, QString afterImgPath, QWidget* parent);
+	CircularAvatar(QSize size, QString prevImgPath, QString afterImgPath, BubbleViewController* bubble, DialogViewController* dialogView, QWidget* parent = nullptr);
 	~CircularAvatar();
-	// 设置圆头像
-	void setAvatar(QString svgFilePath);
 	// 检查是否应该隐藏气泡框
 	void checkShouldHideBubble();
 	// 设置点击前点击后的头像
 	void setImgs(QString prevImgPath, QString afterImgPath);
-	// 添加对话框
-	void addDialog(DialogViewController* dialog);
-	// 允许登录
-	void allowLogin(bool loginState);
+	// 退出登录
+	void exitLogin(bool loginState);
 	// 获得用户登录状态
 	bool loginState() { return m_isLogin; };
 protected:

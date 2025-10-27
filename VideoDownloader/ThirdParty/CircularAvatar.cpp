@@ -1,23 +1,27 @@
 ﻿#include "CircularAvatar.h"
+
 #include <qpainterpath.h>
 #include <QEvent>
 #include <QEnterEvent>
 #include <QTimer>
-#include "AntTooltipManager.h"
 
-CircularAvatar::CircularAvatar(QSize size, QString prevImgPath, QString afterImgPath, QWidget* parent)
+#include "BubbleViewController.h"
+#include "DialogViewController.h"
+
+CircularAvatar::CircularAvatar(QSize size, QString prevImgPath, QString afterImgPath, BubbleViewController* bubble, DialogViewController* dialogView, QWidget* parent)
 	: QWidget(parent)
+	, m_bubble(bubble)
+	, m_dialogView(dialogView)
 {
 	setFixedSize(size);
 
-	if (!m_bubble)
-	{
-		m_bubble = new BubbleViewController(this);
-		connect(this, &CircularAvatar::playAnim, m_bubble, &BubbleViewController::showAnimated);
-		connect(this, &CircularAvatar::hideAnim, m_bubble, &BubbleViewController::hideAnimated);
-		connect(m_bubble, &BubbleViewController::requestHide, this, &CircularAvatar::checkShouldHideBubble);
-		connect(m_bubble, &BubbleViewController::exitLogin, this, &CircularAvatar::allowLogin);
-	}
+	connect(this, &CircularAvatar::playAnim, m_bubble, &BubbleViewController::showAnimated);
+	connect(this, &CircularAvatar::hideAnim, m_bubble, &BubbleViewController::hideAnimated);
+	connect(m_bubble, &BubbleViewController::requestHide, this, &CircularAvatar::checkShouldHideBubble);
+	connect(m_bubble, &BubbleViewController::exitLogin, this, &CircularAvatar::exitLogin);
+
+	connect(this, &CircularAvatar::showDialog, m_dialogView, &DialogViewController::showAnim);
+
 
 	// 设置图集
 	setImgs(prevImgPath, afterImgPath);
@@ -34,22 +38,11 @@ void CircularAvatar::setImgs(QString prevImgPath, QString afterImgPath)
 	update();
 }
 
-void CircularAvatar::addDialog(DialogViewController* dialog)
-{
-	m_dialogView = dialog;
-	connect(this, &CircularAvatar::showDialog, m_dialogView, &DialogViewController::showAnim);
-}
-
-void CircularAvatar::allowLogin(bool loginState)
+void CircularAvatar::exitLogin(bool loginState)
 {
 	m_isLogin = loginState;
 	m_isClicked = loginState ? true : false;
 	update();
-}
-
-void CircularAvatar::setAvatar(QString svgFilePath)
-{
-	// 扩展接口
 }
 
 void CircularAvatar::paintEvent(QPaintEvent* e)
@@ -100,10 +93,6 @@ void CircularAvatar::enterEvent(QEnterEvent* e)
 				// 自己调整到合适的位置即可
 				emit playAnim(QPoint(rightPos.x(), rightPos.y() - 6));
 			}
-			else
-			{
-				AntTooltipManager::instance()->showTooltip(this, "未登录,登录每日签到可获得积分.", AntTooltipManager::Position::Right);
-			}
 		}
 	}
 }
@@ -117,7 +106,6 @@ void CircularAvatar::leaveEvent(QEvent* e)
 		{
 			checkShouldHideBubble();
 		});
-	AntTooltipManager::instance()->hideTooltip();
 }
 
 void CircularAvatar::mousePressEvent(QMouseEvent* event)

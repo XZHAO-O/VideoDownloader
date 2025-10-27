@@ -7,15 +7,18 @@
 #include "AntToggleButton.h"
 #include "DesignSystem.h"
 #include "QrCodeWidget.h"
+#include "BubbleViewController.h"
 #include "DialogViewController.h"
 #include "CircularAvatar.h"
 #include "ConfigVideoPlatform.h"
 #include "ModCardModel.h"
 
-ModCardWidget::ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, QWidget* parent)
+ModCardWidget::ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, BubbleViewController* bubbleView, DialogViewController* dialogView, QWidget* parent)
 	: QWidget(parent)
 	, m_configVideoPlatform(configVideoPlatform)
 	, m_model(model)
+	, m_bubbleView(bubbleView)
+	, m_dialogView(dialogView)
 {
 	setObjectName("ModCardWidget");
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -71,12 +74,6 @@ QSize ModCardWidget::sizeHint() const
 QSize ModCardWidget::minimumSizeHint() const
 {
 	return QSize(400, 400);
-}
-
-void ModCardWidget::addDialog(DialogViewController* dialog)
-{
-	m_dialogView = dialog;
-	connect(m_avatarButton, &CircularAvatar::showDialog, m_dialogView, &DialogViewController::showAnim);
 }
 
 void ModCardWidget::mousePressEvent(QMouseEvent* event)
@@ -145,6 +142,8 @@ void ModCardWidget::initUI()
 	m_avatarButton = new CircularAvatar(QSize(32, 32),
 		":/Imgs/noLogin.svg",
 		":/Imgs/github.svg",
+		m_bubbleView,
+		m_dialogView,
 		this);
 	m_avatarButton->setToolTip("点击查看模组详情");
 	topLayout->addWidget(m_avatarButton);
@@ -268,7 +267,8 @@ void ModCardWidget::initConnections()
 	connect(m_updateButton, &AntButton::clicked, this, &ModCardWidget::updateClicked);
 	connect(m_uninstallButton, &AntButton::clicked, this, &ModCardWidget::uninstallClicked);
 	connect(m_avatarButton, &CircularAvatar::showDialog, this, &ModCardWidget::onAvatarClicked);
-	connect(m_dialogView, &DialogViewController::successLogin, m_avatarButton, &CircularAvatar::allowLogin);
+	connect(m_avatarButton, &CircularAvatar::showDialog, m_dialogView, &DialogViewController::showAnim);
+	//connect(m_dialogView, &DialogViewController::successLogin, m_avatarButton, &CircularAvatar::allowLogin);
 }
 
 void ModCardWidget::onAvatarClicked()

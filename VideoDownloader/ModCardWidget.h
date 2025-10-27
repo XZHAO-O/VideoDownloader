@@ -8,6 +8,7 @@ class QHBoxLayout;
 class QVBoxLayout;
 class AntButton;
 class AntToggleButton;
+class BubbleViewController;
 class DialogViewController;
 class CircularAvatar;
 class ModCardModel;
@@ -18,7 +19,7 @@ class ModCardWidget : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ModCardWidget(QSharedPointer < ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, QWidget* parent = nullptr);
+	explicit ModCardWidget(QSharedPointer <ConfigVideoPlatform> configVideoPlatform, QSharedPointer<ModCardModel> model, BubbleViewController* bubbleView, DialogViewController* dialogView, QWidget* parent = nullptr);
 	~ModCardWidget();
 
 	QSharedPointer<ModCardModel> model() const { return m_model; }
@@ -73,6 +74,7 @@ private:
 	QVBoxLayout* m_mainLayout = nullptr; // 改为垂直布局
 
 	CircularAvatar* m_avatarButton = nullptr;
+	BubbleViewController* m_bubbleView = nullptr;
 	DialogViewController* m_dialogView = nullptr;
 
 	QSharedPointer<ConfigVideoPlatform> m_configVideoPlatform;
