@@ -142,6 +142,9 @@ SearchResultsWidget::SearchResultsWidget(QWidget* parent)
 
 SearchResultsWidget::~SearchResultsWidget()
 {
+	// 移除事件过滤器
+	if (m_selectAllCheckBox)
+		m_selectAllCheckBox->removeEventFilter(this);
 }
 
 void SearchResultsWidget::setupUI()
@@ -284,11 +287,6 @@ void SearchResultsWidget::clearAll()
 	m_totalItems = 0;
 	m_selectAllCheckBox->setCheckState(Qt::Unchecked);
 	updateSelectedCount();
-}
-
-QList<int> SearchResultsWidget::getSelectedIndexes() const
-{
-	return m_selectedIndexes;
 }
 
 int SearchResultsWidget::getTotalItems() const

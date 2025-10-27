@@ -28,7 +28,7 @@ public:
 
 	void getVideoCover(DownloadTaskInfo& taskInfo);
 
-	void createDownloadCards(const QList<VideoInfo>& videoInfoList);
+	void createDownloadCards(QList<VideoInfo>&& videoInfoList);
 
 signals:
 	void resized(int w, int h);				// 用于通知其他组件调整大小

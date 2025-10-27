@@ -7,20 +7,20 @@
 #include "VideoInfo.h"
 
 class AntInput;
-class ApplicationController;
-class ConfigModManager;
 class SearchResultsWidget;
+class PlatformAggregatorService;
+class ConfigModManager;
 
 class HomePage : public QWidget
 {
 	Q_OBJECT
 
 public:
-	HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent = nullptr);
+	HomePage(QSharedPointer<PlatformAggregatorService> platformService, QSharedPointer<ConfigModManager> configModManager, QWidget* parent = nullptr);
 	~HomePage();
 
 signals:
-	void navigateToDownloadRequested(const QList<VideoInfo>& selectedVideoInfoList);
+	void navigateToDownloadRequested(QList<VideoInfo> selectedVideoInfoList);
 
 protected:
 	void showEvent(QShowEvent* event) override;
@@ -34,6 +34,7 @@ private slots:
 private:
 	void setupUI();
 	void setupConnections();
+	void availablePlatformsChanged();
 	void updateSearchResultsPosition();
 	void getVideoList(const QString& searchText);
 	void processVideoList(const QList<VideoInfo>& videos);
@@ -42,8 +43,9 @@ private:
 	AntInput* antInput = nullptr;
 	SearchResultsWidget* m_searchResultsWidget = nullptr;
 
-	QSharedPointer<ApplicationController> m_appController;
+	QSharedPointer<PlatformAggregatorService> m_platformService;
 	QSharedPointer<ConfigModManager> m_configModManager;
+	QStringList m_availablePlatforms;
 
 	QList<VideoInfo> videoInfoList;
 

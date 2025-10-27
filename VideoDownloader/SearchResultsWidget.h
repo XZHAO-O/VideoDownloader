@@ -23,7 +23,7 @@ public:
 	void addSearchResultItem(const QString& title, const QString& duration, const QString& author);
 	void addSearchResultItems(const QList<VideoInfo>& videoInfos); // 新增批量添加函数
 	void clearAll();
-	QList<int> getSelectedIndexes() const;
+	const QList<int>& getSelectedIndexes() const { return m_selectedIndexes; }
 	int getTotalItems() const;
 	int getSelectedCount() const;
 

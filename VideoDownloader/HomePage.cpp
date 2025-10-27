@@ -6,15 +6,16 @@
 #include "AntButton.h"
 #include "AntInput.h"
 #include "AntMessageManager.h"
-#include "ApplicationController.h"
-#include "LogSystem.h"
 #include "PlatformAggregatorService.h"
+#include "ConfigModManager.h"
 #include "SearchResultsWidget.h"
+#include "LogSystem.h"
 
-HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget* parent)
+HomePage::HomePage(QSharedPointer<PlatformAggregatorService> platformService, QSharedPointer<ConfigModManager> configModManager, QWidget* parent)
 	: QWidget(parent)
-	, m_appController(appController)
-	, m_configModManager(appController->getConfigModManager())
+	, m_platformService(platformService)
+	, m_configModManager(configModManager)
+	, m_availablePlatforms(platformService->getAvailablePlatforms())
 	, antInput(nullptr)
 	, m_searchResultsWidget(nullptr)
 {
@@ -22,27 +23,22 @@ HomePage::HomePage(QSharedPointer<ApplicationController> appController, QWidget*
 
 	setupUI();
 	setupConnections();
-
-	// 初始隐藏搜索结果组件
-	m_searchResultsWidget->hide();
 }
 
 HomePage::~HomePage()
 {
-	// 清理资源
-	clearSearchData();
 }
 
 void HomePage::setupUI()
 {
-	// 创建搜索输入框
 	QStringList listItems = {};
-	antInput = new AntInput(300, listItems, this); // 指定parent
+	antInput = new AntInput(300, listItems, this);
 	antInput->setFixedSize(400, 50);
 	antInput->setPlaceholderText("搜索视频内容...");
 
 	// 创建搜索结果组件
 	m_searchResultsWidget = new SearchResultsWidget(this);
+	m_searchResultsWidget->hide();
 
 	// 使用网格布局实现居中
 	QGridLayout* gridLayout = new QGridLayout(this);
@@ -67,6 +63,12 @@ void HomePage::setupConnections()
 	connect(antInput, &AntInput::searchClicked, this, &HomePage::onSearchClicked);
 	connect(antInput, &AntInput::returnPressed, this, &HomePage::onSearchClicked);
 	connect(m_searchResultsWidget, &SearchResultsWidget::nextButtonClicked, this, &HomePage::onNextButtonClicked);
+	connect(m_configModManager.get(), &ConfigModManager::modsChanged, this, &HomePage::availablePlatformsChanged);
+}
+
+void HomePage::availablePlatformsChanged()
+{
+	m_availablePlatforms = m_platformService->getAvailablePlatforms();
 }
 
 void HomePage::onSearchTextChanged(const QString& text)
@@ -74,9 +76,12 @@ void HomePage::onSearchTextChanged(const QString& text)
 	Q_UNUSED(text);
 	searchChanged = true;
 }
+
 void HomePage::onSearchClicked()
 {
 	if (!searchChanged) return;
+
+	searchChanged = false;
 
 	const QString searchText = antInput->text().trimmed();
 	if (searchText.isEmpty())
@@ -86,8 +91,6 @@ void HomePage::onSearchClicked()
 		return;
 	}
 
-	AntMessageManager::instance()->showMessage(AntMessage::Info, "链接解析中...");
-
 	// 加载数据
 	getVideoList(searchText);
 }
@@ -96,7 +99,7 @@ void HomePage::onNextButtonClicked()
 {
 	AntMessageManager::instance()->showMessage(AntMessage::Info, "数据解析中...");
 
-	const QList<int> selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
+	const QList<int>& selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
 
 	if (selectedIndexes.isEmpty())
 		return;
@@ -120,8 +123,8 @@ void HomePage::onNextButtonClicked()
 	// 清空搜索数据（包括输入框）
 	clearSearchData();
 
-	// 发出导航信号，使用const引用避免拷贝
-	emit navigateToDownloadRequested(selectedVideoInfoList);
+	// 发出导航信号
+	emit navigateToDownloadRequested(std::move(selectedVideoInfoList));
 }
 
 void HomePage::updateSearchResultsPosition()
@@ -147,28 +150,19 @@ void HomePage::getVideoList(const QString& searchText)
 	videoInfoList.clear();
 	m_searchResultsWidget->clearAll();
 
-	// 获取平台聚合服务
-	auto platformService = m_appController->getPlatformService();
-	if (!platformService)
-	{
-		LOG_ERROR("HomePage", "平台服务未初始化");
-		AntMessageManager::instance()->showMessage(AntMessage::Error, "平台服务未初始化！");
-		return;
-	}
-
 	// 检查是否有可用的平台
-	auto availablePlatforms = platformService->getAvailablePlatforms();
-	if (availablePlatforms.isEmpty())
+	if (m_availablePlatforms.isEmpty())
 	{
-		LOG_ERROR("HomePage", "没有可用的视频平台，请检查Mod配置");
+		LOG_ERROR("HomePage", "没有可用的视频平台");
 		AntMessageManager::instance()->showMessage(AntMessage::Error, "无匹配的视频平台！");
 		return;
 	}
 
-	LOG_INFO("HomePage", "开始搜索: %s", searchText.toUtf8().constData());
+	AntMessageManager::instance()->showMessage(AntMessage::Info, "链接解析中...");
+	LOG_INFO("HomePage", "开始解析视频链接: %s", searchText.toUtf8().constData());
 
-	// 启动搜索
-	videoInfoList = platformService->getVideoInfo(searchText);
+	// 启动搜索(搜索请求超时处理未添加)
+	videoInfoList = m_platformService->getVideoInfo(searchText);
 
 	if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
 	{
@@ -181,7 +175,6 @@ void HomePage::getVideoList(const QString& searchText)
 	processVideoList(videoInfoList);
 
 	AntMessageManager::instance()->showMessage(AntMessage::Success, "解析成功！");
-	searchChanged = false;
 }
 
 void HomePage::processVideoList(const QList<VideoInfo>& videos)

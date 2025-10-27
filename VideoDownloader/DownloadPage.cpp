@@ -452,7 +452,7 @@ void DownloadPage::getVideoCover(DownloadTaskInfo& taskInfo)
 	videoPlatfrom->getVideoCover(taskInfo);
 }
 
-void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
+void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 {
 	downloadReadyWidget->showLoading();
 
@@ -460,14 +460,15 @@ void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 	auto sharedTaskList = QSharedPointer<QList<DownloadTaskInfo>>::create();
 	sharedTaskList->reserve(videoInfoList.size());
 
-	// 使用信号槽来在主线程中处理结果
+	// 保存移动后的列表到局部变量
+	QList<VideoInfo> localVideoList = std::move(videoInfoList);
+
 	auto* watcher = new QFutureWatcher<DownloadTaskInfo>(this);
 
 	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::resultReadyAt, this,
 		[this, sharedTaskList, watcher](int index) {
-			// 这个槽会在主线程中被调用
 			DownloadTaskInfo taskInfo = watcher->resultAt(index);
-			sharedTaskList->append(taskInfo);
+			sharedTaskList->append(std::move(taskInfo));
 		});
 
 	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::finished, this,
@@ -476,17 +477,15 @@ void DownloadPage::createDownloadCards(const QList<VideoInfo>& videoInfoList)
 			watcher->deleteLater();
 		});
 
-	// 使用 mapped 而不是 map，这样可以返回结果
-	QFuture<DownloadTaskInfo> future = QtConcurrent::mapped(videoInfoList,
+	// 使用局部变量（左值）而不是右值引用
+	QFuture<DownloadTaskInfo> future = QtConcurrent::mapped(localVideoList,
 		[this](const VideoInfo& videoInfo) {
-			// 在 worker 线程中处理
 			DownloadTaskInfo taskInfo;
 			taskInfo.taskId = taskInfo.request.generateTaskId();
 			taskInfo.request.platformId = videoInfo.platformId;
 			taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
-			taskInfo.videoInfo = videoInfo;
+			taskInfo.videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
 
-			// 网络请求，获取视频播放地址
 			getVideoPlayUrl(taskInfo);
 			getVideoCover(taskInfo);
 			taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";

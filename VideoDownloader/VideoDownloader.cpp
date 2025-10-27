@@ -142,33 +142,36 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	stackedWidget = new SlideStackedWidget(ui.central);
 	contentLay->addWidget(stackedWidget);
 	// 添加页面
-	HomePage* homePage = new HomePage(appController, stackedWidget);
+	HomePage* homePage = new HomePage(appController->getPlatformService(), appController->getConfigModManager(), stackedWidget);
 	DownloadPage* downloadPage = new DownloadPage(appController, stackedWidget);
 	ModManagerPage* modManagerPage = new ModManagerPage(appController, mBubble, mDialog, stackedWidget);
 	SettingsPage* settingsPage = new SettingsPage(appController, stackedWidget);
 
-	connect(homePage, &HomePage::navigateToDownloadRequested, this, [this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
+	connect(homePage, &HomePage::navigateToDownloadRequested, this,
+		[this, downloadPage](QList<VideoInfo> selectedVideoInfoList) {
 
-		// 延迟执行卡片创建和消息显示，确保UI已经更新
-		QTimer::singleShot(50, this, [this, downloadPage, selectedVideoInfoList]() {
-			// 切换到下载页面
-			stackedWidget->setCurrentWidget(downloadPage);
+			// 使用 std::move 将所有权转移到内部 lambda
+			QTimer::singleShot(50, this,
+				[this, downloadPage, selectedVideoInfoList = std::move(selectedVideoInfoList)]() mutable {
 
-			// 更新导航按钮状态（立即更新UI反馈）
-			for (ButtonInfo& info : buttonInfos) {
-				if (info.page == downloadPage) {
-					info.button->setBtnChecked(true);
-				}
-				else {
-					info.button->setBtnChecked(false);
-				}
-			}
-			// 创建下载卡片
-			downloadPage->createDownloadCards(selectedVideoInfoList);
+					// 切换到下载页面
+					stackedWidget->setCurrentWidget(downloadPage);
 
-			// 显示成功消息
-			AntMessageManager::instance()->showMessage(AntMessage::Success, "数据解析成功");
-			});
+					// 更新导航按钮状态
+					for (ButtonInfo& info : buttonInfos) {
+						if (info.page == downloadPage) {
+							info.button->setBtnChecked(true);
+						}
+						else {
+							info.button->setBtnChecked(false);
+						}
+					}
+
+					// 使用 std::move 将所有权传递给 createDownloadCards
+					downloadPage->createDownloadCards(std::move(selectedVideoInfoList));
+
+					AntMessageManager::instance()->showMessage(AntMessage::Success, "数据解析成功");
+				});
 		});
 
 	stackedWidget->addWidget(homePage);
