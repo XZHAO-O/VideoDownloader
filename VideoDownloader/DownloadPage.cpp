@@ -27,12 +27,14 @@
 #include "PlatformAggregatorService.h"
 #include "ConfigVideoPlatform.h"
 #include "DownloadCardContainerWidget.h"
+#include "Instrumentor.h"
 
 DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent)
 	: QWidget(parent)
 	, m_applicationController(applicationController)
 	, m_downloadManager(applicationController->getDownloadManager())
 {
+	BENCHMARKING_FUNCTION();
 	setObjectName("DownloadPage");
 	setFocusPolicy(Qt::ClickFocus);  // 设置焦点策略 点击空白处可以获取焦点
 
@@ -440,6 +442,7 @@ DownloadPage::~DownloadPage()
 
 void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	auto platformService = m_applicationController->getPlatformService();
 	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
 	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
@@ -447,6 +450,7 @@ void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
 
 void DownloadPage::getVideoCover(DownloadTaskInfo& taskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	auto platformService = m_applicationController->getPlatformService();
 	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
 	videoPlatfrom->getVideoCover(taskInfo);
@@ -454,6 +458,7 @@ void DownloadPage::getVideoCover(DownloadTaskInfo& taskInfo)
 
 void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 {
+	BENCHMARKING_FUNCTION();
 	downloadReadyWidget->showLoading();
 
 	// 创建任务列表
@@ -505,6 +510,7 @@ void DownloadPage::resizeEvent(QResizeEvent* event)
 // 添加任务状态改变处理函数
 void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newState)
 {
+	BENCHMARKING_FUNCTION();
 	DownloadTaskInfo taskInfo;
 	ContainerState sourceState = ContainerState::DownloadReady;
 
@@ -571,6 +577,7 @@ void DownloadPage::onDownloadManagerStarted(const QString& taskId)
 // 处理下载管理器完成的信号
 void DownloadPage::onDownloadManagerCompleted(const QString& taskId, const QString& filePath)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新任务信息中的文件路径
 	DownloadTaskInfo taskInfo = downloadingWidget->getTaskInfo(taskId);
 	if (!taskInfo.taskId.isEmpty()) {

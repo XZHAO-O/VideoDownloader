@@ -369,6 +369,7 @@
     <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
     <QtMoc Include="LoginManager.h" />
+    <ClInclude Include="Instrumentor.h" />
     <ClInclude Include="MediaInfo.h" />
     <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />

@@ -15,6 +15,7 @@
 #include "LogSystem.h"
 #include "ApplicationController.h"
 #include "ConfigManager.h"
+#include "Instrumentor.h"
 
 // 定义默认配置常量
 const QMap<QString, QVariant> SettingsPage::DEFAULT_SETTINGS = {
@@ -56,10 +57,9 @@ const QMap<QString, QVariant> SettingsPage::DEFAULT_SETTINGS = {
 SettingsPage::SettingsPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
+	, m_configManager(m_appController->getConfigManager())
 {
-	// 从 ApplicationController 获取 ConfigManager
-	m_configManager = m_appController->getConfigManager();
-
+	BENCHMARKING_FUNCTION();
 	setObjectName("SettingsPage");
 	setupUI();
 	setupConnections();
@@ -72,6 +72,7 @@ SettingsPage::~SettingsPage()
 
 void SettingsPage::setupUI()
 {
+	BENCHMARKING_FUNCTION();
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setSpacing(0);
 	m_mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -460,6 +461,7 @@ void SettingsPage::setupAdvancedSettings()
 
 void SettingsPage::setupConnections()
 {
+	BENCHMARKING_FUNCTION();
 	// 重置按钮连接
 	connect(m_resetButton, &AntButton::clicked, this, [this]() {
 		emit showResetDialog("重置设置", "确定要重置设置为默认状态吗？");
@@ -531,6 +533,7 @@ void SettingsPage::setupConnections()
 
 void SettingsPage::loadCurrentSettings()
 {
+	BENCHMARKING_FUNCTION();
 	// 常规设置
 	m_autoStartToggle->setChecked(m_configManager->getValue("app/autoStart", false).toBool());
 	m_checkUpdatesToggle->setChecked(m_configManager->getValue("app/checkForUpdates", false).toBool());
@@ -633,6 +636,7 @@ void SettingsPage::loadCurrentSettings()
 
 void SettingsPage::saveCurrentSettings()
 {
+	BENCHMARKING_FUNCTION();
 	// 常规设置
 	m_configManager->setValue("app/autoStart", m_autoStartToggle->isChecked());
 	m_configManager->setValue("app/checkForUpdates", m_checkUpdatesToggle->isChecked());
@@ -796,6 +800,7 @@ void SettingsPage::clearLog()
 // 获取默认设置
 QVariantMap SettingsPage::getDefaultSettings() const
 {
+	BENCHMARKING_FUNCTION();
 	QVariantMap defaultSettings;
 
 	// 将常量映射转换为 QVariantMap
@@ -842,6 +847,7 @@ void SettingsPage::applyDefaultSettings()
 // 重置常规设置
 void SettingsPage::resetGeneralSettings()
 {
+	BENCHMARKING_FUNCTION();
 	m_configManager->setValue("app/autoStart", DEFAULT_SETTINGS["app/autoStart"]);
 	m_configManager->setValue("app/checkForUpdates", DEFAULT_SETTINGS["app/checkForUpdates"]);
 	m_configManager->setValue("ui/minimizeToTray", DEFAULT_SETTINGS["ui/minimizeToTray"]);
@@ -854,6 +860,7 @@ void SettingsPage::resetGeneralSettings()
 // 重置下载设置
 void SettingsPage::resetDownloadSettings()
 {
+	BENCHMARKING_FUNCTION();
 	// 设置默认下载路径
 	QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 	if (defaultDownloadPath.isEmpty()) {
@@ -874,6 +881,7 @@ void SettingsPage::resetDownloadSettings()
 // 重置网络设置
 void SettingsPage::resetNetworkSettings()
 {
+	BENCHMARKING_FUNCTION();
 	m_configManager->setValue("network/timeout", DEFAULT_SETTINGS["network/timeout"]);
 	m_configManager->setValue("network/retryCount", DEFAULT_SETTINGS["network/retryCount"]);
 	m_configManager->setValue("network/userAgent", DEFAULT_SETTINGS["network/userAgent"]);
@@ -894,6 +902,7 @@ void SettingsPage::resetNetworkSettings()
 // 重置高级设置
 void SettingsPage::resetAdvancedSettings()
 {
+	BENCHMARKING_FUNCTION();
 	// 设置默认日志路径
 	QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 	if (defaultLogPath.isEmpty()) {
@@ -914,6 +923,7 @@ void SettingsPage::resetAdvancedSettings()
 // 完整的重置设置实现
 void SettingsPage::resetSettings()
 {
+	BENCHMARKING_FUNCTION();
 	applyDefaultSettings();
 
 	// 重新加载界面显示新设置
@@ -941,6 +951,7 @@ void SettingsPage::onExitBehaviorChanged()
 
 void SettingsPage::onProxySettingsChanged()
 {
+	BENCHMARKING_FUNCTION();
 	bool enabled = m_proxyEnabledToggle->isChecked();
 	m_proxyTypeCombo->setEnabled(enabled);
 	m_proxyHostInput->setEnabled(enabled);

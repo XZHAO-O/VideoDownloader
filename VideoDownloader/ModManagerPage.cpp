@@ -14,6 +14,7 @@
 #include "ModCardModel.h"
 #include "ModCardWidget.h"
 #include "ModInfo.h"
+#include "Instrumentor.h"
 
 ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appController, BubbleViewController* bubbleView, DialogViewController* dialogView, QWidget* parent)
 	: QWidget(parent)
@@ -22,6 +23,7 @@ ModManagerPage::ModManagerPage(QSharedPointer<ApplicationController> appControll
 	, m_dialogView(dialogView)
 	, m_modManager(appController->getConfigModManager())
 {
+	BENCHMARKING_FUNCTION();
 	setObjectName("ModManagerPage");
 	initUI();
 	initConnections();
@@ -238,6 +240,7 @@ void ModManagerPage::onUninstallClicked()
 
 void ModManagerPage::initUI()
 {
+	BENCHMARKING_FUNCTION();
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setSpacing(0);
 	m_mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -251,6 +254,7 @@ void ModManagerPage::initUI()
 
 void ModManagerPage::initConnections()
 {
+	BENCHMARKING_FUNCTION();
 	if (m_modManager) {
 		connect(m_modManager.get(), &ConfigModManager::modLoaded, this, &ModManagerPage::onModLoaded);
 		connect(m_modManager.get(), &ConfigModManager::modUnloaded, this, &ModManagerPage::onModUnloaded);
@@ -262,6 +266,7 @@ void ModManagerPage::initConnections()
 
 void ModManagerPage::loadMods()
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_modManager) return;
 
 	// 清空现有模组
@@ -291,6 +296,7 @@ void ModManagerPage::loadMods()
 
 void ModManagerPage::refreshTabs()
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_tabWidget) return;
 
 	// 清空所有标签页
@@ -344,6 +350,7 @@ void ModManagerPage::refreshTabs()
 
 void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardModel> model)
 {
+	BENCHMARKING_FUNCTION();
 	if (m_modTabs.contains(modId)) {
 		// 如果已存在，更新现有卡片
 		m_modTabs[modId]->setModel(model);
@@ -370,6 +377,7 @@ void ModManagerPage::createModTab(const QString& modId, QSharedPointer<ModCardMo
 
 void ModManagerPage::removeModTab(const QString& modId)
 {
+	BENCHMARKING_FUNCTION();
 	if (m_modTabs.contains(modId)) {
 		ModCardWidget* cardWidget = m_modTabs.take(modId);
 		cardWidget->deleteLater();
@@ -389,6 +397,7 @@ void ModManagerPage::removeModTab(const QString& modId)
 
 void ModManagerPage::updateTabName(const QString& modId)
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_modModels.contains(modId) || !m_modTabIndexes.contains(modId)) {
 		return;
 	}
@@ -406,6 +415,7 @@ void ModManagerPage::updateTabName(const QString& modId)
 
 void ModManagerPage::updateModTab(const QString& modId)
 {
+	BENCHMARKING_FUNCTION();
 	if (m_modModels.contains(modId) && m_modTabs.contains(modId)) {
 		// 更新模型数据
 		ModInfo modInfo = m_modManager->getMod(modId);

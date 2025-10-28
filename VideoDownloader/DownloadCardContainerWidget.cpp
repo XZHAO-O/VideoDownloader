@@ -13,6 +13,7 @@
 #include "DownloadCard.h"
 #include "DownloadManager.h"
 #include "DownloadCardPool.h"
+#include "Instrumentor.h"
 
 DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager,
 	ContainerState state,
@@ -30,6 +31,7 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	, m_spinner(nullptr)
 	, m_currentSpeed(0)
 {
+	BENCHMARKING_FUNCTION();
 	// 根据状态设置无数据文本
 	switch (m_containerState) {
 	case ContainerState::DownloadReady:
@@ -61,6 +63,7 @@ DownloadCardContainerWidget::~DownloadCardContainerWidget()
 
 void DownloadCardContainerWidget::initUI()
 {
+	BENCHMARKING_FUNCTION();
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setContentsMargins(0, 0, 0, 0);
 	m_mainLayout->setSpacing(0);
@@ -125,6 +128,7 @@ void DownloadCardContainerWidget::onPageChanged(int page)
 
 void DownloadCardContainerWidget::updateCurrentPageCards()
 {
+	BENCHMARKING_FUNCTION();
 	// 计算当前页的任务范围
 	int startIndex = (m_currentPage - 1) * m_pageSize;
 	int endIndex = qMin(startIndex + m_pageSize, m_downloadTasks.size());
@@ -162,6 +166,7 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 
 void DownloadCardContainerWidget::clearCurrentCards()
 {
+	BENCHMARKING_FUNCTION();
 	// 断开所有连接并隐藏卡片
 	for (auto card : m_precreatedCards) {
 		card->disconnect();
@@ -172,6 +177,7 @@ void DownloadCardContainerWidget::clearCurrentCards()
 
 void DownloadCardContainerWidget::clearAllCards()
 {
+	BENCHMARKING_FUNCTION();
 	// 清理所有卡片
 	for (auto card : m_precreatedCards) {
 		m_cardPool->releaseCard(card);
@@ -182,6 +188,7 @@ void DownloadCardContainerWidget::clearAllCards()
 
 void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	switch (m_containerState) {
 	case ContainerState::DownloadReady:
 		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo]() {
@@ -409,6 +416,7 @@ void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
 
 void DownloadCardContainerWidget::addDownloadCard(const DownloadTaskInfo& downloadTaskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	m_downloadTasks.append(downloadTaskInfo);
 
 	int beforeTotalPages = m_paginationWidget->totalPages();
@@ -437,6 +445,7 @@ void DownloadCardContainerWidget::addDownloadCard(const DownloadTaskInfo& downlo
 
 void DownloadCardContainerWidget::showLoading()
 {
+	BENCHMARKING_FUNCTION();
 	// 显示加载指示器
 	m_spinner->setVisible(true);
 	m_spinner->raise();  // 确保在最上层
@@ -448,6 +457,7 @@ void DownloadCardContainerWidget::showLoading()
 // 添加一个批量添加任务的方法，用于优化大量任务添加时的性能
 void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tasks)
 {
+	BENCHMARKING_FUNCTION();
 	if (tasks.isEmpty()) return;
 
 	int beforeTotalPages = m_paginationWidget->totalPages();
@@ -476,6 +486,7 @@ void DownloadCardContainerWidget::addDownloadCards(QList<DownloadTaskInfo>&& tas
 
 void DownloadCardContainerWidget::updateVisibility()
 {
+	BENCHMARKING_FUNCTION();
 	if (m_downloadCards.isEmpty())
 	{
 		m_scrollArea->setVisible(false);
@@ -514,6 +525,7 @@ void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 
 void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId, const QString& filePath)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新任务信息
 	for (auto& task : m_downloadTasks) {
 		if (task.taskId == taskId) {
@@ -537,6 +549,7 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 
 void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新对应卡片的进度
 	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
 	if (card) {
@@ -568,6 +581,7 @@ void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
 
 void DownloadCardContainerWidget::onDownloadStarted(const QString& taskId)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新任务状态为下载中
 	for (auto& task : m_downloadTasks) {
 		if (task.taskId == taskId) {
@@ -586,6 +600,7 @@ void DownloadCardContainerWidget::onDownloadStarted(const QString& taskId)
 
 void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新特定任务的进度
 	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
 	if (card) {
@@ -597,6 +612,7 @@ void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint
 
 void DownloadCardContainerWidget::setState(ContainerState state)
 {
+	BENCHMARKING_FUNCTION();
 	if (m_containerState != state) {
 		m_containerState = state;
 
@@ -622,6 +638,7 @@ void DownloadCardContainerWidget::setState(ContainerState state)
 
 void DownloadCardContainerWidget::transferTaskToThis(const DownloadTaskInfo& taskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	// 更新任务状态以匹配容器状态
 	DownloadTaskInfo updatedTaskInfo = taskInfo;
 
@@ -642,6 +659,7 @@ void DownloadCardContainerWidget::transferTaskToThis(const DownloadTaskInfo& tas
 
 void DownloadCardContainerWidget::removeTask(const QString& taskId)
 {
+	BENCHMARKING_FUNCTION();
 	// 查找任务
 	auto it = std::find_if(m_downloadTasks.begin(), m_downloadTasks.end(),
 		[taskId](const DownloadTaskInfo& task) { return task.taskId == taskId; });
@@ -661,6 +679,7 @@ void DownloadCardContainerWidget::removeTask(const QString& taskId)
 
 DownloadTaskInfo DownloadCardContainerWidget::getTaskInfo(const QString& taskId) const
 {
+	BENCHMARKING_FUNCTION();
 	auto it = std::find_if(m_downloadTasks.begin(), m_downloadTasks.end(),
 		[taskId](const DownloadTaskInfo& task) { return task.taskId == taskId; });
 

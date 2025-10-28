@@ -10,11 +10,13 @@
 #include "MaterialProgressBar.h"
 #include "SingleLevelComboBox.h"
 #include "DownloadTaskInfo.h"
+#include "Instrumentor.h"
 
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
 	, m_model(model)
 {
+	BENCHMARKING_FUNCTION();
 	setObjectName("DownloadCard");
 	// 移除固定大小，使用尺寸策略
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -42,6 +44,7 @@ DownloadCard::~DownloadCard()
 
 void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 {
+	BENCHMARKING_FUNCTION();
 	if (m_model == model || !model) return;
 
 	if (m_model)
@@ -88,6 +91,7 @@ void DownloadCard::leaveEvent(QEvent* event)
 
 void DownloadCard::paintEvent(QPaintEvent* event)
 {
+	BENCHMARKING_FUNCTION();
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
 
@@ -117,6 +121,7 @@ void DownloadCard::paintEvent(QPaintEvent* event)
 
 void DownloadCard::onModelChanged()
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_model) return;
 
 	updateUI();
@@ -177,6 +182,7 @@ void DownloadCard::onAudioQualityChanged(const QString& quality)
 
 void DownloadCard::updateButtonStates()
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_model) return;
 
 	// 根据状态更新按钮状态
@@ -215,6 +221,7 @@ void DownloadCard::updateButtonStates()
 // 修改initUI函数，移除所有硬编码的颜色，使用DesignSystem动态获取
 void DownloadCard::initUI()
 {
+	BENCHMARKING_FUNCTION();
 	// 主布局
 	m_mainLayout = new QHBoxLayout(this);
 	m_mainLayout->setSpacing(12);
@@ -447,6 +454,7 @@ void DownloadCard::initUI()
 
 void DownloadCard::initConnections()
 {
+	BENCHMARKING_FUNCTION();
 	// 封面点击
 	connect(m_coverLabel, &QLabel::linkActivated, this, &DownloadCard::onCoverClicked);
 
@@ -485,6 +493,7 @@ void DownloadCard::initConnections()
 
 void DownloadCard::initModelConnections()
 {
+	BENCHMARKING_FUNCTION();
 	connect(m_model.get(), &DownloadCardModel::stateChanged, this, &DownloadCard::onModelChanged);
 	connect(m_model.get(), &DownloadCardModel::progressChanged, this, &DownloadCard::onModelChanged);
 	connect(m_model.get(), &DownloadCardModel::downloadSpeedChanged, this, &DownloadCard::onModelChanged);
@@ -497,6 +506,7 @@ void DownloadCard::initModelConnections()
 // 修改updateUI函数，在每次更新时动态设置颜色
 void DownloadCard::updateUI()
 {
+	BENCHMARKING_FUNCTION();
 	if (!m_model) return;
 
 	// 更新基本信息 - 直接设置 AntCellWidget 的按钮文本
@@ -541,6 +551,7 @@ void DownloadCard::updateUI()
 // 添加updateTextColors函数
 void DownloadCard::updateTextColors()
 {
+	BENCHMARKING_FUNCTION();
 	auto theme = DesignSystem::instance()->currentTheme();
 
 	// 更新标题颜色 - 只让文字变色，不要背景
@@ -603,6 +614,7 @@ void DownloadCard::updateTextColors()
 // 修改updatePendingUI和updateDownloadedUI函数，使用动态颜色
 void DownloadCard::updatePendingUI()
 {
+	BENCHMARKING_FUNCTION();
 	m_playIcon->setVisible(false);
 	m_progressBar->setVisible(false);
 	m_progressInfoLabel->setVisible(false);
@@ -615,6 +627,7 @@ void DownloadCard::updatePendingUI()
 
 void DownloadCard::updateDownloadingUI()
 {
+	BENCHMARKING_FUNCTION();
 	// 更新进度信息
 	m_progressBar->setValue(m_model->progress());
 	m_speedLabel->setText(m_model->formattedDownloadSpeed());
@@ -636,6 +649,7 @@ void DownloadCard::updateDownloadingUI()
 
 void DownloadCard::updateDownloadedUI()
 {
+	BENCHMARKING_FUNCTION();
 	m_playIcon->setVisible(true);
 	m_progressBar->setVisible(false);
 	m_progressInfoLabel->setVisible(false);

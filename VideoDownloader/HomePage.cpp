@@ -9,6 +9,7 @@
 #include "ConfigModManager.h"
 #include "SearchResultsWidget.h"
 #include "LogSystem.h"
+#include "Instrumentor.h"
 
 HomePage::HomePage(QSharedPointer<PlatformAggregatorService> platformService, QSharedPointer<ConfigModManager> configModManager, QWidget* parent)
 	: QWidget(parent)
@@ -18,6 +19,7 @@ HomePage::HomePage(QSharedPointer<PlatformAggregatorService> platformService, QS
 	, antInput(nullptr)
 	, m_searchResultsWidget(nullptr)
 {
+	BENCHMARKING_FUNCTION();
 	setObjectName("HomePage");
 
 	setupUI();
@@ -30,6 +32,7 @@ HomePage::~HomePage()
 
 void HomePage::setupUI()
 {
+	BENCHMARKING_FUNCTION();
 	QStringList listItems = {};
 	antInput = new AntInput(300, listItems, this);
 	antInput->setFixedSize(400, 50);
@@ -58,6 +61,7 @@ void HomePage::setupUI()
 
 void HomePage::setupConnections()
 {
+	BENCHMARKING_FUNCTION();
 	connect(antInput, &AntInput::textChanged, this, &HomePage::onSearchTextChanged);
 	connect(antInput, &AntInput::searchClicked, this, &HomePage::onSearchClicked);
 	connect(antInput, &AntInput::returnPressed, this, &HomePage::onSearchClicked);
@@ -78,6 +82,7 @@ void HomePage::onSearchTextChanged(const QString& text)
 
 void HomePage::onSearchClicked()
 {
+	BENCHMARKING_FUNCTION();
 	if (!searchChanged) return;
 
 	searchChanged = false;
@@ -96,6 +101,7 @@ void HomePage::onSearchClicked()
 
 void HomePage::onNextButtonClicked()
 {
+	BENCHMARKING_FUNCTION();
 	AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, "数据解析中...");
 
 	const QList<int>& selectedIndexes = m_searchResultsWidget->getSelectedIndexes();
@@ -136,6 +142,7 @@ void HomePage::updateSearchResultsPosition()
 
 void HomePage::getVideoList(const QString& searchText)
 {
+	BENCHMARKING_FUNCTION();
 	// 清空之前的结果（但不包括输入框）
 	videoInfoList.clear();
 	m_searchResultsWidget->clearAll();
@@ -143,7 +150,7 @@ void HomePage::getVideoList(const QString& searchText)
 	// 检查是否有可用的平台
 	if (m_availablePlatforms.isEmpty())
 	{
-		LOG_ERROR("HomePage", "没有可用的视频平台");
+		LOG_WARN("HomePage", "没有可用的视频平台");
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无匹配的视频平台！");
 		return;
 	}
@@ -169,6 +176,7 @@ void HomePage::getVideoList(const QString& searchText)
 
 void HomePage::processVideoList(const QList<VideoInfo>& videos)
 {
+	BENCHMARKING_FUNCTION();
 	// 批量添加搜索结果，减少UI更新次数
 	m_searchResultsWidget->clearAll();
 	m_searchResultsWidget->addSearchResultItems(videos); // 使用批量添加
@@ -182,6 +190,7 @@ void HomePage::processVideoList(const QList<VideoInfo>& videos)
 
 void HomePage::clearSearchData()
 {
+	BENCHMARKING_FUNCTION();
 	videoInfoList.clear();
 	m_searchResultsWidget->clearAll();
 	antInput->clear();

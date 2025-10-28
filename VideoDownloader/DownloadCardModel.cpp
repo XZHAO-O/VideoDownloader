@@ -1,6 +1,7 @@
 #include "DownloadCardModel.h"
 
 #include "DownloadTaskInfo.h"
+#include "Instrumentor.h"
 
 DownloadCardModel::DownloadCardModel(QObject* parent)
 	: QObject(parent)
@@ -10,6 +11,7 @@ DownloadCardModel::DownloadCardModel(QObject* parent)
 DownloadCardModel::DownloadCardModel(const DownloadTaskInfo& taskInfo, QObject* parent)
 	: QObject(parent)
 {
+	BENCHMARKING_FUNCTION();
 	fromDownloadTaskInfo(taskInfo);
 }
 

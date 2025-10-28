@@ -43,8 +43,6 @@ private slots:
 	void onDownloadManagerStarted(const QString& taskId);
 
 private:
-	void initViewPage();
-
 	QSharedPointer<ApplicationController> m_applicationController;
 	QSharedPointer<DownloadManager> m_downloadManager;
 	MaterialTabWidget* tabWidget = nullptr;

@@ -3,6 +3,7 @@
 #include <QDir>
 
 #include "VideoDownloader.h"
+#include "Instrumentor.h"
 
 int main(int argc, char* argv[])
 {
@@ -34,8 +35,11 @@ int main(int argc, char* argv[])
 	//	qWarning("字体加载失败！");
 	//}
 
+	Instrumentor::Get().BeginSession("VideoDownloader");
 	VideoDownloader window;
 	window.show();
 
-	return app.exec();
+	int ret = app.exec();
+	Instrumentor::Get().EndSession();
+	return ret;
 }

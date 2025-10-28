@@ -93,7 +93,7 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 
 	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 	QNetworkReply* reply = networkManager->get(request);
-	//handleReply(reply, context);
+
 	// 创建事件循环等待请求完成
 	QEventLoop loop;
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);

@@ -761,5 +761,8 @@
     <ClInclude Include="DownloadCardState.h">
       <Filter>Ui\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Instrumentor.h">
+      <Filter>Core\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
