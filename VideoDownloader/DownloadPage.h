@@ -50,13 +50,6 @@ private:
 	DownloadCardContainerWidget* downloadingWidget = nullptr;
 	DownloadCardContainerWidget* downloadedWidget = nullptr;
 	AntScrollArea* scrollArea1 = nullptr;
-	AntScrollArea* scrollArea2 = nullptr;
-	QList<SkeletonWidget*> skeletons;
-	QVector<AntProfileTable::TableColumnItems> rowItems;
-	AntProfileTable* table = nullptr;
-	QStandardItemModel* tableModel = nullptr;
-	AntTabWidgetContainer* antTabContainer = nullptr;
-	QWidget* container = nullptr;
 
 	QMutex m_mutex;
 };

@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 	//}
 
 	Instrumentor::Get().BeginSession("VideoDownloader");
+	BENCHMARKING_FUNCTION();
 	VideoDownloader window;
 	window.show();
 

@@ -23,10 +23,6 @@ public:
 	explicit DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent = nullptr);
 	~DownloadCard();
 
-	void cleanupMaterialProgressBar(MaterialProgressBar* progressBar);
-
-	void cleanupAntButton(AntButton* button);
-
 	QSharedPointer<DownloadCardModel> model() const { return m_model; }
 	void setModel(QSharedPointer<DownloadCardModel> model);
 
@@ -67,6 +63,7 @@ private:
 	void initUI();
 	void initConnections();
 	void initModelConnections();
+	void updateVisibility();
 	void updatePendingUI();
 	void updateDownloadingUI();
 	void updateDownloadedUI();

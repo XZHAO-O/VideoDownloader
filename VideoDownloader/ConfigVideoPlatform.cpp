@@ -6,6 +6,7 @@
 #include "ConfigManager.h"
 #include "INetworkManager.h"
 #include "DownloadTaskInfo.h"
+#include "AntMessageManager.h"
 
 ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager,
 	QObject* parent)
@@ -40,63 +41,63 @@ bool ConfigVideoPlatform::matchesUrl(const QString& url) const
 
 QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 {
-	try {
-		LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
+	LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
 
-		QString videoId = extractVideoId(url);
-		QString apiUrl = m_modInfo.getApiEndpoint("videoInfo");
+	QString videoId = extractVideoId(url);
+	QString apiUrl = m_modInfo.getApiEndpoint("videoInfo");
 
-		if (apiUrl.isEmpty()) {
-			throw std::runtime_error("Video info API endpoint not configured");
-		}
-
-		// 构建请求参数
-		QVariantMap params;
-		QVariantMap headers = m_modInfo.getRequestHeaders();
-
-		// 根据平台构建不同的参数
-		params[m_modInfo.getConfigValue("apiParameters.videoInfo").toString()] = videoId;
-
-		// 发送请求
-		NetworkResponse response;
-		if (!params.isEmpty())
-		{
-			QUrl fullUrl(apiUrl);
-			QUrlQuery query;
-			for (auto it = params.begin(); it != params.end(); ++it) {
-				query.addQueryItem(it.key(), it.value().toString());
-			}
-			fullUrl.setQuery(query);
-			response = m_networkManager->get(fullUrl.toString(), headers);
-		}
-		else
-		{
-			response = m_networkManager->get(apiUrl, headers);
-		}
-
-		if (!response.success) {
-			throw std::runtime_error(response.errorString.toStdString());
-		}
-
-		QJsonDocument doc = QJsonDocument::fromJson(response.data);
-		if (doc.isNull()) {
-			throw std::runtime_error("Invalid JSON response");
-		}
-
-		return parseVideoInfo(doc.object());
-
+	if (apiUrl.isEmpty())
+	{
+		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", "视频信息API未设置");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "视频信息API未设置");
+		return {};
 	}
-	catch (const std::exception& e) {
-		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", e.what());
-		emit errorOccurred(QString("Failed to get video info: %1").arg(e.what()));
-		throw;
+
+	// 构建请求参数
+	QVariantMap params;
+	QVariantMap headers = m_modInfo.getRequestHeaders();
+
+	// 根据平台构建不同的参数
+	params[m_modInfo.getConfigValue("apiParameters.videoInfo").toString()] = videoId;
+
+	// 发送请求
+	NetworkResponse response;
+	if (!params.isEmpty())
+	{
+		QUrl fullUrl(apiUrl);
+		QUrlQuery query;
+		for (auto it = params.begin(); it != params.end(); ++it)
+			query.addQueryItem(it.key(), it.value().toString());
+		fullUrl.setQuery(query);
+		response = m_networkManager->getWithLoop(fullUrl.toString(), headers);
 	}
+	else
+	{
+		response = m_networkManager->getWithLoop(apiUrl, headers);
+	}
+
+	if (!response.success)
+	{
+		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", response.errorString);
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, response.errorString);
+		return {};
+	}
+
+	QJsonDocument doc = QJsonDocument::fromJson(response.data);
+	if (doc.isNull())
+	{
+		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", "JSON数据异常!");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "JSON数据异常!");
+		return {};
+	}
+
+	return parseVideoInfo(doc.object());
 }
 
 void ConfigVideoPlatform::getVideoCover(DownloadTaskInfo& taskInfo)
 {
 	QVariantMap headers = m_modInfo.getRequestHeaders();
-	taskInfo.videoInfo.cover = m_networkManager->get(taskInfo.videoInfo.thumbnailUrl.toString(), headers).data;
+	taskInfo.videoInfo.cover = m_networkManager->getWithLoop(taskInfo.videoInfo.thumbnailUrl.toString(), headers).data;
 }
 
 QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
@@ -145,11 +146,11 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 			query.addQueryItem(it.key(), it.value().toString());
 		}
 		fullUrl.setQuery(query);
-		response = m_networkManager->get(fullUrl.toString(), headers);
+		response = m_networkManager->getWithLoop(fullUrl.toString(), headers);
 	}
 	else
 	{
-		response = m_networkManager->get(apiUrl, headers);
+		response = m_networkManager->getWithLoop(apiUrl, headers);
 	}
 
 	if (!response.success) {

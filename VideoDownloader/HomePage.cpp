@@ -151,7 +151,7 @@ void HomePage::getVideoList(const QString& searchText)
 	if (m_availablePlatforms.isEmpty())
 	{
 		LOG_WARN("HomePage", "没有可用的视频平台");
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无匹配的视频平台！");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无可用的视频平台！");
 		return;
 	}
 
@@ -164,7 +164,6 @@ void HomePage::getVideoList(const QString& searchText)
 	if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
 	{
 		m_searchResultsWidget->hide();
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "视频链接不存在！");
 		return;
 	}
 

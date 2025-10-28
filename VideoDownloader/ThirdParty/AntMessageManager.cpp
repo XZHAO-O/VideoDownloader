@@ -1,7 +1,7 @@
-﻿// AntMessageManager.cpp
-#include "AntMessageManager.h"
+﻿#include "AntMessageManager.h"
+
 #include <QApplication>
-#include <QDebug>
+
 #include "DesignSystem.h"
 
 AntMessageManager* AntMessageManager::m_instance = nullptr;
@@ -80,13 +80,9 @@ void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode
 {
 	QWidget* mainWindow = DesignSystem::instance()->getMainWindow();
 
-	qDebug() << "Showing message with mode:" << mode << "Current message count:" << m_messages.size();
-
-	// 单例模式：先移除所有现有消息
-	if (mode == AntMessage::Singleton) {
-		qDebug() << "Singleton mode: clearing all existing messages";
+	// 单例模式：移除所有现有消息
+	if (mode == AntMessage::Singleton)
 		clearAllMessages();
-	}
 
 	AntMessage* msg = new AntMessage(mainWindow, type, message);
 	msgHeight = msg->height();
@@ -94,7 +90,8 @@ void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode
 	// 连接信号
 	connect(msg, &AntMessage::requestExit, this, &AntMessageManager::onMessageRequestExit);
 
-	if (mode == AntMessage::Singleton) {
+	if (mode == AntMessage::Singleton)
+	{
 		// 单例模式：固定位置
 		QPoint pos = getSingletonPosition(msg);
 		msg->move(pos);
@@ -112,13 +109,13 @@ void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode
 		msg->startDisplayTimer(msgDuration);
 
 	}
-	else {
+	else
+	{
 		// 队列模式
 		int y = spacingY + m_singletonOffsetY;
 
-		for (AntMessage* m : m_messages) {
+		for (AntMessage* m : m_messages)
 			y += msgHeight + spacingY;
-		}
 
 		int x = (mainWindow->width() - msg->width()) / 2;
 
@@ -128,12 +125,10 @@ void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode
 		opacityAnim->setStartValue(0.0);
 		opacityAnim->setEndValue(1.0);
 
-		if (m_isBatchAnimating) {
+		if (m_isBatchAnimating)
 			msg->move(x, y - spacingY - msg->height());
-		}
-		else {
+		else
 			msg->move(QPoint(x, y));
-		}
 
 		m_messages.append(msg);
 		msg->show();
@@ -144,11 +139,11 @@ void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode
 
 void AntMessageManager::onMessageRequestExit(AntMessage* msg)
 {
-	if (isAnimating) {
+	if (isAnimating)
 		return;
-	}
 
-	if (!m_messages.isEmpty() && msg == m_messages.first()) {
+	if (!m_messages.isEmpty() && msg == m_messages.first())
+	{
 		startExitAnimation();
 	}
 }

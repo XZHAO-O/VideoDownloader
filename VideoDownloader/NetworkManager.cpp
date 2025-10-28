@@ -4,8 +4,6 @@
 #include <QRandomGenerator>
 #include <QEventLoop>
 #include <QTimer>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QNetworkCookieJar>
 #include <QNetworkProxy>
 #include <QAuthenticator>
@@ -22,7 +20,7 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 	m_networkManager->setCookieJar(m_cookieJar);
 
 	// 从配置加载网络设置
-	m_timeoutMs = m_configManager->getValue("network/timeout", 30000).toInt();
+	m_timeoutMs = m_configManager->getValue("network/timeout", 10000).toInt();
 	m_defaultRetryCount = m_configManager->getValue("network/retryCount", 3).toInt();
 	m_userAgent = m_configManager->getValue("network/userAgent",
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").toString();
@@ -68,26 +66,33 @@ NetworkManager::~NetworkManager()
 	m_activeRequests.clear();
 }
 
-NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& headers)
+QNetworkRequest NetworkManager::setRequest(const QString& url, const QVariantMap& headers)
 {
-	NetworkResponse networkResponse;
-
-	if (m_activeRequests.size() >= MAX_CONCURRENT_REQUESTS) {
-		networkResponse.success = false;
-		networkResponse.errorString = "Too many concurrent requests";
-		return networkResponse;
-	}
-
-	auto request = QNetworkRequest(QUrl(url));
-
+	QNetworkRequest request = QNetworkRequest(url);
 	// 设置请求头
 	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
 	// 设置自定义头
-	for (auto it = headers.begin(); it != headers.end(); ++it) {
+	for (auto it = headers.cbegin(); it != headers.cend(); ++it)
 		request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
-	}
+
+	//设置超时时间
+	request.setTransferTimeout(m_timeoutMs);
+
+	return request;
+}
+
+NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& headers)
+{
+	return NetworkResponse();
+}
+
+NetworkResponse NetworkManager::getWithLoop(const QString& url, const QVariantMap& headers)
+{
+	NetworkResponse networkResponse;
+
+	QNetworkRequest request = setRequest(url, headers);
 
 	LOG_DEBUG("Network", QString("GET request started: %1").arg(url));
 
@@ -96,26 +101,149 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 
 	// 创建事件循环等待请求完成
 	QEventLoop loop;
+	QObject::connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
 
 	// 检查错误
-	if (reply->error() != QNetworkReply::NoError) {
-		networkResponse.errorString = QString("Network error: %1").arg(reply->errorString());
+	if (reply->error() != QNetworkReply::NoError)
+	{
+		handleNetworkError(networkResponse, reply->error());
 		networkManager->deleteLater();
 		reply->deleteLater();
 		return networkResponse;
 	}
 
 	// 读取响应
-	QByteArray data = reply->readAll();
+	networkResponse.success = true;
+	networkResponse.data = reply->readAll();
+
 	networkManager->deleteLater();
 	reply->deleteLater();
 
-	networkResponse.success = true;
-	networkResponse.data = data;
-
 	return networkResponse;
+}
+
+void NetworkManager::handleNetworkError(NetworkResponse& networkResponse, QNetworkReply::NetworkError errorCode)
+{
+	QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+	if (!reply) return;
+
+	networkResponse.success = false;
+
+	// 根据错误类型进行不同处理
+	switch (errorCode)
+	{
+	case QNetworkReply::ConnectionRefusedError:
+		networkResponse.errorString = "服务器拒绝连接";
+		break;
+	case QNetworkReply::RemoteHostClosedError:
+		networkResponse.errorString = "服务器关闭连接";
+		break;
+	case QNetworkReply::HostNotFoundError:
+		networkResponse.errorString = "无法找到指定的服务器";
+		break;
+	case QNetworkReply::TimeoutError:
+		networkResponse.errorString = "网络请求超时，请检查网络连接或稍后重试";
+		break;
+	case QNetworkReply::OperationCanceledError:
+		networkResponse.errorString = "网络请求已被取消";
+		break;
+	case QNetworkReply::SslHandshakeFailedError:
+		networkResponse.errorString = "SSL连接建立失败";
+		break;
+	case QNetworkReply::TemporaryNetworkFailureError:
+		networkResponse.errorString = "检测到临时网络故障";
+		break;
+	case QNetworkReply::NetworkSessionFailedError:
+		networkResponse.errorString = "网络会话初始化失败";
+		break;
+	case QNetworkReply::BackgroundRequestNotAllowedError:
+		networkResponse.errorString = "当前环境不允许后台网络请求";
+		break;
+	case QNetworkReply::TooManyRedirectsError:
+		networkResponse.errorString = "请求经历了太多重定向";
+		break;
+	case QNetworkReply::InsecureRedirectError:
+		networkResponse.errorString = "检测到不安全的HTTP重定向";
+		break;
+	case QNetworkReply::ProxyConnectionRefusedError:
+		networkResponse.errorString = "代理服务器拒绝连接";
+		break;
+	case QNetworkReply::ProxyConnectionClosedError:
+		networkResponse.errorString = "代理服务器在操作期间关闭了连接";
+		break;
+	case QNetworkReply::ProxyNotFoundError:
+		networkResponse.errorString = "无法找到指定的代理服务器";
+		break;
+	case QNetworkReply::ProxyTimeoutError:
+		networkResponse.errorString = "与代理服务器的连接超时";
+		break;
+	case QNetworkReply::ProxyAuthenticationRequiredError:
+		networkResponse.errorString = "代理服务器需要身份验证";
+		break;
+	case QNetworkReply::ContentAccessDenied:
+		networkResponse.errorString = "访问请求的资源被拒绝";
+		break;
+	case QNetworkReply::ContentOperationNotPermittedError:
+		networkResponse.errorString = "请求的操作在资源上不被允许";
+		break;
+	case QNetworkReply::ContentNotFoundError:
+		networkResponse.errorString = "请求的资源在服务器上未找到";
+		break;
+	case QNetworkReply::AuthenticationRequiredError:
+		networkResponse.errorString = "服务器需要身份验证";
+		break;
+	case QNetworkReply::ContentReSendError:
+		networkResponse.errorString = "无法重新发送请求";
+		break;
+	case QNetworkReply::ContentConflictError:
+		networkResponse.errorString = "请求与资源的当前状态冲突";
+		break;
+	case QNetworkReply::ContentGoneError:
+		networkResponse.errorString = "请求的资源不存在";
+		break;
+	case QNetworkReply::InternalServerError:
+		networkResponse.errorString = "服务器内部错误";
+		break;
+	case QNetworkReply::OperationNotImplementedError:
+		networkResponse.errorString = "服务器不支持请求的操作";
+		break;
+	case QNetworkReply::ServiceUnavailableError:
+		networkResponse.errorString = "服务器暂时不可用，请稍后重试";
+		break;
+	case QNetworkReply::ProtocolUnknownError:
+		networkResponse.errorString = "网络协议未知";
+		break;
+	case QNetworkReply::ProtocolInvalidOperationError:
+		networkResponse.errorString = "请求的操作对当前协议无效";
+		break;
+	case QNetworkReply::UnknownNetworkError:
+		networkResponse.errorString = "发生未知的网络错误";
+		break;
+	case QNetworkReply::UnknownProxyError:
+		networkResponse.errorString = "代理服务器报告未知错误";
+		break;
+	case QNetworkReply::UnknownContentError:
+		networkResponse.errorString = "与内容相关的未知错误";
+		break;
+	case QNetworkReply::ProtocolFailure:
+		networkResponse.errorString = "协议处理失败";
+		break;
+	case QNetworkReply::UnknownServerError:
+		networkResponse.errorString = "服务器报告未知错误";
+		break;
+	default:
+		networkResponse.errorString = QString("发生未处理错误 [%1]: %2")
+			.arg(errorCode)
+			.arg(reply->errorString());
+		break;
+	}
+
+	// 记录错误日志
+	LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
+		.arg(errorCode)
+		.arg(networkResponse.errorString));
 }
 
 QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QVariantMap& data, const QVariantMap& headers)
@@ -307,67 +435,67 @@ void NetworkManager::onSslErrors(QNetworkReply* reply, const QList<QSslError>& e
 
 void NetworkManager::handleReply(QNetworkReply* reply, std::shared_ptr<RequestContext> context)
 {
-	// 连接完成信号
-	connect(reply, &QNetworkReply::finished, this, [this, reply, context]() {
-		NetworkResponse response;
+	//// 连接完成信号
+	//connect(reply, &QNetworkReply::finished, this, [this, reply, context]() {
+	//	NetworkResponse response;
 
-		if (reply->error() == QNetworkReply::NoError) {
-			response.success = true;
-			response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-			response.data = reply->readAll();
+	//	if (reply->error() == QNetworkReply::NoError) {
+	//		response.success = true;
+	//		response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+	//		response.data = reply->readAll();
 
-			// 获取响应头
-			QList<QByteArray> headerList = reply->rawHeaderList();
-			for (const QByteArray& header : headerList) {
-				response.headers[QString::fromUtf8(header)] = QString::fromUtf8(reply->rawHeader(header));
-			}
+	//		// 获取响应头
+	//		QList<QByteArray> headerList = reply->rawHeaderList();
+	//		for (const QByteArray& header : headerList) {
+	//			response.headers[QString::fromUtf8(header)] = QString::fromUtf8(reply->rawHeader(header));
+	//		}
 
-			LOG_DEBUG("Network", QString("Request succeeded: %1, status: %2, size: %3")
-				.arg(context->request.url().toString())
-				.arg(response.statusCode)
-				.arg(response.data.size()));
+	//		LOG_DEBUG("Network", QString("Request succeeded: %1, status: %2, size: %3")
+	//			.arg(context->request.url().toString())
+	//			.arg(response.statusCode)
+	//			.arg(response.data.size()));
 
-			completeRequest(context, response);
-		}
-		else {
-			response.success = false;
-			response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-			response.errorString = reply->errorString();
+	//		completeRequest(context, response);
+	//	}
+	//	else {
+	//		response.success = false;
+	//		response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+	//		response.errorString = reply->errorString();
 
-			LOG_WARN("Network", QString("Request failed: %1, error: %2, status: %3")
-				.arg(context->request.url().toString())
-				.arg(response.errorString)
-				.arg(response.statusCode));
+	//		LOG_WARN("Network", QString("Request failed: %1, error: %2, status: %3")
+	//			.arg(context->request.url().toString())
+	//			.arg(response.errorString)
+	//			.arg(response.statusCode));
 
-			// 检查是否应该重试
-			if (context->retryCount < context->maxRetries &&
-				(reply->error() == QNetworkReply::TimeoutError ||
-					reply->error() == QNetworkReply::ConnectionRefusedError ||
-					reply->error() == QNetworkReply::RemoteHostClosedError)) {
+	//		// 检查是否应该重试
+	//		if (context->retryCount < context->maxRetries &&
+	//			(reply->error() == QNetworkReply::TimeoutError ||
+	//				reply->error() == QNetworkReply::ConnectionRefusedError ||
+	//				reply->error() == QNetworkReply::RemoteHostClosedError)) {
 
-				context->retryCount++;
-				LOG_INFO("Network", QString("Retrying request (%1/%2): %3")
-					.arg(context->retryCount)
-					.arg(context->maxRetries)
-					.arg(context->request.url().toString()));
+	//			context->retryCount++;
+	//			LOG_INFO("Network", QString("Retrying request (%1/%2): %3")
+	//				.arg(context->retryCount)
+	//				.arg(context->maxRetries)
+	//				.arg(context->request.url().toString()));
 
-				// 取消超时定时器
-				if (context->timeoutTimer) {
-					context->timeoutTimer->stop();
-				}
+	//			// 取消超时定时器
+	//			if (context->timeoutTimer) {
+	//				context->timeoutTimer->stop();
+	//			}
 
-				// 延迟后重试
-				QTimer::singleShot(1000 * context->retryCount, this, [this, context]() {
-					retryRequest(context);
-					});
-			}
-			else {
-				completeRequest(context, response);
-			}
-		}
+	//			// 延迟后重试
+	//			QTimer::singleShot(1000 * context->retryCount, this, [this, context]() {
+	//				retryRequest(context);
+	//				});
+	//		}
+	//		else {
+	//			completeRequest(context, response);
+	//		}
+	//	}
 
-		reply->deleteLater();
-		});
+	//	reply->deleteLater();
+	//	});
 }
 
 void NetworkManager::retryRequest(std::shared_ptr<RequestContext> context)

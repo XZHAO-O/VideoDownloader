@@ -2,11 +2,10 @@
 
 #include <QFuture>
 
-struct NetworkResponse {
+struct NetworkResponse
+{
 	bool success;
-	int statusCode;
 	QByteArray data;
-	QVariantMap headers;
 	QString errorString;
 };
 
@@ -24,6 +23,8 @@ public:
 	virtual ~INetworkManager() = default;
 
 	virtual NetworkResponse get(const QString& url,
+		const QVariantMap& headers = {}) = 0;
+	virtual NetworkResponse getWithLoop(const QString& url,
 		const QVariantMap& headers = {}) = 0;
 	virtual QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},

@@ -1,4 +1,5 @@
 ﻿#include "AntMessage.h"
+
 #include <QPainter>
 #include <QTimer>
 #include <QPropertyAnimation>
@@ -7,6 +8,7 @@
 #include <QSvgRenderer>
 #include <QFontMetrics>
 #include <QFont>
+
 #include "DesignSystem.h"
 
 AntMessage::AntMessage(QWidget* parent, Type type, const QString& message)

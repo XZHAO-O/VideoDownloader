@@ -19,11 +19,13 @@
 #include "MaskWidget.h"
 #include "ThemeSwitcher.h"
 #include "BubbleViewController.h"
+#include "Instrumentor.h"
 
 VideoDownloader::VideoDownloader(QWidget* parent)
 	: QWidget(parent)
 	, appController(QSharedPointer<ApplicationController>::create())
 {
+	BENCHMARKING_FUNCTION();
 	ui.setupUi(this);
 
 	setObjectName("VideoDownloader");

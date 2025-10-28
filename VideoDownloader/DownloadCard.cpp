@@ -503,6 +503,23 @@ void DownloadCard::initModelConnections()
 	connect(m_model.get(), &DownloadCardModel::audioQualityChanged, this, &DownloadCard::onModelChanged);
 }
 
+void DownloadCard::updateVisibility()
+{
+	BENCHMARKING_FUNCTION();
+	switch (m_model->state())
+	{
+	case DownloadCardState::Pending:
+
+		break;
+	case DownloadCardState::Downloading:
+		updateDownloadingUI();
+		break;
+	case DownloadCardState::Downloaded:
+		updateDownloadedUI();
+		break;
+	}
+}
+
 // 修改updateUI函数，在每次更新时动态设置颜色
 void DownloadCard::updateUI()
 {

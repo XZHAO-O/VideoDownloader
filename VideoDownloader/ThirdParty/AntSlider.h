@@ -1,5 +1,4 @@
-﻿// AntSlider.h
-#pragma once
+﻿#pragma once
 
 #include <QSlider>
 #include <QPropertyAnimation>

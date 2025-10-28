@@ -5,10 +5,10 @@
 #include <QSslError>
 #include <QNetworkRequest>
 #include <QNetworkCookie>
+#include <QNetworkReply>
 
 class QNetworkAccessManager;
 class QNetworkProxy;
-class QNetworkReply;
 class QNetworkCookieJar;
 class QAuthenticator;
 class QTimer;
@@ -24,8 +24,12 @@ public:
 		QObject* parent = nullptr);
 	~NetworkManager();
 
+	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers);
+
 	// INetworkManager 接口实现
 	NetworkResponse get(const QString& url,
+		const QVariantMap& headers = {}) override;
+	NetworkResponse getWithLoop(const QString& url,
 		const QVariantMap& headers = {}) override;
 	QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},
@@ -51,6 +55,7 @@ private slots:
 	void onAuthenticationRequired(QNetworkReply* reply, QAuthenticator* authenticator);
 	void onProxyAuthenticationRequired(const QNetworkProxy& proxy, QAuthenticator* authenticator);
 	void onSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
+	void handleNetworkError(NetworkResponse& networkResponse, QNetworkReply::NetworkError errorCode);
 
 private:
 	struct RequestContext {

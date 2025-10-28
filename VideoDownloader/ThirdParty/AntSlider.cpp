@@ -1,10 +1,11 @@
-﻿// AntSlider.cpp
-#include "AntSlider.h"
+﻿#include "AntSlider.h"
+
 #include <QPainter>
 #include <QStyleOptionSlider>
 #include <QMouseEvent>
 #include <QPainterPath>
 #include <QTimer>
+
 #include "DesignSystem.h"
 
 AntSlider::AntSlider(int min, int max, int value, QWidget* parent)

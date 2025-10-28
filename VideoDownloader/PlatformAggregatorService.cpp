@@ -6,6 +6,7 @@
 #include "LogSystem.h"
 #include "ConfigModManager.h"
 #include "ConfigVideoPlatform.h"
+#include "AntMessageManager.h"
 
 PlatformAggregatorService::PlatformAggregatorService(QSharedPointer<ConfigModManager> modManager,
 	QObject* parent)
@@ -32,22 +33,14 @@ QSharedPointer<ConfigVideoPlatform> PlatformAggregatorService::getPlatformForUrl
 QList<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 {
 	auto platform = getPlatformForUrl(videoUrl);
-	if (!platform) {
-		LogSystem::instance().error(
-			QString("No platform found for URL: %1").arg(videoUrl.toString()),
-			"PlatformAggregator");
+	if (!platform)
+	{
+		LOG_WARN("PlatformAggregator", "No platform found for URL: %1", videoUrl.toString());
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无法解析视频链接");
 		return QList<VideoInfo>();
 	}
 
-	try {
-		return platform->getVideoInfo(videoUrl.toString());
-	}
-	catch (const std::exception& e) {
-		LogSystem::instance().error(
-			QString("Failed to get video info: %1").arg(e.what()),
-			"PlatformAggregator");
-		return QList<VideoInfo>();
-	}
+	return platform->getVideoInfo(videoUrl.toString());
 }
 
 QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QString& videoId,
