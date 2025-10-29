@@ -4,6 +4,7 @@
 
 #include "DownloadCardModel.h"
 #include "VideoPreviewWindow.h"
+#include "DesignSystem.h"
 
 class QLabel;
 class QPushButton;
@@ -117,5 +118,6 @@ private:
 
 	bool m_hovered = false;
 	bool m_isCoverLoaded = false;
+	DesignSystem::ThemeMode m_themeMode;
 	DownloadCardState m_currentState; // 记录当前状态
 };

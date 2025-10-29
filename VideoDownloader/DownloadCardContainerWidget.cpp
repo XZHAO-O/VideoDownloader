@@ -198,6 +198,9 @@ void DownloadCardContainerWidget::clearAllCards()
 void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo)
 {
 	BENCHMARKING_FUNCTION();
+
+	card->disconnect();
+
 	switch (m_containerState) {
 	case ContainerState::DownloadReady:
 		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo]() {
