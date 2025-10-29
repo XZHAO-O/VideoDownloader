@@ -5,6 +5,7 @@
 
 #include "AntButton.h"
 #include "AntCellWidget.h"
+#include "DesignSystem.h"
 #include "AntTooltipManager.h"
 #include "MaterialProgressBar.h"
 #include "SingleLevelComboBox.h"
@@ -14,8 +15,7 @@
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
 	: QWidget(parent)
 	, m_model(model)
-	, m_themeMode(DesignSystem::instance()->themeMode())
-	, m_currentState(model ? model->state() : DownloadCardState::Pending)
+	, m_currentState(model->state())
 {
 	BENCHMARKING_FUNCTION();
 
@@ -33,11 +33,8 @@ DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* par
 
 	// 添加主题变化监听，使用与AntButton相同的模式
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]() {
-		if (this->isVisible())
-		{
-			updateTextColors();
-			update();
-		}
+		updateTextColors();
+		update();
 		});
 }
 
@@ -58,8 +55,6 @@ void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 	m_isCoverLoaded = false;
 
 	onModelChanged();
-	if (m_themeMode != DesignSystem::instance()->themeMode())
-		updateTextColors();
 }
 
 QSize DownloadCard::sizeHint() const
@@ -688,15 +683,13 @@ void DownloadCard::initConnections()
 void DownloadCard::initModelConnections()
 {
 	BENCHMARKING_FUNCTION();
-	if (!m_model) return;
-
-	// 只连接与当前状态相关的信号
 
 	connect(m_model.get(), &DownloadCardModel::titleChanged, this, &DownloadCard::onModelChanged);
 	connect(m_model.get(), &DownloadCardModel::coverUrlChanged, this, &DownloadCard::onModelChanged);
 
 	// 根据状态连接特定信号
-	switch (m_currentState) {
+	switch (m_currentState)
+	{
 	case DownloadCardState::Pending:
 
 		connect(m_model.get(), &DownloadCardModel::videoQualityChanged, this, &DownloadCard::onModelChanged);
@@ -797,7 +790,6 @@ void DownloadCard::updateDownloadedUI()
 void DownloadCard::updateTextColors()
 {
 	BENCHMARKING_FUNCTION();
-	m_themeMode = DesignSystem::instance()->themeMode();
 	auto theme = DesignSystem::instance()->currentTheme();
 
 	m_coverLabel->setStyleSheet(QString("QLabel{"
