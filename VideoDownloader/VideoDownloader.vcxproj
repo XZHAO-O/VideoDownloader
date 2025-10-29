@@ -41,7 +41,7 @@
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>6.8.1</QtInstall>
+    <QtInstall>6.8.1r</QtInstall>
     <QtModules>core;gui;network;widgets;concurrent;opengl;openglwidgets;multimedia;multimediawidgets;svg;svgwidgets;networkauth</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
