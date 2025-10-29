@@ -57,49 +57,32 @@ private slots:
 	void onTitleClicked();
 	void onVideoQualityChanged(const QString& quality);
 	void onAudioQualityChanged(const QString& quality);
-	void updateButtonStates();
 
 private:
 	void initUI();
 	void initConnections();
 	void initModelConnections();
-	void updateVisibility();
+	void updateTextColors(); // 添加文本颜色更新函数
+
+	// 根据状态初始化不同的UI
+	void initPendingUI();
+	void initDownloadingUI();
+	void initDownloadedUI();
+
+	// 根据状态更新不同的UI
 	void updatePendingUI();
 	void updateDownloadingUI();
 	void updateDownloadedUI();
-	void updateTextColors(); // 添加文本颜色更新函数
 
-	// UI组件
+	// UI组件 - 公共部分
 	QLabel* m_coverLabel = nullptr;
 	QLabel* m_playIcon = nullptr;
-	AntCellWidget* m_titleCell = nullptr;  // 改为 AntCellWidget
+	AntCellWidget* m_titleCell = nullptr;
 	QLabel* m_sizeLabel = nullptr;
 	QLabel* m_timeLabel = nullptr;
 	QLabel* m_publisherLabel = nullptr;
-	QLabel* m_progressLabel = nullptr;
-	QLabel* m_speedLabel = nullptr;
-	QLabel* m_progressInfoLabel = nullptr; // 新增：进度信息标签（已下载/总共）
 
-	// 待下载状态按钮
-	AntButton* m_downloadBtn = nullptr;
-	AntButton* m_videoDownloadBtn = nullptr;
-	AntButton* m_audioDownloadBtn = nullptr;
-	AntButton* m_closeBtn = nullptr;
-
-	// 下载中状态按钮（独立实例）
-	AntButton* m_pauseBtn_downloading = nullptr;  // 下载中状态的暂停按钮
-	AntButton* m_openFolderBtn_downloading = nullptr; // 下载中状态的打开文件夹按钮
-	AntButton* m_deleteBtn_downloading = nullptr; // 下载中状态的删除按钮
-
-	// 已下载状态按钮（独立实例）
-	AntButton* m_openUrlBtn_downloaded = nullptr; // 已下载状态的打开链接按钮
-	AntButton* m_openFolderBtn_downloaded = nullptr; // 已下载状态的打开文件夹按钮
-	AntButton* m_deleteBtn_downloaded = nullptr; // 已下载状态的删除按钮
-
-	SingleLevelComboBox* m_videoQualityCombo = nullptr;
-	SingleLevelComboBox* m_audioQualityCombo = nullptr;
-	MaterialProgressBar* m_progressBar = nullptr;
-
+	// 布局
 	QWidget* m_coverContainer = nullptr;
 	QHBoxLayout* m_mainLayout = nullptr;
 	QVBoxLayout* m_contentLayout = nullptr;
@@ -108,9 +91,31 @@ private:
 	QVBoxLayout* m_bottomLayout = nullptr;
 	QHBoxLayout* m_actionLayout = nullptr;
 
+	// 待下载状态特有组件
+	SingleLevelComboBox* m_videoQualityCombo = nullptr;
+	SingleLevelComboBox* m_audioQualityCombo = nullptr;
+	AntButton* m_downloadBtn = nullptr;
+	AntButton* m_videoDownloadBtn = nullptr;
+	AntButton* m_audioDownloadBtn = nullptr;
+	AntButton* m_closeBtn = nullptr;
+
+	// 下载中状态特有组件
+	MaterialProgressBar* m_progressBar = nullptr;
+	QLabel* m_speedLabel = nullptr;
+	QLabel* m_progressInfoLabel = nullptr;
+	AntButton* m_pauseBtn_downloading = nullptr;
+	AntButton* m_openFolderBtn_downloading = nullptr;
+	AntButton* m_deleteBtn_downloading = nullptr;
+
+	// 已下载状态特有组件
+	AntButton* m_openUrlBtn_downloaded = nullptr;
+	AntButton* m_openFolderBtn_downloaded = nullptr;
+	AntButton* m_deleteBtn_downloaded = nullptr;
+
 	QSharedPointer<DownloadCardModel> m_model;
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
 	bool m_hovered = false;
 	bool m_isCoverLoaded = false;
+	DownloadCardState m_currentState; // 记录当前状态
 };

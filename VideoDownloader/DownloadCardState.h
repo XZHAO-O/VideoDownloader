@@ -3,7 +3,8 @@
 #include <QMetaType>
 
 // 下载卡片状态枚举
-enum class DownloadCardState {
+enum class DownloadCardState
+{
 	Pending,        // 待下载
 	Downloading,    // 下载中
 	Downloaded,     // 已下载

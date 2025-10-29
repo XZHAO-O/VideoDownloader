@@ -32,13 +32,18 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	, m_currentSpeed(0)
 {
 	BENCHMARKING_FUNCTION();
-	// 根据状态设置无数据文本
-	switch (m_containerState) {
+
+	DownloadCardState cardState;
+
+	switch (m_containerState)
+	{
 	case ContainerState::DownloadReady:
 		m_noDataText = "暂无待下载任务";
+		cardState = DownloadCardState::Pending;
 		break;
 	case ContainerState::Downloading:
 		m_noDataText = "暂无下载任务";
+		cardState = DownloadCardState::Downloading;
 		// 连接下载管理器信号
 		connect(m_downloadManager.get(), &DownloadManager::downloadProgress, this, &DownloadCardContainerWidget::onDownloadProgress);
 		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
@@ -49,7 +54,18 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		break;
 	case ContainerState::Downloaded:
 		m_noDataText = "暂无已下载任务";
+		cardState = DownloadCardState::Downloaded;
 		break;
+	}
+
+	// 预先创建固定数量的卡片并隐藏
+	for (int i = 0; i < m_pageSize; ++i)
+	{
+		auto emptyModel = QSharedPointer<DownloadCardModel>::create();
+		emptyModel->setState(cardState);
+		DownloadCard* card = new DownloadCard(emptyModel, m_scrollWidget);
+		card->setVisible(false);
+		m_precreatedCards.append(card);
 	}
 
 	initUI();
@@ -65,7 +81,7 @@ void DownloadCardContainerWidget::initUI()
 {
 	BENCHMARKING_FUNCTION();
 	m_mainLayout = new QVBoxLayout(this);
-	m_mainLayout->setContentsMargins(0, 0, 0, 0);
+	m_mainLayout->setContentsMargins(0, 4, 0, 0);
 	m_mainLayout->setSpacing(0);
 
 	// 创建加载指示器
@@ -82,15 +98,8 @@ void DownloadCardContainerWidget::initUI()
 	m_scrollLayout->setSpacing(12);
 	m_scrollLayout->setAlignment(Qt::AlignTop);
 
-	// 预先创建固定数量的卡片并隐藏
-	for (int i = 0; i < m_pageSize; ++i) {
-		// 创建空模型卡片
-		auto emptyModel = QSharedPointer<DownloadCardModel>::create();
-		DownloadCard* card = m_cardPool->getCard(emptyModel, m_scrollWidget);
-		card->setVisible(false); // 初始隐藏
-		m_precreatedCards.append(card);
-		m_scrollLayout->addWidget(card);
-	}
+	for (int i = 0; i < m_pageSize; ++i)
+		m_scrollLayout->addWidget(m_precreatedCards[i]);
 
 	// 添加一个弹簧，让内容从顶部开始
 	m_scrollLayout->addStretch();
@@ -180,7 +189,7 @@ void DownloadCardContainerWidget::clearAllCards()
 	BENCHMARKING_FUNCTION();
 	// 清理所有卡片
 	for (auto card : m_precreatedCards) {
-		m_cardPool->releaseCard(card);
+		card->deleteLater();
 	}
 	m_precreatedCards.clear();
 	m_downloadCards.clear();

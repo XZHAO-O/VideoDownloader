@@ -17,107 +17,72 @@ DownloadCardModel::DownloadCardModel(const DownloadTaskInfo& taskInfo, QObject* 
 
 void DownloadCardModel::setTaskId(const QString& taskId)
 {
-	if (m_taskId != taskId) {
-		m_taskId = taskId;
-		emit taskIdChanged();
-	}
+	m_taskId = taskId;
 }
 
 void DownloadCardModel::setTitle(const QString& title)
 {
-	if (m_title != title) {
-		m_title = title;
-		emit titleChanged();
-	}
+	m_title = title;
 }
 
 void DownloadCardModel::setCoverUrl(const QUrl& coverUrl)
 {
-	if (m_coverUrl != coverUrl) {
-		m_coverUrl = coverUrl;
-		emit coverUrlChanged();
-	}
+	emit coverUrlChanged();
 }
 
 void DownloadCardModel::setCover(const QByteArray& cover)
 {
-	if (m_cover != cover) {
-		m_cover = cover;
-		emit coverChanged();
-	}
+	m_cover = cover;
 }
 
 void DownloadCardModel::setDuration(const QString& duration)
 {
-	if (m_duration != duration) {
-		m_duration = duration;
-		emit durationChanged();
-	}
+	m_duration = duration;
 }
 
 void DownloadCardModel::setPublishTime(const QDateTime& publishTime)
 {
-	if (m_publishTime != publishTime) {
-		m_publishTime = publishTime;
-		emit publishTimeChanged();
-	}
+	m_publishTime = publishTime;
 }
 
 void DownloadCardModel::setPublisher(const QString& publisher)
 {
-	if (m_publisher != publisher) {
-		m_publisher = publisher;
-		emit publisherChanged();
-	}
+	m_publisher = publisher;
 }
 
 void DownloadCardModel::setVideoSize(qint64 videoSize)
 {
-	if (m_videoSize != videoSize) {
-		m_videoSize = videoSize;
-		emit videoSizeChanged();
-	}
+	m_videoSize = videoSize;
+	emit videoSizeChanged();
 }
 
 void DownloadCardModel::setAudioSize(qint64 audioSize)
 {
-	if (m_audioSize != audioSize) {
-		m_audioSize = audioSize;
-		emit audioSizeChanged();
-	}
+	m_audioSize = audioSize;
+	emit audioSizeChanged();
 }
 
 void DownloadCardModel::setState(DownloadCardState state)
 {
-	if (m_state != state)
-	{
-		m_state = state;
-		emit stateChanged();
-	}
+	m_state = state;
 }
 
 void DownloadCardModel::setProgress(int progress)
 {
-	if (m_progress != progress) {
-		m_progress = progress;
-		emit progressChanged();
-	}
+	m_progress = progress;
+	emit progressChanged();
 }
 
 void DownloadCardModel::setDownloadSpeed(qint64 downloadSpeed)
 {
-	if (m_downloadSpeed != downloadSpeed) {
-		m_downloadSpeed = downloadSpeed;
-		emit downloadSpeedChanged();
-	}
+	m_downloadSpeed = downloadSpeed;
+	emit downloadSpeedChanged();
 }
 
 void DownloadCardModel::setFilePath(const QString& filePath)
 {
-	if (m_filePath != filePath) {
-		m_filePath = filePath;
-		emit filePathChanged();
-	}
+	m_filePath = filePath;
+	emit filePathChanged();
 }
 
 void DownloadCardModel::setVideoQuality(VideoQualityLevel quality)
@@ -130,26 +95,17 @@ void DownloadCardModel::setVideoQuality(VideoQualityLevel quality)
 
 void DownloadCardModel::setAudioQuality(AudioQualityLevel quality)
 {
-	if (m_audioQuality != quality) {
-		m_audioQuality = quality;
-		emit audioQualityChanged();
-	}
+	m_audioQuality = quality;
 }
 
 void DownloadCardModel::setDownloadedSize(qint64 downloadedSize)
 {
-	if (m_downloadedSize != downloadedSize) {
-		m_downloadedSize = downloadedSize;
-		emit progressChanged();
-	}
+	m_downloadedSize = downloadedSize;
 }
 
 void DownloadCardModel::setDownloadSize(qint64 totalSize)
 {
-	if (m_downloadSize != totalSize) {
-		m_downloadSize = totalSize;
-		emit progressChanged();
-	}
+	m_downloadSize = totalSize;
 }
 
 QString DownloadCardModel::formattedVideoSize() const
@@ -216,7 +172,8 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 	m_downloadSpeed = taskInfo.downloadSpeed;
 
 	// 根据状态设置卡片状态
-	switch (taskInfo.status) {
+	switch (taskInfo.status)
+	{
 	case Queued:
 		m_state = DownloadCardState::Pending;
 		break;
@@ -236,11 +193,4 @@ void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
 		m_state = DownloadCardState::Pending;
 		break;
 	}
-
-	// 触发所有信号
-	emit taskIdChanged();
-	emit titleChanged();
-	emit stateChanged();
-	emit progressChanged();
-	emit downloadSpeedChanged();
 }
