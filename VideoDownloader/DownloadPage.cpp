@@ -1,33 +1,16 @@
 #include "DownloadPage.h"
 
 #include <QtConcurrent\QtConcurrent>
-#include <QFuture>
-
 
 #include "AntScrollArea.h"
-#include "SkeletonWidget.h"
-#include "AntToggleButton.h"
 #include "MaterialTabWidget.h"
-#include "MaterialProgressBar.h"
-#include "MaterialSpinner.h"
-#include "AntSlider.h"
-#include "NoDataWidget.h"
-#include "AnimatedNumber.h"
-#include "AntButton.h"
-#include "NotificationManager.h"
-#include "AntComboBox.h"
-#include "TagWidget.h"
-#include "CardWidget.h"
-#include "FlowLayout.h"
-#include "BadgeWidget.h"
-#include "AntChatListView.h"
 #include "DownloadCard.h"
 #include "DownloadManager.h"
 #include "ApplicationController.h"
 #include "PlatformAggregatorService.h"
 #include "ConfigVideoPlatform.h"
-#include "DownloadCardContainerWidget.h"
 #include "Instrumentor.h"
+#include "AntMessageManager.h"
 
 DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent)
 	: QWidget(parent)
@@ -123,6 +106,7 @@ void DownloadPage::getVideoPlayUrl(QSharedPointer<DownloadTaskInfo> taskInfo)
 
 void DownloadPage::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
+	//网络错误情况和videoPlatfrom为空的情况处理待增加
 	BENCHMARKING_FUNCTION();
 	auto platformService = m_applicationController->getPlatformService();
 	auto videoPlatfrom = platformService->getPlatform(taskInfo->request.platformId);
@@ -133,7 +117,6 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 {
 	BENCHMARKING_FUNCTION();
 	downloadReadyWidget->showLoading();
-
 	// 创建任务列表
 	auto sharedTaskList = QSharedPointer<QList<QSharedPointer<DownloadTaskInfo>>>::create();
 	sharedTaskList->reserve(videoInfoList.size());
@@ -152,6 +135,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 	connect(watcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::finished, this,
 		[this, watcher, sharedTaskList]() {
 			downloadReadyWidget->addDownloadCards(*sharedTaskList);
+			AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, "数据解析成功");
 			watcher->deleteLater();
 		});
 

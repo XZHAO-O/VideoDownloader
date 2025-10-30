@@ -2,15 +2,12 @@
 
 #include <QDateTime>
 #include <QMutex>
-#include <QMutexLocker>
 
 #include "AntProfileTable.h"
-#include "VideoInfo.h"
 #include "DownloadCardContainerWidget.h"
+#include "VideoInfo.h"
 
 class AntScrollArea;
-class SkeletonWidget;
-class AntTabWidgetContainer;
 class MaterialTabWidget;
 class DownloadTaskInfo;
 class DownloadManager;

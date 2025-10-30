@@ -171,8 +171,6 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 
 					// 使用 std::move 将所有权传递给 createDownloadCards
 					downloadPage->createDownloadCards(std::move(selectedVideoInfoList));
-
-					AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, "数据解析成功");
 				});
 		});
 
