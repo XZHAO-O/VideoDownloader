@@ -24,9 +24,9 @@ public:
 	DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent = nullptr);
 	~DownloadPage();
 
-	void getVideoPlayUrl(DownloadTaskInfo& taskInfo);
+	void getVideoPlayUrl(QSharedPointer<DownloadTaskInfo> taskInfo);
 
-	void getVideoCover(DownloadTaskInfo& taskInfo);
+	void getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo);
 
 	void createDownloadCards(QList<VideoInfo>&& videoInfoList);
 

@@ -1,43 +1,9 @@
 #include "DownloadManager.h"
-#include "DownloadEngine.h"
 #include <QUuid>
 
 DownloadManager::DownloadManager(QObject* parent)
 	: QObject(parent)
-	, m_engine(new DownloadEngine())
 {
-	// 将引擎移动到工作线程
-	m_engine->moveToThread(&m_workerThread);
-
-	// 连接从引擎到管理器的信号（跨线程连接，使用QueuedConnection）
-	connect(m_engine, &DownloadEngine::downloadPaused,
-		this, &DownloadManager::onDownloadPaused, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadResumed,
-		this, &DownloadManager::onDownloadResumed, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadCanceled,
-		this, &DownloadManager::onDownloadCanceled, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadCompleted,
-		this, &DownloadManager::onDownloadCompleted, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadFailed,
-		this, &DownloadManager::onDownloadFailed, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadProgress,
-		this, &DownloadManager::onDownloadProgress, Qt::QueuedConnection);
-
-	// 连接从管理器到引擎的信号
-	connect(this, &DownloadManager::addDownloadRequested,
-		m_engine, &DownloadEngine::onAddDownload, Qt::QueuedConnection);
-	connect(this, &DownloadManager::pauseDownloadRequested,
-		m_engine, &DownloadEngine::onPauseDownload, Qt::QueuedConnection);
-	connect(this, &DownloadManager::resumeDownloadRequested,
-		m_engine, &DownloadEngine::onResumeDownload, Qt::QueuedConnection);
-	connect(this, &DownloadManager::cancelDownloadRequested,
-		m_engine, &DownloadEngine::onCancelDownload, Qt::QueuedConnection);
-	connect(this, &DownloadManager::speedLimitChanged,
-		m_engine, &DownloadEngine::onSpeedLimitChanged, Qt::QueuedConnection);
-	connect(this, &DownloadManager::maxConcurrentChanged,
-		m_engine, &DownloadEngine::onMaxConcurrentChanged, Qt::QueuedConnection);
-	connect(this, &DownloadManager::maxThreadsChanged,
-		m_engine, &DownloadEngine::onMaxThreadsChanged, Qt::QueuedConnection);
 
 	// 启动工作线程
 	m_workerThread.start();
@@ -47,24 +13,23 @@ DownloadManager::~DownloadManager()
 {
 	m_workerThread.quit();
 	m_workerThread.wait();
-	delete m_engine;
 }
 
-void DownloadManager::addDownload(const DownloadTaskInfo& taskInfo)
+void DownloadManager::addDownload(DownloadTaskInfo taskInfo)
 {
-	// 确保任务状态正确
-	DownloadTaskInfo updatedTaskInfo = taskInfo;
-	if (updatedTaskInfo.status != Queued && updatedTaskInfo.status != Downloading) {
-		updatedTaskInfo.status = Queued;
-	}
+	//// 确保任务状态正确
+	//QSharedPointer<DownloadTaskInfo> updatedTaskInfo = taskInfo;
+	//if (updatedTaskInfo->status != Queued && updatedTaskInfo->status != Downloading) {
+	//	updatedTaskInfo->status = Queued;
+	//}
 
-	// 设置开始时间
-	updatedTaskInfo.startTime = QDateTime::currentDateTime();
+	//// 设置开始时间
+	//updatedTaskInfo->startTime = QDateTime::currentDateTime();
 
-	m_tasks[updatedTaskInfo.taskId] = updatedTaskInfo;
+	//m_tasks[updatedTaskInfo->taskId] = *updatedTaskInfo;
 
-	emit addDownloadRequested(updatedTaskInfo);
-	emit downloadAdded(updatedTaskInfo.taskId);
+	//emit addDownloadRequested(*updatedTaskInfo);
+	//emit downloadAdded(updatedTaskInfo->taskId);
 }
 
 void DownloadManager::pauseDownload(const QString& taskId)

@@ -116,6 +116,7 @@ void ApplicationController::initializeServices()
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
 	// 初始化下载管理器
+	//m_downloadManager = QSharedPointer<DownloadManager>::create(m_networkManager);
 	m_downloadManager = QSharedPointer<DownloadManager>::create();
 
 	LogSystem::instance().info("All services initialized", "Application");

@@ -113,19 +113,19 @@ DownloadPage::~DownloadPage()
 {
 }
 
-void DownloadPage::getVideoPlayUrl(DownloadTaskInfo& taskInfo)
+void DownloadPage::getVideoPlayUrl(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	BENCHMARKING_FUNCTION();
 	auto platformService = m_applicationController->getPlatformService();
-	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
-	taskInfo.request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo.streamRequest);
+	auto videoPlatfrom = platformService->getPlatform(taskInfo->request.platformId);
+	taskInfo->request.videoPlayUrl = videoPlatfrom->getVideoPlayUrl(taskInfo->streamRequest);
 }
 
-void DownloadPage::getVideoCover(DownloadTaskInfo& taskInfo)
+void DownloadPage::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	BENCHMARKING_FUNCTION();
 	auto platformService = m_applicationController->getPlatformService();
-	auto videoPlatfrom = platformService->getPlatform(taskInfo.request.platformId);
+	auto videoPlatfrom = platformService->getPlatform(taskInfo->request.platformId);
 	videoPlatfrom->getVideoCover(taskInfo);
 }
 
@@ -135,38 +135,38 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 	downloadReadyWidget->showLoading();
 
 	// 创建任务列表
-	auto sharedTaskList = QSharedPointer<QList<DownloadTaskInfo>>::create();
+	auto sharedTaskList = QSharedPointer<QList<QSharedPointer<DownloadTaskInfo>>>::create();
 	sharedTaskList->reserve(videoInfoList.size());
 
 	// 保存移动后的列表到局部变量
 	QList<VideoInfo> localVideoList = std::move(videoInfoList);
 
-	auto* watcher = new QFutureWatcher<DownloadTaskInfo>(this);
+	auto* watcher = new QFutureWatcher<QSharedPointer<DownloadTaskInfo>>(this);
 
-	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::resultReadyAt, this,
+	connect(watcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::resultReadyAt, this,
 		[this, sharedTaskList, watcher](int index) {
-			DownloadTaskInfo taskInfo = watcher->resultAt(index);
-			sharedTaskList->append(std::move(taskInfo));
+			QSharedPointer<DownloadTaskInfo> taskInfo = watcher->resultAt(index);
+			sharedTaskList->append(taskInfo);
 		});
 
-	connect(watcher, &QFutureWatcher<DownloadTaskInfo>::finished, this,
+	connect(watcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::finished, this,
 		[this, watcher, sharedTaskList]() {
-			downloadReadyWidget->addDownloadCards(std::move(*sharedTaskList));
+			downloadReadyWidget->addDownloadCards(*sharedTaskList);
 			watcher->deleteLater();
 		});
 
 	// 使用局部变量（左值）而不是右值引用
-	QFuture<DownloadTaskInfo> future = QtConcurrent::mapped(localVideoList,
+	QFuture<QSharedPointer<DownloadTaskInfo>> future = QtConcurrent::mapped(localVideoList,
 		[this](const VideoInfo& videoInfo) {
-			DownloadTaskInfo taskInfo;
-			taskInfo.taskId = taskInfo.request.generateTaskId();
-			taskInfo.request.platformId = videoInfo.platformId;
-			taskInfo.streamRequest.extraParams.insert(videoInfo.extraParams);
-			taskInfo.videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
+			QSharedPointer<DownloadTaskInfo> taskInfo = QSharedPointer<DownloadTaskInfo>::create();
+			taskInfo->taskId = taskInfo->request.generateTaskId();
+			taskInfo->request.platformId = videoInfo.platformId;
+			taskInfo->streamRequest.extraParams.insert(videoInfo.extraParams);
+			taskInfo->videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
 
 			getVideoPlayUrl(taskInfo);
 			getVideoCover(taskInfo);
-			taskInfo.request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
+			taskInfo->request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
 
 			return taskInfo;
 		});
@@ -182,14 +182,14 @@ void DownloadPage::resizeEvent(QResizeEvent* event)
 void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newState)
 {
 	BENCHMARKING_FUNCTION();
-	DownloadTaskInfo taskInfo;
+	QSharedPointer<DownloadTaskInfo> taskInfo;
 	ContainerState sourceState = ContainerState::DownloadReady;
 
 	// 查找任务在哪个容器中
-	if (!(taskInfo = downloadReadyWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
+	if (!(taskInfo = downloadReadyWidget->getTaskInfo(taskId))->taskId.isEmpty()) {
 		sourceState = ContainerState::DownloadReady;
 	}
-	else if (!(taskInfo = downloadingWidget->getTaskInfo(taskId)).taskId.isEmpty()) {
+	else if (!(taskInfo = downloadingWidget->getTaskInfo(taskId))->taskId.isEmpty()) {
 		sourceState = ContainerState::Downloading;
 	}
 	else {
@@ -215,10 +215,10 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 	// 更新任务状态以匹配目标容器状态
 	switch (newState) {
 	case ContainerState::Downloading:
-		taskInfo.status = Downloading;
+		taskInfo->status = Downloading;
 		break;
 	case ContainerState::Downloaded:
-		taskInfo.status = Completed;
+		taskInfo->status = Completed;
 		break;
 	}
 
@@ -229,7 +229,7 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 		// 如果是转移到下载中，开始下载
 		if (m_downloadManager && sourceState == ContainerState::DownloadReady) {
 			// 只有从待下载转移时才调用addDownload
-			m_downloadManager->addDownload(taskInfo);
+			m_downloadManager->addDownload(*taskInfo);
 		}
 		break;
 	case ContainerState::Downloaded:
@@ -243,10 +243,10 @@ void DownloadPage::onDownloadManagerCompleted(const QString& taskId, const QStri
 {
 	BENCHMARKING_FUNCTION();
 	// 更新任务信息中的文件路径
-	DownloadTaskInfo taskInfo = downloadingWidget->getTaskInfo(taskId);
-	if (!taskInfo.taskId.isEmpty()) {
-		taskInfo.request.outputPath = filePath;
-		taskInfo.status = Completed;
+	QSharedPointer<DownloadTaskInfo> taskInfo = downloadingWidget->getTaskInfo(taskId);
+	if (!taskInfo->taskId.isEmpty()) {
+		taskInfo->request.outputPath = filePath;
+		taskInfo->status = Completed;
 		// 转移到已下载容器
 		onTaskStateChanged(taskId, ContainerState::Downloaded);
 	}

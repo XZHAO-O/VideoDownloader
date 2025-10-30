@@ -31,7 +31,7 @@ class DownloadCardModel : public QObject
 
 public:
 	explicit DownloadCardModel(QObject* parent = nullptr);
-	explicit DownloadCardModel(const DownloadTaskInfo& taskInfo, QObject* parent = nullptr);
+	explicit DownloadCardModel(QSharedPointer<DownloadTaskInfo> taskInfo, QObject* parent = nullptr);
 
 	// Getters
 	const QString& taskId() const { return m_taskId; }
@@ -76,7 +76,7 @@ public:
 	QString formattedDuration() const;
 
 	// 从DownloadTaskInfo转换
-	void fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo);
+	void fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo);
 
 signals:
 	void taskIdChanged();

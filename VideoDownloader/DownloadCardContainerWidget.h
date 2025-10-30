@@ -31,15 +31,15 @@ public:
 	virtual ~DownloadCardContainerWidget();
 
 	// 公共接口
-	void addDownloadCard(const DownloadTaskInfo& downloadTaskInfo);
+	void addDownloadCard(QSharedPointer<DownloadTaskInfo> downloadTaskInfo);
 	void showLoading();
-	void addDownloadCards(QList<DownloadTaskInfo>&& tasks);
+	void addDownloadCards(QList<QSharedPointer<DownloadTaskInfo>> tasks);
 	ContainerState state() const { return m_containerState; }
 
 	// 任务转移相关方法
-	void transferTaskToThis(const DownloadTaskInfo& taskInfo);
+	void transferTaskToThis(QSharedPointer<DownloadTaskInfo> taskInfo);
 	void removeTask(const QString& taskId);
-	DownloadTaskInfo getTaskInfo(const QString& taskId) const;
+	QSharedPointer<DownloadTaskInfo> getTaskInfo(const QString& taskId) const;
 
 	// 更新显示当前页的卡片
 	void updateCurrentPageCards();
@@ -66,7 +66,7 @@ private:
 	void updateVisibility();
 
 	// 根据状态设置卡片连接
-	void setupCardConnections(DownloadCard* card, const DownloadTaskInfo& taskInfo);
+	void setupCardConnections(DownloadCard* card, QSharedPointer<DownloadTaskInfo> taskInfo);
 
 	// 获取无数据文本
 	QString getNoDataText() const;
@@ -87,7 +87,7 @@ private:
 	QWidget* m_scrollWidget;
 	QVBoxLayout* m_scrollLayout;
 	QMap<QString, DownloadCard*> m_downloadCards;        // 当前显示的卡片，使用taskId作为键
-	QList<DownloadTaskInfo> m_downloadTasks;     // 所有任务信息
+	QList<QSharedPointer<DownloadTaskInfo>> m_downloadTasks;     // 所有任务信息
 	NoDataWidget* m_noDataWidget;
 	PaginationWidget* m_paginationWidget;        // 分页器
 	DownloadCardPool* m_cardPool;                // 卡片池

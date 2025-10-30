@@ -94,10 +94,10 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 	return parseVideoInfo(doc.object());
 }
 
-void ConfigVideoPlatform::getVideoCover(DownloadTaskInfo& taskInfo)
+void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	QVariantMap headers = m_modInfo.getRequestHeaders();
-	taskInfo.videoInfo.cover = m_networkManager->getWithLoop(taskInfo.videoInfo.thumbnailUrl.toString(), headers).data;
+	taskInfo->videoInfo.cover = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers).data;
 }
 
 QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)

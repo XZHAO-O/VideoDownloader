@@ -8,7 +8,7 @@ DownloadCardModel::DownloadCardModel(QObject* parent)
 {
 }
 
-DownloadCardModel::DownloadCardModel(const DownloadTaskInfo& taskInfo, QObject* parent)
+DownloadCardModel::DownloadCardModel(QSharedPointer<DownloadTaskInfo> taskInfo, QObject* parent)
 	: QObject(parent)
 {
 	BENCHMARKING_FUNCTION();
@@ -154,20 +154,20 @@ QString DownloadCardModel::formattedDuration() const
 	return m_duration; // 假设已经是格式化好的时长
 }
 
-void DownloadCardModel::fromDownloadTaskInfo(const DownloadTaskInfo& taskInfo)
+void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
-	m_taskId = taskInfo.taskId;
-	m_title = taskInfo.videoInfo.title;
-	m_coverUrl = taskInfo.videoInfo.thumbnailUrl;
-	m_cover = taskInfo.videoInfo.cover;
-	m_duration = taskInfo.videoInfo.duration;
-	m_publishTime = taskInfo.videoInfo.uploadDate;
-	m_publisher = taskInfo.videoInfo.author;
-	m_progress = taskInfo.progressPercentage;
-	m_downloadSpeed = taskInfo.downloadSpeed;
+	m_taskId = taskInfo->taskId;
+	m_title = taskInfo->videoInfo.title;
+	m_coverUrl = taskInfo->videoInfo.thumbnailUrl;
+	m_cover = taskInfo->videoInfo.cover;
+	m_duration = taskInfo->videoInfo.duration;
+	m_publishTime = taskInfo->videoInfo.uploadDate;
+	m_publisher = taskInfo->videoInfo.author;
+	m_progress = taskInfo->progressPercentage;
+	m_downloadSpeed = taskInfo->downloadSpeed;
 
 	// 根据状态设置卡片状态
-	switch (taskInfo.status)
+	switch (taskInfo->status)
 	{
 	case Queued:
 		m_state = DownloadCardState::Pending;

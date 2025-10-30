@@ -7,8 +7,6 @@
 #include <QQueue>
 #include "DownloadTaskInfo.h"
 
-class DownloadEngine;
-
 class DownloadManager : public QObject
 {
 	Q_OBJECT
@@ -18,7 +16,7 @@ public:
 	~DownloadManager();
 
 	// 公共接口
-	void addDownload(const DownloadTaskInfo& taskInfo);
+	void addDownload(DownloadTaskInfo taskInfo);
 	void pauseDownload(const QString& taskId);
 	void resumeDownload(const QString& taskId);
 	void cancelDownload(const QString& taskId);
@@ -62,7 +60,6 @@ private slots:
 
 private:
 	QThread m_workerThread;
-	DownloadEngine* m_engine;
 	QMap<QString, DownloadTaskInfo> m_tasks;
 
 	QString generateTaskId() const;
