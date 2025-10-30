@@ -56,16 +56,10 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 		this, &DownloadPage::onTaskStateChanged);
 	connect(downloadingWidget, &DownloadCardContainerWidget::taskStateChanged,
 		this, &DownloadPage::onTaskStateChanged);
-	connect(downloadedWidget, &DownloadCardContainerWidget::taskStateChanged,
-		this, &DownloadPage::onTaskStateChanged);
 
 	// 连接下载管理器信号
-	connect(m_downloadManager.get(), &DownloadManager::downloadStarted,
-		this, &DownloadPage::onDownloadManagerStarted);
 	connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
 		this, &DownloadPage::onDownloadManagerCompleted);
-	connect(m_downloadManager.get(), &DownloadManager::downloadProgress,
-		downloadingWidget, &DownloadCardContainerWidget::onDownloadProgress);
 	connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
 		downloadingWidget, &DownloadCardContainerWidget::onDownloadFailed);
 	connect(m_downloadManager.get(), &DownloadManager::downloadPaused,
@@ -242,13 +236,6 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 		downloadedWidget->transferTaskToThis(taskInfo);
 		break;
 	}
-}
-
-// 处理下载管理器开始的信号
-void DownloadPage::onDownloadManagerStarted(const QString& taskId)
-{
-	// 确保卡片状态正确更新
-	downloadingWidget->onDownloadStarted(taskId);
 }
 
 // 处理下载管理器完成的信号

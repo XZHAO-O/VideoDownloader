@@ -34,7 +34,6 @@ public:
 	void addDownloadCard(const DownloadTaskInfo& downloadTaskInfo);
 	void showLoading();
 	void addDownloadCards(QList<DownloadTaskInfo>&& tasks);
-	void setState(ContainerState state);
 	ContainerState state() const { return m_containerState; }
 
 	// 任务转移相关方法
@@ -55,9 +54,7 @@ public slots:
 	void onDownloadStatusChanged(const QString& taskId);
 	void onDownloadCompleted(const QString& taskId, const QString& filePath);
 	void onDownloadFailed(const QString& taskId, const QString& error);
-	void onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 	void onDownloadSpeedUpdated(qint64 bytesPerSecond);
-	void onDownloadStarted(const QString& taskId);
 
 	// 分页改变槽函数
 	void onPageChanged(int page);
@@ -82,8 +79,6 @@ private:
 
 	// 清理所有卡片（包括预创建的）
 	void clearAllCards();
-
-	void updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
 	QSharedPointer<DownloadManager> m_downloadManager;
 	ContainerState m_containerState;

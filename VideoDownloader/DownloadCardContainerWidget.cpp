@@ -45,12 +45,11 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		m_noDataText = "暂无下载任务";
 		cardState = DownloadCardState::Downloading;
 		// 连接下载管理器信号
-		connect(m_downloadManager.get(), &DownloadManager::downloadProgress, this, &DownloadCardContainerWidget::onDownloadProgress);
 		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
 		connect(m_downloadManager.get(), &DownloadManager::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
 		connect(m_downloadManager.get(), &DownloadManager::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
 		connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
 		m_noDataText = "暂无已下载任务";
@@ -201,7 +200,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 
 	card->disconnect();
 
-	switch (m_containerState) {
+	switch (m_containerState)
+	{
 	case ContainerState::DownloadReady:
 		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo]() {
 			// 发出任务转移信号，让DownloadPage处理容器间的转移和开始下载
@@ -209,25 +209,11 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 			});
 
 		connect(card, &DownloadCard::videoDownloadClicked, this, [this, taskInfo]() {
-			DownloadTaskInfo updatedTask = taskInfo;
-			updatedTask.status = Downloading;
-
 			emit taskStateChanged(taskInfo.taskId, ContainerState::Downloading);
-
-			if (m_downloadManager) {
-				m_downloadManager->addDownload(updatedTask);
-			}
 			});
 
 		connect(card, &DownloadCard::audioDownloadClicked, this, [this, taskInfo]() {
-			DownloadTaskInfo updatedTask = taskInfo;
-			updatedTask.status = Downloading;
-
 			emit taskStateChanged(taskInfo.taskId, ContainerState::Downloading);
-
-			if (m_downloadManager) {
-				m_downloadManager->addDownload(updatedTask);
-			}
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
@@ -259,7 +245,11 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, const
 		break;
 
 	case ContainerState::Downloading:
+
 		card->disconnect();
+
+		connect(m_downloadManager.get(), &DownloadManager::downloadProgress, card, &DownloadCard::onDownloadProgress);
+
 		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
 			if (m_downloadManager) {
 				m_downloadManager->pauseDownload(taskInfo.taskId);
@@ -538,14 +528,14 @@ void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId, const QString& filePath)
 {
 	BENCHMARKING_FUNCTION();
-	// 更新任务信息
-	for (auto& task : m_downloadTasks) {
-		if (task.taskId == taskId) {
-			task.status = Completed;
-			task.request.outputPath = filePath;
-			break;
-		}
-	}
+	//// 更新任务信息
+	//for (auto& task : m_downloadTasks) {
+	//	if (task.taskId == taskId) {
+	//		task.status = Completed;
+	//		task.request.outputPath = filePath;
+	//		break;
+	//	}
+	//}
 
 	// 发出任务完成信号
 	emit taskStateChanged(taskId, ContainerState::Downloaded);
@@ -557,23 +547,6 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 	qDebug() << "Download failed for task:" << taskId << "Error:" << error;
 	// 可以选择将任务移回待下载状态
 	// emit taskStateChanged(taskId, ContainerState::DownloadReady);
-}
-
-void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, qint64 downloaded, qint64 total)
-{
-	BENCHMARKING_FUNCTION();
-	// 更新对应卡片的进度
-	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
-	if (card) {
-		int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
-		card->model()->setDownloadedSize(downloaded);
-		card->model()->setDownloadSize(total);
-		card->model()->setProgress(progress);
-		card->model()->setDownloadSpeed(m_currentSpeed);
-
-		// 强制更新UI
-		card->updateUI();
-	}
 }
 
 void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
@@ -589,63 +562,6 @@ void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
 	//        //card->updateUI();
 	//    }
 	//}
-}
-
-void DownloadCardContainerWidget::onDownloadStarted(const QString& taskId)
-{
-	BENCHMARKING_FUNCTION();
-	// 更新任务状态为下载中
-	for (auto& task : m_downloadTasks) {
-		if (task.taskId == taskId) {
-			task.status = Downloading;
-			break;
-		}
-	}
-
-	// 更新对应卡片的UI
-	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
-	if (card) {
-		card->model()->setState(DownloadCardState::Downloading);
-		//card->updateUI();
-	}
-}
-
-void DownloadCardContainerWidget::updateTaskProgress(const QString& taskId, qint64 downloaded, qint64 total)
-{
-	BENCHMARKING_FUNCTION();
-	// 更新特定任务的进度
-	DownloadCard* card = m_downloadCards.value(taskId, nullptr);
-	if (card) {
-		int progress = total > 0 ? static_cast<int>((downloaded * 100) / total) : 0;
-		card->model()->setProgress(progress);
-		//card->updateUI();
-	}
-}
-
-void DownloadCardContainerWidget::setState(ContainerState state)
-{
-	BENCHMARKING_FUNCTION();
-	if (m_containerState != state) {
-		m_containerState = state;
-
-		// 更新无数据文本
-		switch (m_containerState) {
-		case ContainerState::DownloadReady:
-			m_noDataText = "暂无待下载任务";
-			break;
-		case ContainerState::Downloading:
-			m_noDataText = "暂无下载任务";
-			break;
-		case ContainerState::Downloaded:
-			m_noDataText = "暂无已下载任务";
-			break;
-		}
-
-		if (m_noDataWidget)
-		{
-			m_noDataWidget->setText(m_noDataText);
-		}
-	}
 }
 
 void DownloadCardContainerWidget::transferTaskToThis(const DownloadTaskInfo& taskInfo)

@@ -45,6 +45,10 @@ signals:
 	void openUrlClicked();
 	void previewClicked();
 
+public slots:
+
+	void onDownloadProgress(const QString& progressInfo, int progress);
+
 protected:
 	void mousePressEvent(QMouseEvent* event) override;
 	void enterEvent(QEnterEvent* event) override;

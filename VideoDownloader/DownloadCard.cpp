@@ -710,6 +710,12 @@ void DownloadCard::initModelConnections()
 	}
 }
 
+void DownloadCard::onDownloadProgress(const QString& progressInfo, int progress)
+{
+	model()->setProgressInfo(progressInfo);
+	model()->setProgress(progress);
+}
+
 void DownloadCard::updateUI()
 {
 	BENCHMARKING_FUNCTION();
@@ -773,9 +779,7 @@ void DownloadCard::updateDownloadingUI()
 
 	m_speedLabel->setText(m_model->formattedDownloadSpeed());
 
-	QString downloadedSize = DownloadTaskInfo::formatFileSize(m_model->downloadedSize());
-	QString totalSize = DownloadTaskInfo::formatFileSize(m_model->downloadSize());
-	m_progressInfoLabel->setText(QString("%1/%2").arg(downloadedSize).arg(totalSize));
+	m_progressInfoLabel->setText(m_model->progressInfo());
 }
 
 void DownloadCard::updateDownloadedUI()

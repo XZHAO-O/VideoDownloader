@@ -10,10 +10,6 @@ DownloadManager::DownloadManager(QObject* parent)
 	m_engine->moveToThread(&m_workerThread);
 
 	// 连接从引擎到管理器的信号（跨线程连接，使用QueuedConnection）
-	connect(m_engine, &DownloadEngine::downloadAdded,
-		this, &DownloadManager::onDownloadAdded, Qt::QueuedConnection);
-	connect(m_engine, &DownloadEngine::downloadStarted,
-		this, &DownloadManager::onDownloadStarted, Qt::QueuedConnection);
 	connect(m_engine, &DownloadEngine::downloadPaused,
 		this, &DownloadManager::onDownloadPaused, Qt::QueuedConnection);
 	connect(m_engine, &DownloadEngine::downloadResumed,
@@ -126,20 +122,6 @@ QList<DownloadTaskInfo> DownloadManager::getAllTasks() const
 QString DownloadManager::generateTaskId() const
 {
 	return QUuid::createUuid().toString(QUuid::WithoutBraces);
-}
-
-// 槽函数实现 - 转发信号到UI
-void DownloadManager::onDownloadAdded(const QString& taskId)
-{
-	emit downloadAdded(taskId);
-}
-
-void DownloadManager::onDownloadStarted(const QString& taskId)
-{
-	if (m_tasks.contains(taskId)) {
-		m_tasks[taskId].status = Downloading;
-	}
-	emit downloadStarted(taskId);
 }
 
 void DownloadManager::onDownloadPaused(const QString& taskId)

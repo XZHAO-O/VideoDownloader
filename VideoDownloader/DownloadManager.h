@@ -53,8 +53,6 @@ signals:
 	void downloadProgress(const QString& taskId, qint64 downloaded, qint64 total);
 
 private slots:
-	void onDownloadAdded(const QString& taskId);
-	void onDownloadStarted(const QString& taskId);
 	void onDownloadPaused(const QString& taskId);
 	void onDownloadResumed(const QString& taskId);
 	void onDownloadCanceled(const QString& taskId);

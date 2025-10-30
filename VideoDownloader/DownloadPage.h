@@ -40,7 +40,6 @@ protected:
 private slots:
 	void onTaskStateChanged(const QString& taskId, ContainerState newState);
 	void onDownloadManagerCompleted(const QString& taskId, const QString& filePath);
-	void onDownloadManagerStarted(const QString& taskId);
 
 private:
 	QSharedPointer<ApplicationController> m_applicationController;

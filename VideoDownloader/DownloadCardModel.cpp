@@ -27,7 +27,7 @@ void DownloadCardModel::setTitle(const QString& title)
 
 void DownloadCardModel::setCoverUrl(const QUrl& coverUrl)
 {
-	emit coverUrlChanged();
+	m_coverUrl = coverUrl;
 }
 
 void DownloadCardModel::setCover(const QByteArray& cover)
@@ -67,6 +67,11 @@ void DownloadCardModel::setState(DownloadCardState state)
 	m_state = state;
 }
 
+void DownloadCardModel::setProgressInfo(const QString& progressInfo)
+{
+	m_progressInfo = progressInfo;
+}
+
 void DownloadCardModel::setProgress(int progress)
 {
 	m_progress = progress;
@@ -96,16 +101,6 @@ void DownloadCardModel::setVideoQuality(VideoQualityLevel quality)
 void DownloadCardModel::setAudioQuality(AudioQualityLevel quality)
 {
 	m_audioQuality = quality;
-}
-
-void DownloadCardModel::setDownloadedSize(qint64 downloadedSize)
-{
-	m_downloadedSize = downloadedSize;
-}
-
-void DownloadCardModel::setDownloadSize(qint64 totalSize)
-{
-	m_downloadSize = totalSize;
 }
 
 QString DownloadCardModel::formattedVideoSize() const
