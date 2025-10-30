@@ -57,9 +57,6 @@
     <Filter Include="Core\Mod">
       <UniqueIdentifier>{16163dcf-20aa-4de4-b4d8-30c4c1563530}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Event">
-      <UniqueIdentifier>{f1ea61c7-2f5a-4762-b57a-fc26ef2a64d3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Network">
       <UniqueIdentifier>{5f9fcaf2-b20a-41d6-93bc-1716e2b4b2ce}</UniqueIdentifier>
     </Filter>
@@ -339,9 +336,6 @@
     </ClCompile>
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Core\Config</Filter>
-    </ClCompile>
-    <ClCompile Include="EventBus.cpp">
-      <Filter>Core\Event</Filter>
     </ClCompile>
     <ClCompile Include="LogSystem.cpp">
       <Filter>Core\Log</Filter>
@@ -642,9 +636,6 @@
     <QtMoc Include="ConfigManager.h">
       <Filter>Core\Config</Filter>
     </QtMoc>
-    <QtMoc Include="EventBus.h">
-      <Filter>Core\Event</Filter>
-    </QtMoc>
     <QtMoc Include="LogSystem.h">
       <Filter>Core\Log</Filter>
     </QtMoc>
@@ -727,9 +718,6 @@
     </ClInclude>
     <ClInclude Include="VideoInfo.h">
       <Filter>Core\models</Filter>
-    </ClInclude>
-    <ClInclude Include="EventTypes.h">
-      <Filter>Core\Event</Filter>
     </ClInclude>
     <ClInclude Include="INetworkManager.h">
       <Filter>Core\Network</Filter>

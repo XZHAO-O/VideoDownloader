@@ -93,9 +93,6 @@ void ApplicationController::initializeCoreSystems()
 	// 初始化配置管理器
 	m_configManager = QSharedPointer<ConfigManager>::create(appDataDir);
 
-	// 初始化事件总线
-	m_eventBus = EventBus::instance();
-
 	LogSystem::instance().info("Core systems initialized", "Application");
 }
 
@@ -144,8 +141,6 @@ void ApplicationController::cleanup()
 	m_mediaService.clear();
 	m_networkManager.clear();
 
-	// 清理核心系统
-	m_eventBus.clear();
 	m_configManager.clear();
 
 	LogSystem::instance().shutdown();

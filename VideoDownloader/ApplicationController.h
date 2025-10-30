@@ -6,7 +6,6 @@
 #include "ApplicationState.h"
 
 class LogSystem;
-class EventBus;
 class NetworkManager;
 class DownloadManager;
 class ConfigManager;
@@ -54,7 +53,6 @@ private:
 	// 核心系统
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<LogSystem> m_logSystem;
-	QSharedPointer<EventBus> m_eventBus;
 
 	// 服务
 	QSharedPointer<ConfigModManager> m_modManager;

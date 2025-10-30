@@ -123,7 +123,6 @@
     <ClCompile Include="DownloadCardPool.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
-    <ClCompile Include="EventBus.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
     <ClCompile Include="MediaProcessingService.cpp" />
@@ -358,7 +357,6 @@
     <QtMoc Include="VideoPreviewWindow.h" />
     <QtMoc Include="DownloadRecordRepository.h" />
     <QtMoc Include="ConfigManager.h" />
-    <QtMoc Include="EventBus.h" />
     <ClInclude Include="ApplicationState.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadCardModel.h" />
@@ -371,7 +369,6 @@
     <ClInclude Include="DownloadCardState.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
-    <ClInclude Include="EventTypes.h" />
     <QtMoc Include="LogSystem.h" />
     <QtMoc Include="IDownloadEngine.h" />
     <QtMoc Include="IMediaProcessor.h" />

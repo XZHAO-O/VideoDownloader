@@ -13,7 +13,8 @@ class DownloadCard;
 class DownloadManager;
 
 // 容器状态枚举
-enum class ContainerState {
+enum class ContainerState
+{
 	DownloadReady, // 待下载
 	Downloading,   // 下载中
 	Downloaded     // 已下载
