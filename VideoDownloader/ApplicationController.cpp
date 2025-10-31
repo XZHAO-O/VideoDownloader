@@ -3,7 +3,7 @@
 #include <QDir>
 #include <QStandardPaths>
 
-#include "DownloadManager.h"
+//#include "DownloadManager.h"
 #include "ConfigManager.h"
 #include "ConfigModManager.h"
 #include "LogSystem.h"
@@ -116,8 +116,7 @@ void ApplicationController::initializeServices()
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
 	// 初始化下载管理器
-	//m_downloadManager = QSharedPointer<DownloadManager>::create(m_networkManager);
-	m_downloadManager = QSharedPointer<DownloadManager>::create();
+	//m_downloadManager = QSharedPointer<DownloadManager>::create(m_networkManager, m_configManager);
 
 	LogSystem::instance().info("All services initialized", "Application");
 }

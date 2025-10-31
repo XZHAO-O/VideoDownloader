@@ -143,7 +143,6 @@
     <QtUic Include="VideoDownloader.ui" />
     <QtMoc Include="VideoDownloader.h" />
     <ClCompile Include="ApplicationController.cpp" />
-    <ClCompile Include="DownloadManager.cpp" />
     <ClCompile Include="DownloadPage.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="MaterialTabBar.cpp" />
@@ -368,7 +367,6 @@
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
     <QtMoc Include="LogSystem.h" />
-    <QtMoc Include="IDownloadEngine.h" />
     <QtMoc Include="IMediaProcessor.h" />
     <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
@@ -393,7 +391,6 @@
     <QtMoc Include="MaterialTabBar.h" />
     <QtMoc Include="MaterialTabWidget.h" />
     <QtMoc Include="ApplicationController.h" />
-    <QtMoc Include="DownloadManager.h" />
     <ClInclude Include="ThirdParty\FastGaussianBlur-main\fast_gaussian_blur_template.h" />
     <ClInclude Include="ThirdParty\GaussianBlur.h" />
     <ClInclude Include="ThirdParty\QR-Code-generator-master\qrcodegen.hpp" />

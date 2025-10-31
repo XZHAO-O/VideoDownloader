@@ -4,7 +4,19 @@
 #include "ModInfo.h"
 #include "VideoInfo.h"
 
-struct DownloadTaskInfo {
+// 下载任务状态
+enum DownloadStatus
+{
+	Queued = 0,
+	Downloading,
+	Paused,
+	Completed,
+	Failed
+};
+
+class DownloadTaskInfo
+{
+public:
 	QString taskId;
 	VideoInfo videoInfo;
 	VideoDownloadRequest request;
@@ -12,12 +24,12 @@ struct DownloadTaskInfo {
 	DownloadStatus status;
 	qint64 downloadedBytes;
 	qint64 totalBytes;
-	double downloadSpeed; // bytes per second
+	int progressPercentage;
+	double downloadSpeed;
 	QDateTime startTime;
 	QDateTime endTime;
 	QString currentFile;
 	QString errorMessage;
-	int progressPercentage;
 
 	DownloadTaskInfo()
 		: status(Queued)
@@ -82,5 +94,3 @@ struct DownloadTaskInfo {
 			return QString("%1 字节").arg(bytes);
 	}
 };
-
-Q_DECLARE_METATYPE(DownloadTaskInfo)

@@ -11,7 +11,7 @@
 #include "NoDataWidget.h"
 #include "DesignSystem.h"
 #include "DownloadCard.h"
-#include "DownloadManager.h"
+//#include "DownloadManager.h"
 #include "DownloadCardPool.h"
 #include "Instrumentor.h"
 
@@ -45,10 +45,10 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		m_noDataText = "暂无下载任务";
 		cardState = DownloadCardState::Downloading;
 		// 连接下载管理器信号
-		connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
+		/*connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
 		connect(m_downloadManager.get(), &DownloadManager::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
 		connect(m_downloadManager.get(), &DownloadManager::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);*/
 		//connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
@@ -248,23 +248,23 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		card->disconnect();
 
-		connect(m_downloadManager.get(), &DownloadManager::downloadProgress, card, &DownloadCard::onDownloadProgress);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadProgress, card, &DownloadCard::onDownloadProgress);
 
 		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
 			if (m_downloadManager) {
-				m_downloadManager->pauseDownload(taskInfo->taskId);
+				//m_downloadManager->pauseDownload(taskInfo->taskId);
 			}
 			});
 
 		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
 			if (m_downloadManager) {
-				m_downloadManager->resumeDownload(taskInfo->taskId);
+				//m_downloadManager->resumeDownload(taskInfo->taskId);
 			}
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
 			if (m_downloadManager) {
-				m_downloadManager->cancelDownload(taskInfo->taskId);
+				//m_downloadManager->cancelDownload(taskInfo->taskId);
 			}
 
 			// 从任务列表中移除

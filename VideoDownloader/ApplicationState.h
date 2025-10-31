@@ -11,15 +11,7 @@ enum ApplicationState {
 	Error
 };
 
-// 下载任务状态
-enum DownloadStatus {
-	Queued = 0,
-	Downloading,
-	Paused,
-	Completed,
-	Failed,
-	Cancelled
-};
+
 
 // 视频质量选项
 struct VideoQuality {
@@ -55,7 +47,6 @@ enum DownloadFormat {
 };
 
 Q_DECLARE_METATYPE(ApplicationState)
-Q_DECLARE_METATYPE(DownloadStatus)
 Q_DECLARE_METATYPE(VideoQuality)
 Q_DECLARE_METATYPE(AudioQuality)
 Q_DECLARE_METATYPE(DownloadFormat)

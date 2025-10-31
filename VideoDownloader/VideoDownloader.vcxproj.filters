@@ -328,9 +328,6 @@
     <ClCompile Include="ApplicationController.cpp">
       <Filter>app</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadManager.cpp">
-      <Filter>Business</Filter>
-    </ClCompile>
     <ClCompile Include="DownloadRecordRepository.cpp">
       <Filter>Storage</Filter>
     </ClCompile>
@@ -348,9 +345,6 @@
     </ClCompile>
     <ClCompile Include="PlatformAggregatorService.cpp">
       <Filter>Services</Filter>
-    </ClCompile>
-    <ClCompile Include="DownloadEngine.cpp">
-      <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="DownloadCardModel.cpp">
       <Filter>Core\models</Filter>
@@ -642,9 +636,6 @@
     <QtMoc Include="NetworkManager.h">
       <Filter>Core\Network</Filter>
     </QtMoc>
-    <QtMoc Include="IDownloadEngine.h">
-      <Filter>Core\models</Filter>
-    </QtMoc>
     <QtMoc Include="IMediaProcessor.h">
       <Filter>Core\models</Filter>
     </QtMoc>
@@ -654,14 +645,8 @@
     <QtMoc Include="PlatformAggregatorService.h">
       <Filter>Services</Filter>
     </QtMoc>
-    <QtMoc Include="DownloadManager.h">
-      <Filter>Business</Filter>
-    </QtMoc>
     <QtMoc Include="ApplicationController.h">
       <Filter>app</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadEngine.h">
-      <Filter>Core</Filter>
     </QtMoc>
     <QtMoc Include="DownloadCardModel.h">
       <Filter>Core\models</Filter>

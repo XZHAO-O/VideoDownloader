@@ -5,7 +5,7 @@
 #include "AntScrollArea.h"
 #include "MaterialTabWidget.h"
 #include "DownloadCard.h"
-#include "DownloadManager.h"
+//#include "DownloadManager.h"
 #include "ApplicationController.h"
 #include "PlatformAggregatorService.h"
 #include "ConfigVideoPlatform.h"
@@ -41,16 +41,16 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 		this, &DownloadPage::onTaskStateChanged);
 
 	// 连接下载管理器信号
-	connect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
+	/*onnect(m_downloadManager.get(), &DownloadManager::downloadCompleted,
 		this, &DownloadPage::onDownloadManagerCompleted);
 	connect(m_downloadManager.get(), &DownloadManager::downloadFailed,
 		downloadingWidget, &DownloadCardContainerWidget::onDownloadFailed);
 	connect(m_downloadManager.get(), &DownloadManager::downloadPaused,
 		downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);
 	connect(m_downloadManager.get(), &DownloadManager::downloadResumed,
-		downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);*/
 
-	// 添加标签项
+		// 添加标签项
 	tabWidget->addTab(downloadReadyWidget, "待下载");
 	tabWidget->addTab(downloadingWidget, "下载中");
 	tabWidget->addTab(downloadedWidget, "已下载");
@@ -213,7 +213,7 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 		// 如果是转移到下载中，开始下载
 		if (m_downloadManager && sourceState == ContainerState::DownloadReady) {
 			// 只有从待下载转移时才调用addDownload
-			m_downloadManager->addDownload(*taskInfo);
+			//m_downloadManager->addDownload(taskInfo);
 		}
 		break;
 	case ContainerState::Downloaded:
