@@ -400,6 +400,9 @@
     <ClCompile Include="AppInstanceManager.cpp">
       <Filter>Core\System</Filter>
     </ClCompile>
+    <ClCompile Include="TrayManager.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -700,6 +703,9 @@
       <Filter>Core\Download</Filter>
     </QtMoc>
     <QtMoc Include="AppInstanceManager.h">
+      <Filter>Core\System</Filter>
+    </QtMoc>
+    <QtMoc Include="TrayManager.h">
       <Filter>Core\System</Filter>
     </QtMoc>
   </ItemGroup>
