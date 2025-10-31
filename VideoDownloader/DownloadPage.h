@@ -10,7 +10,7 @@
 class AntScrollArea;
 class MaterialTabWidget;
 class DownloadTaskInfo;
-class DownloadManager;
+class DownloadEngine;
 class ApplicationController;
 
 class DownloadPage : public QWidget
@@ -40,7 +40,7 @@ private slots:
 
 private:
 	QSharedPointer<ApplicationController> m_applicationController;
-	QSharedPointer<DownloadManager> m_downloadManager;
+	QSharedPointer<DownloadEngine> m_downloadEngine;
 	MaterialTabWidget* tabWidget = nullptr;
 	DownloadCardContainerWidget* downloadReadyWidget = nullptr;
 	DownloadCardContainerWidget* downloadingWidget = nullptr;

@@ -121,6 +121,7 @@
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadCardPool.cpp" />
+    <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -364,6 +365,7 @@
     <ClInclude Include="CookieManageUtil.h" />
     <QtMoc Include="DownloadCardPool.h" />
     <ClInclude Include="DownloadCardState.h" />
+    <QtMoc Include="DownloadEngine.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
     <QtMoc Include="LogSystem.h" />

@@ -7,7 +7,7 @@
 
 class LogSystem;
 class NetworkManager;
-class DownloadManager;
+class DownloadEngine;
 class ConfigManager;
 class ConfigModManager;
 class PlatformAggregatorService;
@@ -28,7 +28,7 @@ public:
 	// 获取服务实例
 	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
 	QSharedPointer<ConfigModManager> getConfigModManager() const { return m_modManager; }
-	QSharedPointer<DownloadManager> getDownloadManager() const { return m_downloadManager; }
+	QSharedPointer<DownloadEngine> getDownloadEngine() const { return m_downloadEngine; }
 	QSharedPointer<PlatformAggregatorService> getPlatformService() const { return m_platformService; }
 	QSharedPointer<MediaProcessingService> getMediaService() const { return m_mediaService; }
 
@@ -59,6 +59,6 @@ private:
 	QSharedPointer<NetworkManager> m_networkManager;
 	QSharedPointer<MediaProcessingService> m_mediaService;
 	QSharedPointer<PlatformAggregatorService> m_platformService;
-	QSharedPointer<DownloadManager> m_downloadManager;
+	QSharedPointer<DownloadEngine> m_downloadEngine;
 	QSharedPointer<DownloadRecordRepository> m_recordRepository;
 };

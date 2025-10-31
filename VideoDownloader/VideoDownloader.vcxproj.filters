@@ -39,9 +39,6 @@
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{9614c07c-4a07-46e9-bfac-37678ea133da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Business">
-      <UniqueIdentifier>{607bccd7-607b-4689-9b5f-8998dca76ac7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Services">
       <UniqueIdentifier>{ff8020a1-f287-4abe-a1a7-f7477660f904}</UniqueIdentifier>
     </Filter>
@@ -71,6 +68,9 @@
     </Filter>
     <Filter Include="Ui\Components">
       <UniqueIdentifier>{a251c7cd-a822-435f-b20a-682f0ba7b356}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Download">
+      <UniqueIdentifier>{436c3f88-3ecb-497e-85bd-1cd5d4cb8bb7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -391,6 +391,9 @@
     <ClCompile Include="DownloadCardPool.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadEngine.cpp">
+      <Filter>Core\Download</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -687,6 +690,9 @@
     <QtMoc Include="DownloadCardPool.h">
       <Filter>Core</Filter>
     </QtMoc>
+    <QtMoc Include="DownloadEngine.h">
+      <Filter>Core\Download</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\GaussianBlur.h">
@@ -713,9 +719,6 @@
     <ClInclude Include="VideoDownloadRequest.h">
       <Filter>Core\models</Filter>
     </ClInclude>
-    <ClInclude Include="DownloadTaskInfo.h">
-      <Filter>Core\models</Filter>
-    </ClInclude>
     <ClInclude Include="SearchResult.h">
       <Filter>Core\models</Filter>
     </ClInclude>
@@ -736,6 +739,9 @@
     </ClInclude>
     <ClInclude Include="Instrumentor.h">
       <Filter>Core\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadTaskInfo.h">
+      <Filter>Core\Download</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

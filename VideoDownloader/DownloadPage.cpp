@@ -15,7 +15,7 @@
 DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent)
 	: QWidget(parent)
 	, m_applicationController(applicationController)
-	, m_downloadManager(applicationController->getDownloadManager())
+	, m_downloadEngine(applicationController->getDownloadEngine())
 {
 	BENCHMARKING_FUNCTION();
 	setObjectName("DownloadPage");
@@ -30,9 +30,9 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	QWidget* w1 = new QWidget(this);
 	scrollArea1->addWidget(w1);
 
-	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::DownloadReady, this);
-	downloadingWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloading, this);
-	downloadedWidget = new DownloadCardContainerWidget(m_downloadManager, ContainerState::Downloaded, this);
+	downloadReadyWidget = new DownloadCardContainerWidget(m_downloadEngine, ContainerState::DownloadReady, this);
+	downloadingWidget = new DownloadCardContainerWidget(m_downloadEngine, ContainerState::Downloading, this);
+	downloadedWidget = new DownloadCardContainerWidget(m_downloadEngine, ContainerState::Downloaded, this);
 
 	// 连接任务状态改变信号
 	connect(downloadReadyWidget, &DownloadCardContainerWidget::taskStateChanged,
@@ -211,9 +211,9 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 	case ContainerState::Downloading:
 		downloadingWidget->transferTaskToThis(taskInfo);
 		// 如果是转移到下载中，开始下载
-		if (m_downloadManager && sourceState == ContainerState::DownloadReady) {
+		if (m_downloadEngine && sourceState == ContainerState::DownloadReady) {
 			// 只有从待下载转移时才调用addDownload
-			//m_downloadManager->addDownload(taskInfo);
+			//m_downloadEngine->addDownload(taskInfo);
 		}
 		break;
 	case ContainerState::Downloaded:

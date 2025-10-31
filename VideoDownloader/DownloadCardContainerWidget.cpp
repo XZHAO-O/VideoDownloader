@@ -11,15 +11,15 @@
 #include "NoDataWidget.h"
 #include "DesignSystem.h"
 #include "DownloadCard.h"
-//#include "DownloadManager.h"
+#include "DownloadEngine.h"
 #include "DownloadCardPool.h"
 #include "Instrumentor.h"
 
-DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager,
+DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadEngine> downloadEngine,
 	ContainerState state,
 	QWidget* parent)
 	: QWidget(parent)
-	, m_downloadManager(downloadManager)
+	, m_downloadEngine(downloadEngine)
 	, m_containerState(state)
 	, m_mainLayout(nullptr)
 	, m_scrollArea(nullptr)
@@ -251,21 +251,21 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 		//connect(m_downloadManager.get(), &DownloadManager::downloadProgress, card, &DownloadCard::onDownloadProgress);
 
 		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
-			if (m_downloadManager) {
+			//if (m_downloadManager) {
 				//m_downloadManager->pauseDownload(taskInfo->taskId);
-			}
+			//}
 			});
 
 		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
-			if (m_downloadManager) {
+			//if (m_downloadManager) {
 				//m_downloadManager->resumeDownload(taskInfo->taskId);
-			}
+			//}
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
-			if (m_downloadManager) {
+			//if (m_downloadManager) {
 				//m_downloadManager->cancelDownload(taskInfo->taskId);
-			}
+			//}
 
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);

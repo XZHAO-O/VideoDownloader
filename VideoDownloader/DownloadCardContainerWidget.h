@@ -10,7 +10,7 @@ class PaginationWidget;
 class MaterialSpinner;
 class DownloadCardPool;
 class DownloadCard;
-class DownloadManager;
+class DownloadEngine;
 
 // 容器状态枚举
 enum class ContainerState
@@ -25,10 +25,10 @@ class DownloadCardContainerWidget : public QWidget
 	Q_OBJECT
 
 public:
-	explicit DownloadCardContainerWidget(QSharedPointer<DownloadManager> downloadManager,
+	explicit DownloadCardContainerWidget(QSharedPointer<DownloadEngine> downloadEngine,
 		ContainerState state,
 		QWidget* parent = nullptr);
-	virtual ~DownloadCardContainerWidget();
+	~DownloadCardContainerWidget();
 
 	// 公共接口
 	void addDownloadCard(QSharedPointer<DownloadTaskInfo> downloadTaskInfo);
@@ -80,7 +80,7 @@ private:
 	// 清理所有卡片（包括预创建的）
 	void clearAllCards();
 
-	QSharedPointer<DownloadManager> m_downloadManager;
+	QSharedPointer<DownloadEngine> m_downloadEngine;
 	ContainerState m_containerState;
 	QVBoxLayout* m_mainLayout;
 	AntScrollArea* m_scrollArea;
