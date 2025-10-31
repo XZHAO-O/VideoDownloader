@@ -6,7 +6,7 @@
 #include "SearchResult.h"
 
 class ConfigVideoPlatform;
-class INetworkManager;
+class NetworkManager;
 class ConfigManager;
 
 class ConfigModManager : public QObject
@@ -15,7 +15,7 @@ class ConfigModManager : public QObject
 
 public:
 	explicit ConfigModManager(QSharedPointer<ConfigManager> configManager,
-		QSharedPointer<INetworkManager> networkManager,
+		QSharedPointer<NetworkManager> networkManager,
 		QObject* parent = nullptr);
 
 	bool initialize();
@@ -62,7 +62,7 @@ private:
 	void buildUrlPatterns();
 
 	QSharedPointer<ConfigManager> m_configManager;
-	QSharedPointer<INetworkManager> m_networkManager;
+	QSharedPointer<NetworkManager> m_networkManager;
 	QMap<QString, ModInfo> m_mods;
 	QMap<QString, QSharedPointer<ConfigVideoPlatform>> m_platforms;
 	QMap<QString, QString> m_urlPatterns; // 正则表达式字符串 -> modId

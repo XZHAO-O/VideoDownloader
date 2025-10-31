@@ -4,11 +4,11 @@
 
 #include "LogSystem.h"
 #include "ConfigManager.h"
-#include "INetworkManager.h"
+#include "NetworkManager.h"
 #include "DownloadTaskInfo.h"
 #include "AntMessageManager.h"
 
-ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager,
+ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager,
 	QObject* parent)
 	: QObject(parent)
 	, m_modInfo(modInfo)

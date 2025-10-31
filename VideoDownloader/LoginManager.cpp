@@ -5,11 +5,11 @@
 #include <QJsonArray>
 #include <QTimer>
 
-#include "INetworkManager.h"
+#include "NetworkManager.h"
 #include "LogSystem.h"
 #include "CookieManageUtil.h"
 
-LoginManager::LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager, QObject* parent)
+LoginManager::LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager, QObject* parent)
 	: QObject(parent)
 	, m_modInfo(modInfo)
 	, m_modPath(modPath)

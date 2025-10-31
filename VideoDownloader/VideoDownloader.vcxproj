@@ -373,7 +373,6 @@
     <ClInclude Include="DownloadTaskInfo.h" />
     <QtMoc Include="LogSystem.h" />
     <QtMoc Include="IMediaProcessor.h" />
-    <ClInclude Include="INetworkManager.h" />
     <QtMoc Include="NetworkManager.h" />
     <QtMoc Include="LoginManager.h" />
     <ClInclude Include="Instrumentor.h" />

@@ -1,21 +1,39 @@
 #pragma once
 
-#include "INetworkManager.h"
-
+#include <QObject>
+#include <QFuture>
 #include <QSslError>
 #include <QNetworkRequest>
 #include <QNetworkCookie>
 #include <QNetworkReply>
+#include <QMutex>
+#include <QSharedPointer>
 
 class QNetworkAccessManager;
 class QNetworkProxy;
 class QNetworkCookieJar;
 class QAuthenticator;
 class QTimer;
-
 class ConfigManager;
 
-class NetworkManager : public QObject, public INetworkManager
+struct NetworkResponse
+{
+	bool success;
+	QByteArray data;
+	QString errorString;
+};
+
+struct NetworkProxy
+{
+	bool enabled = false;
+	QString type; // "http", "socks5"
+	QString host;
+	int port = 0;
+	QString username;
+	QString password;
+};
+
+class NetworkManager : public QObject
 {
 	Q_OBJECT
 
@@ -26,21 +44,24 @@ public:
 
 	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers);
 
-	// INetworkManager 接口实现
+	// 下载
+	//void download(void* ...);
+
+	// 网络请求方法
 	NetworkResponse get(const QString& url,
-		const QVariantMap& headers = {}) override;
+		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QString& url,
-		const QVariantMap& headers = {}) override;
+		const QVariantMap& headers = {});
 	QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},
-		const QVariantMap& headers = {}) override;
+		const QVariantMap& headers = {});
 	QFuture<NetworkResponse> post(const QString& url,
 		const QByteArray& data,
-		const QVariantMap& headers = {}) override;
+		const QVariantMap& headers = {});
 
-	void setProxy(const NetworkProxy& proxy) override;
-	void setTimeout(int milliseconds) override;
-	void setRetryCount(int count) override;
+	void setProxy(const NetworkProxy& proxy);
+	void setTimeout(int milliseconds);
+	void setRetryCount(int count);
 
 	// Cookie 管理
 	void setCookies(const QString& domain, const QList<QNetworkCookie>& cookies);

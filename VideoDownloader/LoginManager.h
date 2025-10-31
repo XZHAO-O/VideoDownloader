@@ -4,14 +4,14 @@
 
 #include "ModInfo.h"
 
-class INetworkManager;
+class NetworkManager;
 
 class LoginManager : public QObject
 {
 	Q_OBJECT
 
 public:
-	explicit LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager, QObject* parent = nullptr);
+	explicit LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager, QObject* parent = nullptr);
 
 	// 二维码登录功能
 	QUrl startQRCodeLogin();
@@ -58,5 +58,5 @@ private:
 
 	ModInfo m_modInfo;
 	QString m_modPath;
-	QSharedPointer<INetworkManager> m_networkManager;
+	QSharedPointer<NetworkManager> m_networkManager;
 };

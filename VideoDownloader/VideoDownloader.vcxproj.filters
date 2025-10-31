@@ -734,9 +734,6 @@
     <ClInclude Include="VideoInfo.h">
       <Filter>Core\models</Filter>
     </ClInclude>
-    <ClInclude Include="INetworkManager.h">
-      <Filter>Core\Network</Filter>
-    </ClInclude>
     <ClInclude Include="DownloadRecord.h">
       <Filter>Storage</Filter>
     </ClInclude>

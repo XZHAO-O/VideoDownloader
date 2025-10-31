@@ -7,7 +7,7 @@
 #include "ConfigVideoPlatform.h"
 
 ConfigModManager::ConfigModManager(QSharedPointer<ConfigManager> configManager,
-	QSharedPointer<INetworkManager> networkManager,
+	QSharedPointer<NetworkManager> networkManager,
 	QObject* parent)
 	: QObject(parent)
 	, m_configManager(configManager)

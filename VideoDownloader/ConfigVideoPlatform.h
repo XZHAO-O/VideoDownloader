@@ -7,7 +7,7 @@
 #include "LoginManager.h"
 #include "SearchResult.h"
 
-class INetworkManager;
+class NetworkManager;
 class ConfigManager;
 class DownloadTaskInfo;
 
@@ -16,7 +16,7 @@ class ConfigVideoPlatform : public QObject
 	Q_OBJECT
 
 public:
-	explicit ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<INetworkManager> networkManager, QObject* parent = nullptr);
+	explicit ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager, QObject* parent = nullptr);
 
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
@@ -64,6 +64,6 @@ private:
 
 private:
 	ModInfo m_modInfo;
-	QSharedPointer<INetworkManager> m_networkManager;
+	QSharedPointer<NetworkManager> m_networkManager;
 	QScopedPointer<LoginManager> m_loginManager;
 };
