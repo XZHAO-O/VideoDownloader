@@ -136,6 +136,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="AppInstanceManager.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="SingleLevelComboBox.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
@@ -381,6 +382,7 @@
     <QtMoc Include="ModCardWidget.h" />
     <ClInclude Include="ModInfo.h" />
     <QtMoc Include="QRCodeLoginWidget.h" />
+    <QtMoc Include="AppInstanceManager.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <QtMoc Include="SingleLevelComboBox.h" />

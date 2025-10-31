@@ -2,6 +2,7 @@
 #include <QFontDatabase>
 #include <QDir>
 
+#include "AppInstanceManager.h"
 #include "VideoDownloader.h"
 #include "Instrumentor.h"
 
@@ -21,6 +22,11 @@ int main(int argc, char* argv[])
 	// 设置当前工作目录为项目根目录
 	QDir::setCurrent(dir.absolutePath());
 
+	const QString serverName = "VideoDownloader_XZHAO_O";
+	AppInstanceManager appInstanceManager;
+	if (appInstanceManager.isAnotherInstanceRunning(serverName))
+		return 0;
+
 	// 加载google字体
 	//int fontId = QFontDatabase::addApplicationFont(":/fonts/NotoSansSC-Regular.ttf");
 	//if (fontId != -1)
@@ -35,12 +41,12 @@ int main(int argc, char* argv[])
 	//	qWarning("字体加载失败！");
 	//}
 
-	Instrumentor::Get().BeginSession("VideoDownloader");
+	BENCHMARKING_START();
 	BENCHMARKING_FUNCTION();
 	VideoDownloader window;
 	window.show();
 
 	int ret = app.exec();
-	Instrumentor::Get().EndSession();
+	BENCHMARKING_STOP();
 	return ret;
 }

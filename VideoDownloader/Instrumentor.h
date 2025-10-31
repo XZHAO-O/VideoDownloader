@@ -222,9 +222,30 @@ private:
 };
 
 #if defined(_DEBUG)
-#define BENCHMARKING_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
-#define BENCHMARKING_FUNCTION() BENCHMARKING_SCOPE(__FUNCSIG__)
+// 平台特定的函数签名宏
+#if defined(_WIN32)
+#define FUNC_SIG __FUNCSIG__
+#elif defined(__linux__) || defined(__APPLE__)
+#define FUNC_SIG __PRETTY_FUNCTION__
 #else
+#define FUNC_SIG __func__
+#endif
+
+// 使用宏重载技术
+#define BENCHMARKING_START_ARG_1(filePath) Instrumentor::Get().BeginSession(FUNC_SIG, filePath)
+#define BENCHMARKING_START_ARG_0() Instrumentor::Get().BeginSession(FUNC_SIG)
+
+// 选择正确的宏版本
+#define BENCHMARKING_START_SELECT(_1, _2, NAME, ...) NAME
+#define BENCHMARKING_START(...) BENCHMARKING_START_SELECT(__VA_ARGS__, BENCHMARKING_START_ARG_1, BENCHMARKING_START_ARG_0)(__VA_ARGS__)
+
+#define BENCHMARKING_STOP() Instrumentor::Get().EndSession()
+#define BENCHMARKING_SCOPE(name) InstrumentationTimer timer##__LINE__(name)
+#define BENCHMARKING_FUNCTION() BENCHMARKING_SCOPE(FUNC_SIG)
+#else
+#define BENCHMARKING_START(...)
+#define BENCHMARKING_STOP()
 #define BENCHMARKING_SCOPE(name)
 #define BENCHMARKING_FUNCTION()
+#define FUNC_SIG ""
 #endif

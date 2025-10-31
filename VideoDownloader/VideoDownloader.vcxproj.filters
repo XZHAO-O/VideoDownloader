@@ -72,6 +72,9 @@
     <Filter Include="Core\Download">
       <UniqueIdentifier>{436c3f88-3ecb-497e-85bd-1cd5d4cb8bb7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\System">
+      <UniqueIdentifier>{ed9a2465-fc81-4b9d-9502-367cb8e874c8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -394,6 +397,9 @@
     <ClCompile Include="DownloadEngine.cpp">
       <Filter>Core\Download</Filter>
     </ClCompile>
+    <ClCompile Include="AppInstanceManager.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -692,6 +698,9 @@
     </QtMoc>
     <QtMoc Include="DownloadEngine.h">
       <Filter>Core\Download</Filter>
+    </QtMoc>
+    <QtMoc Include="AppInstanceManager.h">
+      <Filter>Core\System</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
