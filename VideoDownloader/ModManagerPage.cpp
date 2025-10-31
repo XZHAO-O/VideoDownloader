@@ -343,8 +343,8 @@ void ModManagerPage::refreshTabs()
 	else {
 		// 没有模组时显示无数据页面
 		m_noDataWidget = new NoDataWidget(this);
-		m_noDataWidget->setText("暂无模组");
-		m_tabWidget->addTab(m_noDataWidget, "模组管理");
+		m_noDataWidget->setText(tr("暂无模组"));
+		m_tabWidget->addTab(m_noDataWidget, tr("模组管理"));
 	}
 }
 

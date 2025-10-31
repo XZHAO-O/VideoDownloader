@@ -51,10 +51,10 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 		downloadingWidget, &DownloadCardContainerWidget::onDownloadStatusChanged);*/
 
 		// 添加标签项
-	tabWidget->addTab(downloadReadyWidget, "待下载");
-	tabWidget->addTab(downloadingWidget, "下载中");
-	tabWidget->addTab(downloadedWidget, "已下载");
-	tabWidget->addTab(scrollArea1, "常用控件");
+	tabWidget->addTab(downloadReadyWidget, tr("待下载"));
+	tabWidget->addTab(downloadingWidget, tr("下载中"));
+	tabWidget->addTab(downloadedWidget, tr("已下载"));
+	tabWidget->addTab(scrollArea1, tr("常用控件"));
 
 	// 主布局
 	QVBoxLayout* layout = new QVBoxLayout(this);

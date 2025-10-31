@@ -99,7 +99,7 @@ void SettingsPage::setupGeneralSettings()
 
 	// 开机自启动
 	QHBoxLayout* autoStartLayout = new QHBoxLayout();
-	QLabel* autoStartLabel = new QLabel("开机自启动", m_generalTab);
+	QLabel* autoStartLabel = new QLabel(tr("开机自启动"), m_generalTab);
 	m_autoStartToggle = new AntToggleButton(QSize(57, 26), m_generalTab);
 	m_autoStartToggle->setShowText(true);
 	autoStartLayout->addWidget(autoStartLabel);
@@ -109,7 +109,7 @@ void SettingsPage::setupGeneralSettings()
 
 	// 自动检查更新
 	QHBoxLayout* checkUpdatesLayout = new QHBoxLayout();
-	QLabel* checkUpdatesLabel = new QLabel("自动检查更新", m_generalTab);
+	QLabel* checkUpdatesLabel = new QLabel(tr("自动检查更新"), m_generalTab);
 	m_checkUpdatesToggle = new AntToggleButton(QSize(57, 26), m_generalTab);
 	m_checkUpdatesToggle->setShowText(true);
 	checkUpdatesLayout->addWidget(checkUpdatesLabel);
@@ -119,11 +119,11 @@ void SettingsPage::setupGeneralSettings()
 
 	// 退出行为
 	m_exitBehaviorLayout = new QHBoxLayout();
-	m_exitBehaviorLabel = new QLabel("退出行为", m_generalTab);
+	m_exitBehaviorLabel = new QLabel(tr("退出行为"), m_generalTab);
 	m_exitProgramRadio = new AntRadioButton(m_generalTab);
-	m_exitProgramRadio->setText("退出程序");
+	m_exitProgramRadio->setText(tr("退出程序"));
 	m_minimizeToTrayRadio = new AntRadioButton(m_generalTab);
-	m_minimizeToTrayRadio->setText("最小化到系统托盘");
+	m_minimizeToTrayRadio->setText(tr("最小化到系统托盘"));
 
 	m_exitBehaviorLayout->addWidget(m_exitBehaviorLabel);
 	m_exitBehaviorLayout->addWidget(m_exitProgramRadio);
@@ -133,11 +133,11 @@ void SettingsPage::setupGeneralSettings()
 
 	// 语言设置
 	m_languageLayout = new QHBoxLayout();
-	m_languageLabel = new QLabel("界面语言", m_generalTab);
+	m_languageLabel = new QLabel(tr("界面语言"), m_generalTab);
 
 	// 创建语言列表
 	QStringList languages;
-	languages << "简体中文" << "English" << "日本語";
+	languages << tr("简体中文") << tr("English") << tr("日本語");
 
 	// 使用当前语言作为默认显示文本
 	QString currentLanguage = m_configManager->getValue("ui/language", "简体中文").toString();
@@ -151,7 +151,7 @@ void SettingsPage::setupGeneralSettings()
 
 	// 重置按钮
 	QHBoxLayout* resetLayout = new QHBoxLayout();
-	m_resetButton = new AntButton("重置设置", 11, m_generalTab);
+	m_resetButton = new AntButton(tr("重置设置"), 11, m_generalTab);
 	m_resetButton->setFixedSize(120, 40);
 
 	resetLayout->addWidget(m_resetButton);
@@ -159,7 +159,7 @@ void SettingsPage::setupGeneralSettings()
 	m_generalLayout->addLayout(resetLayout);
 
 	m_generalLayout->addStretch();
-	m_tabWidget->addTab(m_generalTab, "常规");
+	m_tabWidget->addTab(m_generalTab, tr("常规"));
 }
 
 void SettingsPage::setupDownloadSettings()
@@ -171,9 +171,9 @@ void SettingsPage::setupDownloadSettings()
 
 	// 下载路径
 	m_downloadPathLayout = new QHBoxLayout();
-	m_downloadPathLabel = new QLabel("下载路径", m_downloadTab);
+	m_downloadPathLabel = new QLabel(tr("下载路径"), m_downloadTab);
 	m_downloadPathInput = new QLineEdit(m_downloadTab);
-	m_browsePathButton = new AntButton("浏览", 11, m_downloadTab);
+	m_browsePathButton = new AntButton(tr("浏览"), 11, m_downloadTab);
 	m_browsePathButton->setFixedSize(80, 40);
 
 	m_downloadPathLayout->addWidget(m_downloadPathLabel);
@@ -246,15 +246,15 @@ void SettingsPage::setupDownloadSettings()
 
 	// 下载格式
 	m_downloadFormatLayout = new QHBoxLayout();
-	m_downloadFormatLabel = new QLabel("下载格式", m_downloadTab);
+	m_downloadFormatLabel = new QLabel(tr("下载格式"), m_downloadTab);
 	m_formatMerge = new AntRadioButton(m_downloadTab);
-	m_formatMerge->setText("视频+音频(合并)");
+	m_formatMerge->setText(tr("视频+音频(合并)"));
 	m_formatVideoOnly = new AntRadioButton(m_downloadTab);
-	m_formatVideoOnly->setText("仅视频");
+	m_formatVideoOnly->setText(tr("仅视频"));
 	m_formatAudioOnly = new AntRadioButton(m_downloadTab);
-	m_formatAudioOnly->setText("仅音频");
+	m_formatAudioOnly->setText(tr("仅音频"));
 	m_formatSeparate = new AntRadioButton(m_downloadTab);
-	m_formatSeparate->setText("视频+音频(分离)");
+	m_formatSeparate->setText(tr("视频+音频(分离)"));
 
 	// 创建下载格式按钮组
 	QButtonGroup* formatGroup = new QButtonGroup(this);
@@ -273,17 +273,17 @@ void SettingsPage::setupDownloadSettings()
 
 	// 同时下载数量
 	m_concurrentDownloadsLayout = new QHBoxLayout();
-	m_concurrentDownloadsLabel = new QLabel("同时下载", m_downloadTab);
+	m_concurrentDownloadsLabel = new QLabel(tr("同时下载"), m_downloadTab);
 	m_concurrent1 = new AntRadioButton(m_downloadTab);
-	m_concurrent1->setText("1个");
+	m_concurrent1->setText("1");
 	m_concurrent2 = new AntRadioButton(m_downloadTab);
-	m_concurrent2->setText("2个");
+	m_concurrent2->setText("2");
 	m_concurrent3 = new AntRadioButton(m_downloadTab);
-	m_concurrent3->setText("3个");
+	m_concurrent3->setText("3");
 	m_concurrent4 = new AntRadioButton(m_downloadTab);
-	m_concurrent4->setText("4个");
+	m_concurrent4->setText("4");
 	m_concurrent5 = new AntRadioButton(m_downloadTab);
-	m_concurrent5->setText("5个");
+	m_concurrent5->setText("5");
 
 	// 创建同时下载数量按钮组
 	QButtonGroup* concurrentGroup = new QButtonGroup(this);
@@ -303,7 +303,7 @@ void SettingsPage::setupDownloadSettings()
 	m_downloadLayout->addLayout(m_concurrentDownloadsLayout);
 
 	m_downloadLayout->addStretch();
-	m_tabWidget->addTab(m_downloadTab, "下载");
+	m_tabWidget->addTab(m_downloadTab, tr("下载"));
 }
 
 void SettingsPage::setupNetworkSettings()
@@ -315,7 +315,7 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理设置 - 启用代理
 	m_proxyEnabledLayout = new QHBoxLayout();
-	m_proxyEnabledLabel = new QLabel("启用代理", m_networkTab);
+	m_proxyEnabledLabel = new QLabel(tr("启用代理"), m_networkTab);
 	m_proxyEnabledToggle = new AntToggleButton(QSize(57, 26), m_networkTab);
 	m_proxyEnabledToggle->setShowText(true);
 
@@ -326,7 +326,7 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理类型
 	m_proxyTypeLayout = new QHBoxLayout();
-	m_proxyTypeLabel = new QLabel("代理类型", m_networkTab);
+	m_proxyTypeLabel = new QLabel(tr("代理类型"), m_networkTab);
 
 	QStringList proxyTypes;
 	proxyTypes << "HTTP" << "SOCKS5" << "HTTPS";
@@ -340,7 +340,7 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理主机
 	m_proxyHostLayout = new QHBoxLayout();
-	m_proxyHostLabel = new QLabel("代理主机", m_networkTab);
+	m_proxyHostLabel = new QLabel(tr("代理主机"), m_networkTab);
 	m_proxyHostInput = new QLineEdit(m_networkTab);
 	m_proxyHostInput->setPlaceholderText("proxy.example.com");
 
@@ -351,7 +351,7 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理端口
 	m_proxyPortLayout = new QHBoxLayout();
-	m_proxyPortLabel = new QLabel("代理端口", m_networkTab);
+	m_proxyPortLabel = new QLabel(tr("代理端口"), m_networkTab);
 	m_proxyPortInput = new QLineEdit(m_networkTab);
 	m_proxyPortInput->setPlaceholderText("8080");
 
@@ -362,9 +362,9 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理用户名
 	m_proxyUserLayout = new QHBoxLayout();
-	m_proxyUserLabel = new QLabel("代理用户名", m_networkTab);
+	m_proxyUserLabel = new QLabel(tr("代理用户名"), m_networkTab);
 	m_proxyUserInput = new QLineEdit(m_networkTab);
-	m_proxyUserInput->setPlaceholderText("用户名");
+	m_proxyUserInput->setPlaceholderText(tr("用户名"));
 
 	m_proxyUserLayout->addWidget(m_proxyUserLabel);
 	m_proxyUserLayout->addWidget(m_proxyUserInput);
@@ -373,9 +373,9 @@ void SettingsPage::setupNetworkSettings()
 
 	// 代理密码
 	m_proxyPassLayout = new QHBoxLayout();
-	m_proxyPassLabel = new QLabel("代理密码", m_networkTab);
+	m_proxyPassLabel = new QLabel(tr("代理密码"), m_networkTab);
 	m_proxyPassInput = new QLineEdit(m_networkTab);
-	m_proxyPassInput->setPlaceholderText("密码");
+	m_proxyPassInput->setPlaceholderText(tr("密码"));
 	m_proxyPassInput->setEchoMode(QLineEdit::Password);
 
 	m_proxyPassLayout->addWidget(m_proxyPassLabel);
@@ -386,9 +386,9 @@ void SettingsPage::setupNetworkSettings()
 	// 其他网络设置
 	// 超时时间
 	m_timeoutLayout = new QHBoxLayout();
-	m_timeoutLabel = new QLabel("超时时间", m_networkTab);
+	m_timeoutLabel = new QLabel(tr("超时时间"), m_networkTab);
 	m_timeoutInput = new QLineEdit(m_networkTab);
-	m_timeoutInput->setPlaceholderText("毫秒");
+	m_timeoutInput->setPlaceholderText(tr("毫秒"));
 	m_timeoutInput->setFixedWidth(100);
 
 	m_timeoutLayout->addWidget(m_timeoutLabel);
@@ -398,9 +398,9 @@ void SettingsPage::setupNetworkSettings()
 
 	// 重试次数
 	m_retryCountLayout = new QHBoxLayout();
-	m_retryCountLabel = new QLabel("重试次数", m_networkTab);
+	m_retryCountLabel = new QLabel(tr("重试次数"), m_networkTab);
 	m_retryCountInput = new QLineEdit(m_networkTab);
-	m_retryCountInput->setPlaceholderText("次");
+	//m_retryCountInput->setPlaceholderText(tr("次"));
 	m_retryCountInput->setFixedWidth(100);
 
 	m_retryCountLayout->addWidget(m_retryCountLabel);
@@ -410,7 +410,7 @@ void SettingsPage::setupNetworkSettings()
 
 	// 用户代理
 	m_userAgentLayout = new QHBoxLayout();
-	m_userAgentLabel = new QLabel("用户代理", m_networkTab);
+	m_userAgentLabel = new QLabel(tr("用户代理"), m_networkTab);
 	m_userAgentInput = new QLineEdit(m_networkTab);
 	m_userAgentInput->setPlaceholderText("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
@@ -420,7 +420,7 @@ void SettingsPage::setupNetworkSettings()
 	m_networkLayout->addLayout(m_userAgentLayout);
 
 	m_networkLayout->addStretch();
-	m_tabWidget->addTab(m_networkTab, "网络");
+	m_tabWidget->addTab(m_networkTab, tr("网络"));
 }
 
 void SettingsPage::setupAdvancedSettings()
@@ -432,9 +432,9 @@ void SettingsPage::setupAdvancedSettings()
 
 	// 日志路径
 	m_logPathLayout = new QHBoxLayout();
-	m_logPathLabel = new QLabel("日志路径", m_advancedTab);
+	m_logPathLabel = new QLabel(tr("日志路径"), m_advancedTab);
 	m_logPathInput = new QLineEdit(m_advancedTab);
-	m_browseLogPathButton = new AntButton("浏览", 11, m_advancedTab);
+	m_browseLogPathButton = new AntButton(tr("浏览"), 11, m_advancedTab);
 	m_browseLogPathButton->setFixedSize(80, 40);
 
 	m_logPathLayout->addWidget(m_logPathLabel);
@@ -445,9 +445,9 @@ void SettingsPage::setupAdvancedSettings()
 
 	// 日志操作按钮
 	m_logButtonsLayout = new QHBoxLayout();
-	m_viewLogsButton = new AntButton("查看日志", 11, m_advancedTab);
+	m_viewLogsButton = new AntButton(tr("查看日志"), 11, m_advancedTab);
 	m_viewLogsButton->setFixedSize(120, 40);
-	m_clearLogsButton = new AntButton("清空日志", 11, m_advancedTab);
+	m_clearLogsButton = new AntButton(tr("清空日志"), 11, m_advancedTab);
 	m_clearLogsButton->setFixedSize(120, 40);
 
 	m_logButtonsLayout->addWidget(m_viewLogsButton);
@@ -456,7 +456,7 @@ void SettingsPage::setupAdvancedSettings()
 	m_advancedLayout->addLayout(m_logButtonsLayout);
 
 	m_advancedLayout->addStretch();
-	m_tabWidget->addTab(m_advancedTab, "高级");
+	m_tabWidget->addTab(m_advancedTab, tr("高级"));
 }
 
 void SettingsPage::setupConnections()
@@ -464,7 +464,7 @@ void SettingsPage::setupConnections()
 	BENCHMARKING_FUNCTION();
 	// 重置按钮连接
 	connect(m_resetButton, &AntButton::clicked, this, [this]() {
-		emit showResetDialog("重置设置", "确定要重置设置为默认状态吗？");
+		emit showResetDialog(tr("重置设置"), tr("确定要重置设置为默认状态吗？"));
 		});
 
 	// 常规设置自动保存
@@ -513,7 +513,7 @@ void SettingsPage::setupConnections()
 	// 其他连接
 	connect(m_browsePathButton, &AntButton::clicked, this, &SettingsPage::onDownloadPathBrowse);
 	connect(m_browseLogPathButton, &AntButton::clicked, this, [this]() {
-		QString path = QFileDialog::getExistingDirectory(this, "选择日志目录", m_logPathInput->text());
+		QString path = QFileDialog::getExistingDirectory(this, tr("选择日志目录"), m_logPathInput->text());
 		if (!path.isEmpty()) {
 			m_logPathInput->setText(path);
 		}
@@ -527,7 +527,7 @@ void SettingsPage::setupConnections()
 		});
 
 	connect(m_clearLogsButton, &AntButton::clicked, this, [this]() {
-		emit showLogClearDialog("清空日志", "确认清空日志文件？");
+		emit showLogClearDialog(tr("清空日志"), tr("确认清空日志文件？"));
 		});
 }
 
@@ -934,7 +934,7 @@ void SettingsPage::resetSettings()
 
 void SettingsPage::onDownloadPathBrowse()
 {
-	QString path = QFileDialog::getExistingDirectory(this, "选择下载目录",
+	QString path = QFileDialog::getExistingDirectory(this, tr("选择下载目录"),
 		m_downloadPathInput->text());
 	if (!path.isEmpty()) {
 		m_downloadPathInput->setText(path);
@@ -945,8 +945,8 @@ void SettingsPage::onDownloadPathBrowse()
 void SettingsPage::onExitBehaviorChanged()
 {
 	// 退出行为改变的处理
-	LOG_INFO("Settings", QString("退出行为更改为: %1")
-		.arg(m_minimizeToTrayRadio->isChecked() ? "最小化到系统托盘" : "退出程序"));
+	LOG_INFO("Settings", QString(tr("退出行为更改为: %1"))
+		.arg(m_minimizeToTrayRadio->isChecked() ? tr("最小化到系统托盘") : tr("退出程序")));
 }
 
 void SettingsPage::onProxySettingsChanged()

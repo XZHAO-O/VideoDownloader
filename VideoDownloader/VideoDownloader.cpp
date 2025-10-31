@@ -89,7 +89,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	QFont font;
 	font.setPointSizeF(16);
 	font.setBold(true);
-	QLabel* title = new QLabel("视频下载器", ui.titleBar);
+	QLabel* title = new QLabel(tr("视频下载器"), ui.titleBar);
 	title->setFont(font);
 	// 创建按钮
 	btnMin = new QToolButton(ui.titleBar);
@@ -324,7 +324,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 				// 执行自定义逻辑
 				QApplication::quit();
 				});
-			emit showStandardDialog("退出", "是否关闭应用程序?");
+			emit showStandardDialog(tr("退出"), tr("是否关闭应用程序?"));
 		});
 
 	connect(this, &VideoDownloader::showStandardDialog, mDialog, &DialogViewController::buildStandardDialog);

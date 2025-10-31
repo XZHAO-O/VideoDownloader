@@ -38,11 +38,11 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	switch (m_containerState)
 	{
 	case ContainerState::DownloadReady:
-		m_noDataText = "暂无待下载任务";
+		m_noDataText = tr("暂无待下载任务");
 		cardState = DownloadCardState::Pending;
 		break;
 	case ContainerState::Downloading:
-		m_noDataText = "暂无下载任务";
+		m_noDataText = tr("暂无下载任务");
 		cardState = DownloadCardState::Downloading;
 		// 连接下载管理器信号
 		/*connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
@@ -52,7 +52,7 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		//connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
-		m_noDataText = "暂无已下载任务";
+		m_noDataText = tr("暂无已下载任务");
 		cardState = DownloadCardState::Downloaded;
 		break;
 	}

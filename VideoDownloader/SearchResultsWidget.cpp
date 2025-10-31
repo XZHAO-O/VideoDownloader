@@ -157,7 +157,7 @@ void SearchResultsWidget::setupUI()
 	containerLayout->setSpacing(12);
 
 	// 已选择数量标签
-	m_selectedCountLabel = new QLabel("已选择 0/0", this);
+	m_selectedCountLabel = new QLabel(tr("已选择 0/0"), this);
 
 	// 创建列表视图 - 完全模仿DownloadPage中的方式
 	m_searchResultsList = new AntChatListView(this);
@@ -181,12 +181,12 @@ void SearchResultsWidget::setupUI()
 	bottomLayout->setSpacing(12);
 
 	// 全选复选框 - 设置为三态
-	m_selectAllCheckBox = new QCheckBox("全选", this);
+	m_selectAllCheckBox = new QCheckBox(tr("全选"), this);
 	m_selectAllCheckBox->setTristate(true);
 	m_selectAllCheckBox->installEventFilter(this);
 
 	// 下一步按钮
-	m_nextButton = new AntButton("下一步", 12, this);
+	m_nextButton = new AntButton(tr("下一步"), 12, this);
 	m_nextButton->setFixedSize(100, 36);
 
 	bottomLayout->addWidget(m_selectAllCheckBox);
@@ -375,7 +375,7 @@ void SearchResultsWidget::onSelectAllStateChanged(int state)
 void SearchResultsWidget::onNextButtonClicked()
 {
 	if (m_selectedIndexes.isEmpty()) {
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "请选择一个视频！");
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, tr("请选择一个视频！"));
 		return;
 	}
 	emit nextButtonClicked();
@@ -410,7 +410,7 @@ void SearchResultsWidget::handleSelectAllClick()
 void SearchResultsWidget::updateSelectedCount()
 {
 	int selectedCount = m_selectedIndexes.size();
-	m_selectedCountLabel->setText(QString("已选择 %1/%2").arg(selectedCount).arg(m_totalItems));
+	m_selectedCountLabel->setText(QString(tr("已选择 %1/%2")).arg(selectedCount).arg(m_totalItems));
 }
 
 void SearchResultsWidget::updateSelectAllCheckboxState()

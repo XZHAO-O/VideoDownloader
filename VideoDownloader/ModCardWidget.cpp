@@ -145,7 +145,7 @@ void ModCardWidget::initUI()
 		m_bubbleView,
 		m_dialogView,
 		this);
-	m_avatarButton->setToolTip("点击查看模组详情");
+	m_avatarButton->setToolTip(tr("点击查看模组详情"));
 	topLayout->addWidget(m_avatarButton);
 
 	// 第一部分：基本信息区域（图标 + 文字信息）
@@ -233,15 +233,15 @@ void ModCardWidget::initUI()
 	m_toggleButton->setShowText(true);
 
 	// 打开文件夹按钮
-	m_openFolderButton = new AntButton("打开模组所在文件夹", 12, this); // 增大字体
+	m_openFolderButton = new AntButton(tr("打开模组所在文件夹"), 12, this); // 增大字体
 	m_openFolderButton->setFixedSize(200, 40); // 增大按钮尺寸
 
 	// 更新按钮
-	m_updateButton = new AntButton("更新模组", 12, this);
+	m_updateButton = new AntButton(tr("更新模组"), 12, this);
 	m_updateButton->setFixedSize(120, 40);
 
 	// 卸载按钮
-	m_uninstallButton = new AntButton("卸载模组", 12, this);
+	m_uninstallButton = new AntButton(tr("卸载模组"), 12, this);
 	m_uninstallButton->setFixedSize(120, 40);
 
 	buttonLayout->addWidget(m_toggleButton);
@@ -301,7 +301,7 @@ void ModCardWidget::showCustomModDialog(QUrl qrCodeUrl)
 	contentLayout->addStretch();
 
 	// 使用对话框控制器显示自定义内容
-	m_dialogView->showQRCodeLoginDialog("模组详情", qrCodeLoginContent);
+	m_dialogView->showQRCodeLoginDialog(tr("模组详情"), qrCodeLoginContent);
 }
 
 void ModCardWidget::updateUI()
@@ -313,9 +313,9 @@ void ModCardWidget::updateUI()
 
 	// 更新基本信息 - 直接设置文本，QLabel会自动处理富文本
 	m_nameLabel->setText(m_model->name());
-	m_authorLabel->setText("作者：" + m_model->author());
-	m_versionLabel->setText("版本：" + m_model->version());
-	m_sizeLabel->setText("大小：" + m_model->formattedSize());
+	m_authorLabel->setText(tr("作者：") + m_model->author());
+	m_versionLabel->setText(tr("版本：") + m_model->version());
+	m_sizeLabel->setText(tr("大小：") + m_model->formattedSize());
 	m_descriptionLabel->setText(m_model->description());
 
 	// 更新开关状态

@@ -269,13 +269,13 @@ void DownloadCard::initPendingUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建待下载状态按钮
-	m_downloadBtn = new AntButton("下载", 10, this);
+	m_downloadBtn = new AntButton(tr("下载"), 10, this);
 	m_downloadBtn->setFixedSize(70, 32);
 
-	m_videoDownloadBtn = new AntButton("视频", 10, this);
+	m_videoDownloadBtn = new AntButton(tr("视频"), 10, this);
 	m_videoDownloadBtn->setFixedSize(70, 32);
 
-	m_audioDownloadBtn = new AntButton("音频", 10, this);
+	m_audioDownloadBtn = new AntButton(tr("音频"), 10, this);
 	m_audioDownloadBtn->setFixedSize(70, 32);
 
 	m_closeBtn = new AntButton("×", 10, this);
@@ -305,11 +305,11 @@ void DownloadCard::initPendingUI()
 	qualityLayout->setContentsMargins(0, 0, 0, 0);
 
 	QStringList qualityList = { "480p", "720p", "1080p", "4K", "原画", "8K" };
-	m_videoQualityCombo = new SingleLevelComboBox("画质", qualityList, this);
+	m_videoQualityCombo = new SingleLevelComboBox(tr("画质"), qualityList, this);
 	m_videoQualityCombo->setFixedSize(90, 28);
 
 	QStringList audioQualityList = { "低音质", "中音质", "高音质", "无损" };
-	m_audioQualityCombo = new SingleLevelComboBox("音质", audioQualityList, this);
+	m_audioQualityCombo = new SingleLevelComboBox(tr("音质"), audioQualityList, this);
 	m_audioQualityCombo->setFixedSize(90, 28);
 
 	qualityLayout->addWidget(m_videoQualityCombo);
@@ -426,13 +426,13 @@ void DownloadCard::initDownloadingUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建下载中状态按钮
-	m_pauseBtn_downloading = new AntButton("暂停", 10, this);
+	m_pauseBtn_downloading = new AntButton(tr("暂停"), 10, this);
 	m_pauseBtn_downloading->setFixedSize(70, 32);
 
-	m_openFolderBtn_downloading = new AntButton("文件夹", 10, this);
+	m_openFolderBtn_downloading = new AntButton(tr("文件夹"), 10, this);
 	m_openFolderBtn_downloading->setFixedSize(70, 32);
 
-	m_deleteBtn_downloading = new AntButton("删除", 10, this);
+	m_deleteBtn_downloading = new AntButton(tr("删除"), 10, this);
 	m_deleteBtn_downloading->setFixedSize(70, 32);
 
 	// 添加到操作布局
@@ -575,13 +575,13 @@ void DownloadCard::initDownloadedUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建已下载状态按钮
-	m_openUrlBtn_downloaded = new AntButton("打开链接", 10, this);
+	m_openUrlBtn_downloaded = new AntButton(tr("打开链接"), 10, this);
 	m_openUrlBtn_downloaded->setFixedSize(70, 32);
 
-	m_openFolderBtn_downloaded = new AntButton("文件夹", 10, this);
+	m_openFolderBtn_downloaded = new AntButton(tr("文件夹"), 10, this);
 	m_openFolderBtn_downloaded->setFixedSize(70, 32);
 
-	m_deleteBtn_downloaded = new AntButton("删除", 10, this);
+	m_deleteBtn_downloaded = new AntButton(tr("删除"), 10, this);
 	m_deleteBtn_downloaded->setFixedSize(70, 32);
 
 	// 添加到操作布局
@@ -722,7 +722,7 @@ void DownloadCard::updateUI()
 
 	// 更新基本信息
 	m_titleCell->getBtn()->setText(m_model->title());
-	m_sizeLabel->setText(QString("视频: %1  音频: %2")
+	m_sizeLabel->setText(QString(tr("视频: %1  音频: %2"))
 		.arg(m_model->formattedVideoSize())
 		.arg(m_model->formattedAudioSize()));
 
@@ -786,7 +786,7 @@ void DownloadCard::updateDownloadedUI()
 {
 	BENCHMARKING_FUNCTION();
 
-	m_timeLabel->setText(QString("下载完成: %1").arg(m_model->formattedPublishTime()));
+	m_timeLabel->setText(QString(tr("下载完成: %1")).arg(m_model->formattedPublishTime()));
 
 	m_playIcon->setVisible(true);
 }

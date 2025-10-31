@@ -75,6 +75,9 @@
     <Filter Include="Core\System">
       <UniqueIdentifier>{ed9a2465-fc81-4b9d-9502-367cb8e874c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Translations">
+      <UniqueIdentifier>{562b7ab5-8f99-4237-b388-bb1dffaa511d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -403,6 +406,9 @@
     <ClCompile Include="TrayManager.cpp">
       <Filter>Core\System</Filter>
     </ClCompile>
+    <ClCompile Include="LanguageManager.cpp">
+      <Filter>Core\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -706,6 +712,9 @@
       <Filter>Core\System</Filter>
     </QtMoc>
     <QtMoc Include="TrayManager.h">
+      <Filter>Core\System</Filter>
+    </QtMoc>
+    <QtMoc Include="LanguageManager.h">
       <Filter>Core\System</Filter>
     </QtMoc>
   </ItemGroup>
