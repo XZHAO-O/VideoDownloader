@@ -409,6 +409,9 @@
     <ClCompile Include="LanguageManager.cpp">
       <Filter>Core\System</Filter>
     </ClCompile>
+    <ClCompile Include="DatabaseManager.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -716,6 +719,9 @@
     </QtMoc>
     <QtMoc Include="LanguageManager.h">
       <Filter>Core\System</Filter>
+    </QtMoc>
+    <QtMoc Include="DatabaseManager.h">
+      <Filter>Storage</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
