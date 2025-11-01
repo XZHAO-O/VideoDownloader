@@ -10,6 +10,7 @@
 
 #include "ConfigManager.h"
 #include "LogSystem.h"
+#include "DownloadTaskInfo.h"
 
 NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: QObject(parent)
@@ -545,4 +546,309 @@ QString NetworkManager::generateRequestId() const
 {
 	return QString::number(QDateTime::currentMSecsSinceEpoch()) +
 		QString::number(QRandomGenerator::global()->generate64());
+}
+
+void NetworkManager::download(const QString& url, const QString& filename, qint64 size)
+{
+	LOG_INFO("Network", QString("Starting download: %1 -> %2").arg(url).arg(filename));
+
+	if (checkPartialDownloadSupport(url))
+	{
+		LOG_INFO("Network", "Server supports partial download, using multi-part download");
+
+		// 文件大小从HEAD请求获取
+		// 这里简化处理，使用固定分片数
+		int totalParts = 3;
+		int totalSize = size * totalParts;
+
+		// 开始分片下载
+		for (int i = 0; i < totalParts; ++i)
+			downloadPartialFile(url, filename, i);
+	}
+	else
+	{
+		LOG_INFO("Network", "Server does not support partial download, using single download");
+		downloadSingleFile(url, filename);
+	}
+}
+
+bool NetworkManager::checkPartialDownloadSupport(const QString& url)
+{
+	// 发送HEAD请求检查是否支持Range头
+	QNetworkRequest request(url);
+	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+
+	QNetworkAccessManager tempManager;
+	QNetworkReply* reply = tempManager.head(request);
+
+	QEventLoop loop;
+	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+	loop.exec();
+
+	bool supportsPartial = false;
+	if (reply->error() == QNetworkReply::NoError) {
+		QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
+		QString contentLength = reply->rawHeader("Content-Length");
+
+		supportsPartial = (acceptRanges == "bytes" && !contentLength.isEmpty());
+		LOG_DEBUG("Network", QString("Partial download support: %1, Content-Length: %2")
+			.arg(supportsPartial ? "yes" : "no").arg(contentLength));
+	}
+	else {
+		LOG_WARN("Network", QString("Failed to check partial download support: %1").arg(reply->errorString()));
+	}
+
+	reply->deleteLater();
+	return supportsPartial;
+}
+
+void NetworkManager::downloadSingleFile(const QString& url, const QString& filename)
+{
+	QNetworkRequest request(url);
+	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+
+	QSharedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
+
+	QNetworkReply* reply = manager->get(request);
+	QFile* file = new QFile(filename);
+
+	if (!file->open(QIODevice::WriteOnly)) {
+		LOG_ERROR("Network", QString("Failed to open file for writing: %1, error: %2")
+			.arg(filename).arg(file->errorString()));
+		delete file;
+		reply->deleteLater();
+		//emit downloadFinished(filename, false, "Failed to create file");
+		return;
+	}
+
+	// 连接信号
+	QObject::connect(reply, &QNetworkReply::readyRead, [reply, file]() {
+		if (file->isOpen()) {
+			file->write(reply->readAll());
+		}
+		});
+
+	QObject::connect(reply, &QNetworkReply::downloadProgress,
+		[this, filename](qint64 bytesReceived, qint64 bytesTotal) {
+
+			//转换为mb
+			QString receivedBytes = QString::number(bytesReceived / (1024 * 1024.0), 'f', 2);
+			QString totalBytes = QString::number(bytesTotal / (1024 * 1024.0), 'f', 2);
+
+			QString progressInfo = bytesTotal > 0 ? QString("%1/%2").arg(receivedBytes).arg(totalBytes) : "0/0";
+			double progress = bytesTotal > 0 ? (double)bytesReceived / bytesTotal : 0.0;
+
+			//emit downloadProgress(progressInfo, progress);
+		});
+
+	QObject::connect(reply, &QNetworkReply::finished,
+		[this, reply, file, filename, manager]() {
+			bool success = false;
+			QString errorString;
+
+			if (reply->error() == QNetworkReply::NoError) {
+				// 确保所有数据都已写入
+				if (file->isOpen()) {
+					file->write(reply->readAll());
+					file->close();
+				}
+				success = true;
+				LOG_INFO("Network", QString("Download completed: %1").arg(filename));
+			}
+			else {
+				errorString = reply->errorString();
+				LOG_ERROR("Network", QString("Download failed: %1, error: %2")
+					.arg(filename).arg(errorString));
+				if (file->isOpen()) {
+					file->close();
+				}
+				// 删除不完整的文件
+				QFile::remove(filename);
+			}
+
+			delete file;
+			reply->deleteLater();
+			//emit downloadFinished(filename, success, errorString);
+		});
+
+	QObject::connect(reply, &QNetworkReply::errorOccurred,
+		[this, reply, file, filename](QNetworkReply::NetworkError error) {
+			LOG_ERROR("Network", QString("Download error: %1 for file %2").arg(error).arg(filename));
+			if (file->isOpen()) {
+				file->close();
+			}
+			QFile::remove(filename);
+			delete file;
+			//emit downloadFinished(filename, false, QString("Network error: %1").arg(error));
+		});
+}
+
+void NetworkManager::downloadPartialFile(const QString& url, const QString& filename, int partNumber)
+{
+	qint64 partSize = 1;
+	qint64 rangeStart = partNumber * partSize;
+	qint64 rangeEnd = (partNumber + 1) * partSize - 1;
+
+	// 最后一个分片可能没有完整的partSize
+	if (partNumber == 2) { // 第三个分片（0-based index）
+		rangeEnd = -1; // 到文件末尾
+	}
+
+	QString partFilename = getPartFilename(filename, partNumber);
+
+	downloadWithRange(url, partFilename, rangeStart, rangeEnd, partNumber);
+}
+
+void NetworkManager::downloadWithRange(const QString& url, const QString& filename, qint64 rangeStart, qint64 rangeEnd, int partNumber)
+{
+	QNetworkRequest request(url);
+	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
+
+	// 设置范围请求
+	QString rangeHeader;
+	if (rangeEnd >= 0) {
+		rangeHeader = QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd);
+	}
+	else {
+		rangeHeader = QString("bytes=%1-").arg(rangeStart);
+	}
+	request.setRawHeader("Range", rangeHeader.toUtf8());
+
+	LOG_DEBUG("Network", QString("Downloading part %1: %2 -> %3").arg(partNumber).arg(rangeHeader).arg(filename));
+
+	QSharedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
+
+	QNetworkReply* reply = manager->get(request);
+	QFile* file = new QFile(filename);
+
+	if (!file->open(QIODevice::WriteOnly)) {
+		LOG_ERROR("Network", QString("Failed to open file for writing: %1, error: %2")
+			.arg(filename).arg(file->errorString()));
+		delete file;
+		reply->deleteLater();
+		//emit downloadPartFinished(partNumber, 3, false);
+		return;
+	}
+
+	// 连接信号
+	QObject::connect(reply, &QNetworkReply::readyRead, [reply, file]() {
+		if (file->isOpen()) {
+			file->write(reply->readAll());
+		}
+		});
+
+	QObject::connect(reply, &QNetworkReply::downloadProgress,
+		[this, filename, partNumber](qint64 bytesReceived, qint64 bytesTotal) {
+			//emit downloadProgress(progress);
+		});
+
+	QObject::connect(reply, &QNetworkReply::finished,
+		[this, reply, file, filename, manager, partNumber]() {
+			bool success = false;
+			QString errorString;
+
+			if (reply->error() == QNetworkReply::NoError) {
+				// 确保所有数据都已写入
+				if (file->isOpen()) {
+					file->write(reply->readAll());
+					file->close();
+				}
+				success = true;
+				LOG_DEBUG("Network", QString("Part %1 download completed: %2").arg(partNumber).arg(filename));
+			}
+			else {
+				errorString = reply->errorString();
+				LOG_ERROR("Network", QString("Part %1 download failed: %2, error: %3")
+					.arg(partNumber).arg(filename).arg(errorString));
+				if (file->isOpen()) {
+					file->close();
+				}
+				// 删除不完整的文件
+				QFile::remove(filename);
+			}
+
+			delete file;
+			reply->deleteLater();
+
+			//emit downloadPartFinished(partNumber, 3, success);
+		});
+
+	QObject::connect(reply, &QNetworkReply::errorOccurred,
+		[this, reply, file, filename, partNumber](QNetworkReply::NetworkError error) {
+			LOG_ERROR("Network", QString("Part %1 download error: %2 for file %3").arg(partNumber).arg(error).arg(filename));
+			if (file->isOpen()) {
+				file->close();
+			}
+			QFile::remove(filename);
+			delete file;
+
+			//emit downloadPartFinished(partNumber, 3, false);
+		});
+}
+
+void NetworkManager::mergeDownloadedFiles(const QString& filename)
+{
+	//QFile finalFile(filename);
+	//if (!finalFile.open(QIODevice::WriteOnly)) {
+	//	LOG_ERROR("Network", QString("Failed to create final file: %1").arg(filename));
+	//	emit downloadFinished(filename, false, "Failed to create final file");
+	//	cleanupPartFiles(filename);
+	//	return;
+	//}
+
+	//bool success = true;
+	//QString errorString;
+
+	//// 按顺序合并所有分片文件
+	//for (int i = 0; i < 3; ++i) {
+	//	QFile partFile(filename + QString("%1").arg(i));
+	//	if (!partFile.open(QIODevice::ReadOnly)) {
+	//		LOG_ERROR("Network", QString("Failed to open part file: %1").arg(i));
+	//		success = false;
+	//		errorString = QString("Failed to open part file: %1").arg(i);
+	//		break;
+	//	}
+
+	//	// 读取分片内容并写入最终文件
+	//	QByteArray data = partFile.readAll();
+	//	if (finalFile.write(data) != data.size()) {
+	//		LOG_ERROR("Network", QString("Failed to write part %1 data").arg(i));
+	//		success = false;
+	//		errorString = QString("Failed to write part %1 data").arg(i);
+	//		partFile.close();
+	//		break;
+	//	}
+
+	//	partFile.close();
+	//}
+
+	//finalFile.close();
+
+	//if (success) {
+	//	LOG_INFO("Network", QString("File merged successfully: %1, size: %2 bytes")
+	//		.arg(filename).arg(finalFile.size()));
+	//	// 清理分片文件
+	//	cleanupPartFiles(filename);
+	//}
+	//else {
+	//	// 删除不完整的最终文件
+	//	finalFile.remove();
+	//	cleanupPartFiles(filename);
+	//}
+
+	//emit downloadFinished(filename, success, errorString);
+}
+
+void NetworkManager::cleanupPartFiles(const QString& filename)
+{
+	for (const QString& partFile : filename) {
+		if (QFile::exists(partFile)) {
+			QFile::remove(partFile);
+		}
+	}
+}
+
+QString NetworkManager::getPartFilename(const QString& filename, int partNumber) const
+{
+	return QString("%1.part%2").arg(filename).arg(partNumber, 3, 10, QChar('0'));
 }
