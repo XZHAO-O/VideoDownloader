@@ -10,7 +10,7 @@
 
 #include "ConfigManager.h"
 #include "LogSystem.h"
-#include "DownloadTaskInfo.h"
+#include "DownloadContext.h"
 
 NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: QObject(parent)
@@ -548,27 +548,27 @@ QString NetworkManager::generateRequestId() const
 		QString::number(QRandomGenerator::global()->generate64());
 }
 
-void NetworkManager::download(const QString& url, const QString& filename, qint64 size)
+void NetworkManager::download(DownloadContext& context)
 {
-	LOG_INFO("Network", QString("Starting download: %1 -> %2").arg(url).arg(filename));
+	LOG_INFO("Network", QString("Starting download: %1 -> %2").arg(context.url).arg(context.fileName));
 
-	if (checkPartialDownloadSupport(url))
+	if (checkPartialDownloadSupport(context.url))
 	{
 		LOG_INFO("Network", "Server supports partial download, using multi-part download");
 
 		// 文件大小从HEAD请求获取
 		// 这里简化处理，使用固定分片数
 		int totalParts = 3;
-		int totalSize = size * totalParts;
+		int totalSize = context.fileSize * totalParts;
 
 		// 开始分片下载
 		for (int i = 0; i < totalParts; ++i)
-			downloadPartialFile(url, filename, i);
+			downloadPartialFile(context, i);
 	}
 	else
 	{
 		LOG_INFO("Network", "Server does not support partial download, using single download");
-		downloadSingleFile(url, filename);
+		downloadSingleFile(context);
 	}
 }
 
@@ -602,19 +602,19 @@ bool NetworkManager::checkPartialDownloadSupport(const QString& url)
 	return supportsPartial;
 }
 
-void NetworkManager::downloadSingleFile(const QString& url, const QString& filename)
+void NetworkManager::downloadSingleFile(DownloadContext& context)
 {
-	QNetworkRequest request(url);
+	QNetworkRequest request(context.url);
 	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
 
 	QSharedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
 
 	QNetworkReply* reply = manager->get(request);
-	QFile* file = new QFile(filename);
+	QFile* file = new QFile(context.fileName);
 
 	if (!file->open(QIODevice::WriteOnly)) {
 		LOG_ERROR("Network", QString("Failed to open file for writing: %1, error: %2")
-			.arg(filename).arg(file->errorString()));
+			.arg(context.fileName).arg(file->errorString()));
 		delete file;
 		reply->deleteLater();
 		//emit downloadFinished(filename, false, "Failed to create file");
@@ -629,7 +629,7 @@ void NetworkManager::downloadSingleFile(const QString& url, const QString& filen
 		});
 
 	QObject::connect(reply, &QNetworkReply::downloadProgress,
-		[this, filename](qint64 bytesReceived, qint64 bytesTotal) {
+		[this, &context](qint64 bytesReceived, qint64 bytesTotal) {
 
 			//转换为mb
 			QString receivedBytes = QString::number(bytesReceived / (1024 * 1024.0), 'f', 2);
@@ -642,7 +642,7 @@ void NetworkManager::downloadSingleFile(const QString& url, const QString& filen
 		});
 
 	QObject::connect(reply, &QNetworkReply::finished,
-		[this, reply, file, filename, manager]() {
+		[this, reply, file, &context, manager]() {
 			bool success = false;
 			QString errorString;
 
@@ -653,17 +653,17 @@ void NetworkManager::downloadSingleFile(const QString& url, const QString& filen
 					file->close();
 				}
 				success = true;
-				LOG_INFO("Network", QString("Download completed: %1").arg(filename));
+				LOG_INFO("Network", QString("Download completed: %1").arg(context.fileName));
 			}
 			else {
 				errorString = reply->errorString();
 				LOG_ERROR("Network", QString("Download failed: %1, error: %2")
-					.arg(filename).arg(errorString));
+					.arg(context.fileName).arg(errorString));
 				if (file->isOpen()) {
 					file->close();
 				}
 				// 删除不完整的文件
-				QFile::remove(filename);
+				QFile::remove(context.fileName);
 			}
 
 			delete file;
@@ -672,18 +672,18 @@ void NetworkManager::downloadSingleFile(const QString& url, const QString& filen
 		});
 
 	QObject::connect(reply, &QNetworkReply::errorOccurred,
-		[this, reply, file, filename](QNetworkReply::NetworkError error) {
-			LOG_ERROR("Network", QString("Download error: %1 for file %2").arg(error).arg(filename));
+		[this, reply, file, &context](QNetworkReply::NetworkError error) {
+			LOG_ERROR("Network", QString("Download error: %1 for file %2").arg(error).arg(context.fileName));
 			if (file->isOpen()) {
 				file->close();
 			}
-			QFile::remove(filename);
+			QFile::remove(context.fileName);
 			delete file;
 			//emit downloadFinished(filename, false, QString("Network error: %1").arg(error));
 		});
 }
 
-void NetworkManager::downloadPartialFile(const QString& url, const QString& filename, int partNumber)
+void NetworkManager::downloadPartialFile(DownloadContext& context, int partNumber)
 {
 	qint64 partSize = 1;
 	qint64 rangeStart = partNumber * partSize;
@@ -694,19 +694,20 @@ void NetworkManager::downloadPartialFile(const QString& url, const QString& file
 		rangeEnd = -1; // 到文件末尾
 	}
 
-	QString partFilename = getPartFilename(filename, partNumber);
+	QString partFilename = getPartFilename(context.fileName, partNumber);
 
-	downloadWithRange(url, partFilename, rangeStart, rangeEnd, partNumber);
+	downloadWithRange(context, rangeStart, rangeEnd, partNumber);
 }
 
-void NetworkManager::downloadWithRange(const QString& url, const QString& filename, qint64 rangeStart, qint64 rangeEnd, int partNumber)
+void NetworkManager::downloadWithRange(DownloadContext& context, qint64 rangeStart, qint64 rangeEnd, int partNumber)
 {
-	QNetworkRequest request(url);
+	QNetworkRequest request(context.url);
 	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
 
 	// 设置范围请求
 	QString rangeHeader;
-	if (rangeEnd >= 0) {
+	if (rangeEnd >= 0)
+	{
 		rangeHeader = QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd);
 	}
 	else {
@@ -714,16 +715,17 @@ void NetworkManager::downloadWithRange(const QString& url, const QString& filena
 	}
 	request.setRawHeader("Range", rangeHeader.toUtf8());
 
-	LOG_DEBUG("Network", QString("Downloading part %1: %2 -> %3").arg(partNumber).arg(rangeHeader).arg(filename));
+	LOG_DEBUG("Network", QString("Downloading part %1: %2 -> %3").arg(partNumber).arg(rangeHeader).arg(context.fileName));
 
 	QSharedPointer<QNetworkAccessManager> manager(new QNetworkAccessManager);
 
 	QNetworkReply* reply = manager->get(request);
-	QFile* file = new QFile(filename);
+	QFile* file = new QFile(context.fileName);
 
-	if (!file->open(QIODevice::WriteOnly)) {
+	if (!file->open(QIODevice::WriteOnly))
+	{
 		LOG_ERROR("Network", QString("Failed to open file for writing: %1, error: %2")
-			.arg(filename).arg(file->errorString()));
+			.arg(context.fileName).arg(file->errorString()));
 		delete file;
 		reply->deleteLater();
 		//emit downloadPartFinished(partNumber, 3, false);
@@ -738,12 +740,12 @@ void NetworkManager::downloadWithRange(const QString& url, const QString& filena
 		});
 
 	QObject::connect(reply, &QNetworkReply::downloadProgress,
-		[this, filename, partNumber](qint64 bytesReceived, qint64 bytesTotal) {
+		[this, &context, partNumber](qint64 bytesReceived, qint64 bytesTotal) {
 			//emit downloadProgress(progress);
 		});
 
 	QObject::connect(reply, &QNetworkReply::finished,
-		[this, reply, file, filename, manager, partNumber]() {
+		[this, reply, file, &context, manager, partNumber]() {
 			bool success = false;
 			QString errorString;
 
@@ -754,17 +756,17 @@ void NetworkManager::downloadWithRange(const QString& url, const QString& filena
 					file->close();
 				}
 				success = true;
-				LOG_DEBUG("Network", QString("Part %1 download completed: %2").arg(partNumber).arg(filename));
+				LOG_DEBUG("Network", QString("Part %1 download completed: %2").arg(partNumber).arg(context.fileName));
 			}
 			else {
 				errorString = reply->errorString();
 				LOG_ERROR("Network", QString("Part %1 download failed: %2, error: %3")
-					.arg(partNumber).arg(filename).arg(errorString));
+					.arg(partNumber).arg(context.fileName).arg(errorString));
 				if (file->isOpen()) {
 					file->close();
 				}
 				// 删除不完整的文件
-				QFile::remove(filename);
+				QFile::remove(context.fileName);
 			}
 
 			delete file;
@@ -774,12 +776,12 @@ void NetworkManager::downloadWithRange(const QString& url, const QString& filena
 		});
 
 	QObject::connect(reply, &QNetworkReply::errorOccurred,
-		[this, reply, file, filename, partNumber](QNetworkReply::NetworkError error) {
-			LOG_ERROR("Network", QString("Part %1 download error: %2 for file %3").arg(partNumber).arg(error).arg(filename));
+		[this, reply, file, &context, partNumber](QNetworkReply::NetworkError error) {
+			LOG_ERROR("Network", QString("Part %1 download error: %2 for file %3").arg(partNumber).arg(error).arg(context.fileName));
 			if (file->isOpen()) {
 				file->close();
 			}
-			QFile::remove(filename);
+			QFile::remove(context.fileName);
 			delete file;
 
 			//emit downloadPartFinished(partNumber, 3, false);

@@ -371,6 +371,7 @@
     <QtMoc Include="DatabaseManager.h" />
     <ClInclude Include="DownloadCardState.h" />
     <QtMoc Include="DownloadEngine.h" />
+    <ClInclude Include="DownloadContext.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
     <QtMoc Include="LogSystem.h" />

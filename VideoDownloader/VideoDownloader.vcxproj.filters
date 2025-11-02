@@ -770,5 +770,8 @@
     <ClInclude Include="DownloadTaskInfo.h">
       <Filter>Core\Download</Filter>
     </ClInclude>
+    <ClInclude Include="DownloadContext.h">
+      <Filter>Core\Download</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

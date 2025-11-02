@@ -15,7 +15,7 @@ class QNetworkCookieJar;
 class QAuthenticator;
 class QTimer;
 class ConfigManager;
-class DownloadTaskInfo;
+class DownloadContext;
 
 struct NetworkResponse
 {
@@ -97,15 +97,15 @@ private:
 
 	QString generateRequestId() const;
 
-	void download(const QString& url, const QString& filename, qint64 size);
+	void download(DownloadContext& context);
 
 	bool checkPartialDownloadSupport(const QString& url);
 
-	void downloadSingleFile(const QString& url, const QString& filename);
+	void downloadSingleFile(DownloadContext& context);
 
-	void downloadPartialFile(const QString& url, const QString& filename, int partNumber);
+	void downloadPartialFile(DownloadContext& context, int partNumber);
 
-	void downloadWithRange(const QString& url, const QString& filename, qint64 rangeStart, qint64 rangeEnd, int partNumber);
+	void downloadWithRange(DownloadContext& context, qint64 rangeStart, qint64 rangeEnd, int partNumber);
 
 	void mergeDownloadedFiles(const QString& filename);
 
