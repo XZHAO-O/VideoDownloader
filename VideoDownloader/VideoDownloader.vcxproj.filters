@@ -723,6 +723,9 @@
     <QtMoc Include="DatabaseManager.h">
       <Filter>Storage</Filter>
     </QtMoc>
+    <QtMoc Include="DownloadContext.h">
+      <Filter>Core\Download</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\GaussianBlur.h">
@@ -768,9 +771,6 @@
       <Filter>Core\Utils</Filter>
     </ClInclude>
     <ClInclude Include="DownloadTaskInfo.h">
-      <Filter>Core\Download</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadContext.h">
       <Filter>Core\Download</Filter>
     </ClInclude>
   </ItemGroup>

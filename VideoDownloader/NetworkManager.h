@@ -43,12 +43,10 @@ public:
 		QObject* parent = nullptr);
 	~NetworkManager();
 
-	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers);
-
-	// 下载
-	//void download(void* ...);
+	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
+	QNetworkReply* download(DownloadContext& context);
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QString& url,
@@ -80,7 +78,8 @@ private slots:
 	void handleNetworkError(NetworkResponse& networkResponse, QNetworkReply::NetworkError errorCode);
 
 private:
-	struct RequestContext {
+	struct RequestContext
+	{
 		QString id;
 		QNetworkRequest request;
 		QByteArray data;
@@ -97,8 +96,6 @@ private:
 
 	QString generateRequestId() const;
 
-	void download(DownloadContext& context);
-
 	bool checkPartialDownloadSupport(const QString& url);
 
 	void downloadSingleFile(DownloadContext& context);
@@ -108,10 +105,6 @@ private:
 	void downloadWithRange(DownloadContext& context, qint64 rangeStart, qint64 rangeEnd, int partNumber);
 
 	void mergeDownloadedFiles(const QString& filename);
-
-	void cleanupPartFiles(const QString& filename);
-
-	QString getPartFilename(const QString& filename, int partNumber) const;
 
 	QNetworkAccessManager* m_networkManager;
 	QSharedPointer<ConfigManager> m_configManager;
