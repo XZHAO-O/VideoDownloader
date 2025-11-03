@@ -10,6 +10,7 @@
 #include "MaterialProgressBar.h"
 #include "SingleLevelComboBox.h"
 #include "DownloadTaskInfo.h"
+#include "StringUtil.h"
 #include "Instrumentor.h"
 
 DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent)
@@ -723,8 +724,8 @@ void DownloadCard::updateUI()
 	// 更新基本信息
 	m_titleCell->getBtn()->setText(m_model->title());
 	m_sizeLabel->setText(QString(tr("视频: %1  音频: %2"))
-		.arg(m_model->formattedVideoSize())
-		.arg(m_model->formattedAudioSize()));
+		.arg(StringUtil::formatFileSize(m_model->videoSize()))
+		.arg(StringUtil::formatFileSize(m_model->audioSize())));
 
 	// 根据状态更新UI
 	switch (m_model->state())
@@ -757,8 +758,8 @@ void DownloadCard::updatePendingUI()
 {
 	BENCHMARKING_FUNCTION();
 	m_timeLabel->setText(QString("%1 · %2")
-		.arg(m_model->formattedPublishTime())
-		.arg(m_model->formattedDuration()));
+		.arg(StringUtil::formatDateTime(m_model->publishTime()))
+		.arg(StringUtil::formatDuration(m_model->duration())));
 	m_publisherLabel->setText(m_model->publisher());
 
 	// 更新质量选择
@@ -777,7 +778,7 @@ void DownloadCard::updateDownloadingUI()
 
 	m_progressBar->setValue(m_model->progress());
 
-	m_speedLabel->setText(m_model->formattedDownloadSpeed());
+	m_speedLabel->setText(StringUtil::formatDownloadSpeed(m_model->downloadSpeed()));
 
 	m_progressInfoLabel->setText(m_model->progressInfo());
 }
@@ -786,7 +787,7 @@ void DownloadCard::updateDownloadedUI()
 {
 	BENCHMARKING_FUNCTION();
 
-	m_timeLabel->setText(QString(tr("下载完成: %1")).arg(m_model->formattedPublishTime()));
+	m_timeLabel->setText(QString(tr("下载完成: %1")).arg(StringUtil::formatDateTime(m_model->publishTime())));
 
 	m_playIcon->setVisible(true);
 }

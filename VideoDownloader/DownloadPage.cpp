@@ -1,6 +1,6 @@
 #include "DownloadPage.h"
 
-#include <QtConcurrent\QtConcurrent>
+#include <QtConcurrent>
 
 #include "AntScrollArea.h"
 #include "MaterialTabWidget.h"

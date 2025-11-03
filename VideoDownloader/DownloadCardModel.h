@@ -68,12 +68,6 @@ public:
 	void setFilePath(const QString& filePath);
 	void setVideoQuality(VideoQualityLevel quality);
 	void setAudioQuality(AudioQualityLevel quality);
-	// 工具方法
-	QString formattedVideoSize() const;
-	QString formattedAudioSize() const;
-	QString formattedDownloadSpeed() const;
-	QString formattedPublishTime() const;
-	QString formattedDuration() const;
 
 	// 从DownloadTaskInfo转换
 	void fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo);

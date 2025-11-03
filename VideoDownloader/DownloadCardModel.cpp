@@ -103,57 +103,6 @@ void DownloadCardModel::setAudioQuality(AudioQualityLevel quality)
 	m_audioQuality = quality;
 }
 
-QString DownloadCardModel::formattedVideoSize() const
-{
-	return DownloadTaskInfo::formatFileSize(m_videoSize);
-}
-
-QString DownloadCardModel::formattedAudioSize() const
-{
-	return DownloadTaskInfo::formatFileSize(m_audioSize);
-}
-
-QString DownloadCardModel::formattedDownloadSpeed() const
-{
-	if (m_downloadSpeed <= 0) return "0 B/s";
-
-	const qint64 KB = 1024;
-	const qint64 MB = KB * 1024;
-
-	if (m_downloadSpeed >= MB)
-		return QString("%1 MB/s").arg(QString::number(m_downloadSpeed / static_cast<double>(MB), 'f', 1));
-	else if (m_downloadSpeed >= KB)
-		return QString("%1 KB/s").arg(m_downloadSpeed / KB);
-	else
-		return QString("%1 B/s").arg(m_downloadSpeed);
-}
-
-QString DownloadCardModel::formattedPublishTime() const
-{
-	if (!m_publishTime.isValid()) return "";
-
-	QDateTime now = QDateTime::currentDateTime();
-	qint64 days = m_publishTime.daysTo(now);
-
-	if (days == 0) {
-		return m_publishTime.toString("今天 hh:mm");
-	}
-	else if (days == 1) {
-		return m_publishTime.toString("昨天 hh:mm");
-	}
-	else if (days < 7) {
-		return QString("%1天前").arg(days);
-	}
-	else {
-		return m_publishTime.toString("yyyy-MM-dd");
-	}
-}
-
-QString DownloadCardModel::formattedDuration() const
-{
-	return m_duration; // 假设已经是格式化好的时长
-}
-
 void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	m_taskId = taskInfo->taskId;
@@ -163,8 +112,8 @@ void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> ta
 	m_duration = taskInfo->videoInfo.duration;
 	m_publishTime = taskInfo->videoInfo.uploadDate;
 	m_publisher = taskInfo->videoInfo.author;
-	m_progress = taskInfo->progressPercentage;
-	m_downloadSpeed = taskInfo->downloadSpeed;
+	m_progress = 0;
+	m_downloadSpeed = 0;
 
 	// 根据状态设置卡片状态
 	switch (taskInfo->status)

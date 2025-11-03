@@ -27,6 +27,7 @@ public:
 	QString url;
 	std::atomic<unsigned int> downloadedPart;
 	unsigned int totalPart;
+	qint64 progressedSize;
 	std::atomic<qint64> downloadedSize;
 	qint64 fileSize;
 	DownloadPeriod downloadPeriod;
@@ -40,6 +41,7 @@ public:
 		, files(QList<QFile*>())
 		, fileName(fileName)
 		, url(url)
+		, progressedSize(0)
 		, downloadedPart(0)
 		, totalPart(totalPart)
 		, downloadedSize(downloadedSize)

@@ -3,9 +3,11 @@
 #include <QWidget>
 #include <QSharedPointer>
 #include <QMutex>
+#include <QQueue>
 
 #include "DownloadTaskInfo.h"
 
+class QTimer;
 class ConfigManager;
 class NetworkManager;
 
@@ -28,28 +30,25 @@ public:
 
 signals:
 	void downloadProgress(const QString& progress);
-	void downloadFinished();
+	void downloadFinished(const QString& taskId);
 	void downloadFailed(const QString& error);
 
-private slots:
-	void onDownloadFinished();
-	void onDownloadFailed(const QString& error);
-	void onDownloadProgress(const QString& progress);
-
 private:
-
-	void initConnections();
-
 	void startDownload();
+
+	void processDownloadingTasks();
+	void processFailedTasks(QSharedPointer<DownloadTaskInfo> task);
 
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<NetworkManager> m_networkManager;
-	QMap<const QString, QSharedPointer<DownloadTaskInfo>> m_tasks;
-	QMap<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;
+	QHash<const QString, std::list<QSharedPointer<DownloadTaskInfo>>::iterator> m_tasks;
+	std::list<QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
+	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;
 
 	int m_maxCurrentDownloads;
 	int m_maxThreadsPerDownload;
 	int m_maxDownloadSpeed;
 
+	QTimer* m_downloadTimer;
 	QMutex m_mutex;
 };
