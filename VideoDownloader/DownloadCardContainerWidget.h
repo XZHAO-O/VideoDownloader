@@ -90,7 +90,6 @@ private:
 	QList<QSharedPointer<DownloadTaskInfo>> m_downloadTasks;     // 所有任务信息
 	NoDataWidget* m_noDataWidget;
 	PaginationWidget* m_paginationWidget;        // 分页器
-	DownloadCardPool* m_cardPool;                // 卡片池
 	MaterialSpinner* m_spinner;
 	QString m_noDataText;
 

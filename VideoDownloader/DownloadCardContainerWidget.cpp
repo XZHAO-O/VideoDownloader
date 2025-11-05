@@ -12,7 +12,6 @@
 #include "DesignSystem.h"
 #include "DownloadCard.h"
 #include "DownloadEngine.h"
-#include "DownloadCardPool.h"
 #include "Instrumentor.h"
 
 DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<DownloadEngine> downloadEngine,
@@ -27,7 +26,6 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	, m_scrollLayout(nullptr)
 	, m_noDataWidget(nullptr)
 	, m_paginationWidget(nullptr)
-	, m_cardPool(new DownloadCardPool(this))
 	, m_spinner(nullptr)
 	, m_currentSpeed(0)
 {

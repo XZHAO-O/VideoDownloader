@@ -6,6 +6,7 @@
 #include <QQueue>
 
 #include "DownloadTaskInfo.h"
+#include "DownloadThreadPool.h"
 
 class QTimer;
 class ConfigManager;
@@ -39,8 +40,11 @@ private:
 	void processDownloadingTasks();
 	void processFailedTasks(QSharedPointer<DownloadTaskInfo> task);
 
+	void endDownloadContext(QSharedPointer<DownloadTaskInfo> task);
+
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<NetworkManager> m_networkManager;
+	DownloadThreadPool<DownloadContext*> m_downloadThreadPool;
 	QHash<const QString, std::list<QSharedPointer<DownloadTaskInfo>>::iterator> m_tasks;
 	std::list<QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
 	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;

@@ -121,7 +121,6 @@
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
-    <ClCompile Include="DownloadCardPool.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordRepository.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
@@ -132,6 +131,7 @@
     <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModInfo.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
+    <ClCompile Include="OpenGLWidget.cpp" />
     <ClCompile Include="QRCodeLoginWidget.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
@@ -367,7 +367,7 @@
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <ClInclude Include="CookieManageUtil.h" />
-    <QtMoc Include="DownloadCardPool.h" />
+    <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
     <ClInclude Include="DownloadCardState.h" />
     <QtMoc Include="DownloadEngine.h" />
@@ -388,6 +388,7 @@
     <ClInclude Include="ModInfo.h" />
     <QtMoc Include="QRCodeLoginWidget.h" />
     <QtMoc Include="AppInstanceManager.h" />
+    <QtMoc Include="OpenGLWidget.h" />
     <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <QtMoc Include="SingleLevelComboBox.h" />

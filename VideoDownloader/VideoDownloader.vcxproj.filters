@@ -394,9 +394,6 @@
     <ClCompile Include="SingleLevelComboBox.cpp">
       <Filter>Ui\Components</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadCardPool.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="DownloadEngine.cpp">
       <Filter>Core\Download</Filter>
     </ClCompile>
@@ -411,6 +408,9 @@
     </ClCompile>
     <ClCompile Include="DatabaseManager.cpp">
       <Filter>Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenGLWidget.cpp">
+      <Filter>Ui\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -705,9 +705,6 @@
     <QtMoc Include="SingleLevelComboBox.h">
       <Filter>Ui\Components</Filter>
     </QtMoc>
-    <QtMoc Include="DownloadCardPool.h">
-      <Filter>Core</Filter>
-    </QtMoc>
     <QtMoc Include="DownloadEngine.h">
       <Filter>Core\Download</Filter>
     </QtMoc>
@@ -725,6 +722,9 @@
     </QtMoc>
     <QtMoc Include="DownloadContext.h">
       <Filter>Core\Download</Filter>
+    </QtMoc>
+    <QtMoc Include="OpenGLWidget.h">
+      <Filter>Ui\Widgets</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -775,6 +775,9 @@
     </ClInclude>
     <ClInclude Include="StringUtil.h">
       <Filter>Core\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadThreadPool.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
