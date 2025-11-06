@@ -72,7 +72,7 @@ QNetworkRequest NetworkManager::setRequest(const QString& url, const QVariantMap
 	QNetworkRequest request = QNetworkRequest(url);
 	// 设置请求头
 	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	//request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
 	// 设置自定义头
 	for (auto it = headers.cbegin(); it != headers.cend(); ++it)
@@ -109,7 +109,11 @@ NetworkResponse NetworkManager::getWithLoop(const QString& url, const QVariantMa
 	// 检查错误
 	if (reply->error() != QNetworkReply::NoError)
 	{
-		handleNetworkError(networkResponse, reply->error());
+		networkResponse.success = false;
+		networkResponse.errorString = getErrorString(reply);
+		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
+			.arg(reply->error())
+			.arg(networkResponse.errorString));
 		networkManager->deleteLater();
 		reply->deleteLater();
 		return networkResponse;
@@ -125,126 +129,119 @@ NetworkResponse NetworkManager::getWithLoop(const QString& url, const QVariantMa
 	return networkResponse;
 }
 
-void NetworkManager::handleNetworkError(NetworkResponse& networkResponse, QNetworkReply::NetworkError errorCode)
+QString NetworkManager::getErrorString(QNetworkReply* reply)
 {
-	QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
-	if (!reply) return;
+	if (!reply) return "";
 
-	networkResponse.success = false;
+	QNetworkReply::NetworkError errorCode = reply->error();
 
-	// 根据错误类型进行不同处理
 	switch (errorCode)
 	{
 	case QNetworkReply::ConnectionRefusedError:
-		networkResponse.errorString = "服务器拒绝连接";
+		return "服务器拒绝连接";
 		break;
 	case QNetworkReply::RemoteHostClosedError:
-		networkResponse.errorString = "服务器关闭连接";
+		return "服务器关闭连接";
 		break;
 	case QNetworkReply::HostNotFoundError:
-		networkResponse.errorString = "无法找到指定的服务器";
+		return "无法找到指定的服务器";
 		break;
 	case QNetworkReply::TimeoutError:
-		networkResponse.errorString = "网络请求超时，请检查网络连接或稍后重试";
+		return "网络请求超时，请检查网络连接或稍后重试";
 		break;
 	case QNetworkReply::OperationCanceledError:
-		networkResponse.errorString = "网络请求已被取消";
+		return "网络请求已被取消";
 		break;
 	case QNetworkReply::SslHandshakeFailedError:
-		networkResponse.errorString = "SSL连接建立失败";
+		return "SSL连接建立失败";
 		break;
 	case QNetworkReply::TemporaryNetworkFailureError:
-		networkResponse.errorString = "检测到临时网络故障";
+		return "检测到临时网络故障";
 		break;
 	case QNetworkReply::NetworkSessionFailedError:
-		networkResponse.errorString = "网络会话初始化失败";
+		return "网络会话初始化失败";
 		break;
 	case QNetworkReply::BackgroundRequestNotAllowedError:
-		networkResponse.errorString = "当前环境不允许后台网络请求";
+		return "当前环境不允许后台网络请求";
 		break;
 	case QNetworkReply::TooManyRedirectsError:
-		networkResponse.errorString = "请求经历了太多重定向";
+		return "请求经历了太多重定向";
 		break;
 	case QNetworkReply::InsecureRedirectError:
-		networkResponse.errorString = "检测到不安全的HTTP重定向";
+		return "检测到不安全的HTTP重定向";
 		break;
 	case QNetworkReply::ProxyConnectionRefusedError:
-		networkResponse.errorString = "代理服务器拒绝连接";
+		return "代理服务器拒绝连接";
 		break;
 	case QNetworkReply::ProxyConnectionClosedError:
-		networkResponse.errorString = "代理服务器在操作期间关闭了连接";
+		return "代理服务器在操作期间关闭了连接";
 		break;
 	case QNetworkReply::ProxyNotFoundError:
-		networkResponse.errorString = "无法找到指定的代理服务器";
+		return "无法找到指定的代理服务器";
 		break;
 	case QNetworkReply::ProxyTimeoutError:
-		networkResponse.errorString = "与代理服务器的连接超时";
+		return "与代理服务器的连接超时";
 		break;
 	case QNetworkReply::ProxyAuthenticationRequiredError:
-		networkResponse.errorString = "代理服务器需要身份验证";
+		return "代理服务器需要身份验证";
 		break;
 	case QNetworkReply::ContentAccessDenied:
-		networkResponse.errorString = "访问请求的资源被拒绝";
+		return "访问请求的资源被拒绝";
 		break;
 	case QNetworkReply::ContentOperationNotPermittedError:
-		networkResponse.errorString = "请求的操作在资源上不被允许";
+		return "请求的操作在资源上不被允许";
 		break;
 	case QNetworkReply::ContentNotFoundError:
-		networkResponse.errorString = "请求的资源在服务器上未找到";
+		return "请求的资源在服务器上未找到";
 		break;
 	case QNetworkReply::AuthenticationRequiredError:
-		networkResponse.errorString = "服务器需要身份验证";
+		return"服务器需要身份验证";
 		break;
 	case QNetworkReply::ContentReSendError:
-		networkResponse.errorString = "无法重新发送请求";
+		return "无法重新发送请求";
 		break;
 	case QNetworkReply::ContentConflictError:
-		networkResponse.errorString = "请求与资源的当前状态冲突";
+		return "请求与资源的当前状态冲突";
 		break;
 	case QNetworkReply::ContentGoneError:
-		networkResponse.errorString = "请求的资源不存在";
+		return "请求的资源不存在";
 		break;
 	case QNetworkReply::InternalServerError:
-		networkResponse.errorString = "服务器内部错误";
+		return "服务器内部错误";
 		break;
 	case QNetworkReply::OperationNotImplementedError:
-		networkResponse.errorString = "服务器不支持请求的操作";
+		return "服务器不支持请求的操作";
 		break;
 	case QNetworkReply::ServiceUnavailableError:
-		networkResponse.errorString = "服务器暂时不可用，请稍后重试";
+		return "服务器暂时不可用，请稍后重试";
 		break;
 	case QNetworkReply::ProtocolUnknownError:
-		networkResponse.errorString = "网络协议未知";
+		return "网络协议未知";
 		break;
 	case QNetworkReply::ProtocolInvalidOperationError:
-		networkResponse.errorString = "请求的操作对当前协议无效";
+		return "请求的操作对当前协议无效";
 		break;
 	case QNetworkReply::UnknownNetworkError:
-		networkResponse.errorString = "发生未知的网络错误";
+		return "发生未知的网络错误";
 		break;
 	case QNetworkReply::UnknownProxyError:
-		networkResponse.errorString = "代理服务器报告未知错误";
+		return "代理服务器报告未知错误";
 		break;
 	case QNetworkReply::UnknownContentError:
-		networkResponse.errorString = "与内容相关的未知错误";
+		return "与内容相关的未知错误";
 		break;
 	case QNetworkReply::ProtocolFailure:
-		networkResponse.errorString = "协议处理失败";
+		return "协议处理失败";
 		break;
 	case QNetworkReply::UnknownServerError:
-		networkResponse.errorString = "服务器报告未知错误";
+		return "服务器报告未知错误";
 		break;
 	default:
-		networkResponse.errorString = QString("发生未处理错误 [%1]: %2")
+		return QString("发生未处理错误 [%1]: %2")
 			.arg(errorCode)
 			.arg(reply->errorString());
 		break;
 	}
-
-	// 记录错误日志
-	LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
-		.arg(errorCode)
-		.arg(networkResponse.errorString));
 }
 
 QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QVariantMap& data, const QVariantMap& headers)
@@ -548,35 +545,42 @@ QString NetworkManager::generateRequestId() const
 		QString::number(QRandomGenerator::global()->generate64());
 }
 
-QNetworkReply* NetworkManager::download(DownloadContext& context)
+NetworkReply NetworkManager::getReplyWithLoop(const QString& url, const QVariantMap& headers)
 {
-	LOG_INFO("Network", QString("Starting download: %1 -> %2").arg(context.url).arg(context.fileName));
-
-	QNetworkRequest request = setRequest(context.url);
-	if (context.pieced)
-	{
-		//request.setRawHeader("Range", QString("bytes=%1-%2").arg(context.rangeStart).arg(context.rangeEnd).toUtf8());
-	}
-	QNetworkReply* reply = context.accessManager->get(request);
-
-	return reply;
-}
-
-bool NetworkManager::checkPartialDownloadSupport(const QString& url)
-{
-	// 发送HEAD请求检查是否支持Range头
-	QNetworkRequest request(url);
-	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-
-	QNetworkAccessManager tempManager;
-	QNetworkReply* reply = tempManager.head(request);
+	NetworkReply networkReply;
+	QNetworkRequest request = setRequest(url, headers);
+	QNetworkAccessManager manager;
+	QNetworkReply* reply = manager.head(request);
 
 	QEventLoop loop;
+	QObject::connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
 
+	// 检查错误
+	if (reply->error() != QNetworkReply::NoError)
+	{
+		networkReply.success = false;
+		networkReply.errorString = getErrorString(reply);
+		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
+			.arg(reply->error())
+			.arg(networkReply.errorString));
+		reply->deleteLater();
+		return networkReply;
+	}
+
+	// 读取响应
+	networkReply.success = true;
+	networkReply.reply = reply;
+
+	return networkReply;
+}
+
+bool NetworkManager::checkPartialDownloadSupport(QNetworkReply* reply)
+{
 	bool supportsPartial = false;
-	if (reply->error() == QNetworkReply::NoError) {
+	if (reply->error() == QNetworkReply::NoError)
+	{
 		QByteArray acceptRanges = reply->rawHeader("Accept-Ranges");
 		QString contentLength = reply->rawHeader("Content-Length");
 
@@ -584,129 +588,9 @@ bool NetworkManager::checkPartialDownloadSupport(const QString& url)
 		LOG_DEBUG("Network", QString("Partial download support: %1, Content-Length: %2")
 			.arg(supportsPartial ? "yes" : "no").arg(contentLength));
 	}
-	else {
+	else
+	{
 		LOG_WARN("Network", QString("Failed to check partial download support: %1").arg(reply->errorString()));
 	}
-
-	reply->deleteLater();
 	return supportsPartial;
-}
-
-void NetworkManager::downloadSingleFile(DownloadContext& context)
-{
-	QNetworkRequest request(context.url);
-	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-
-	QNetworkReply* reply = context.accessManager->get(request);
-
-	// 创建文件对象
-	QFile* file = new QFile(context.fileName, &context);
-	if (!file->open(QIODevice::WriteOnly)) {
-		qDebug() << "Failed to open file for writing:" << context.fileName << file->errorString();
-		delete file;
-		reply->deleteLater();
-		emit context.downloadFinished(false, "Failed to create file");
-		return;
-	}
-
-	// 设置信号连接（全部在DownloadContext内部处理）
-	context.setupSingleFileConnections(reply, file);
-}
-
-void NetworkManager::downloadWithRange(DownloadContext& context, qint64 rangeStart, qint64 rangeEnd, int partNumber)
-{
-	QNetworkRequest request(context.url);
-	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-
-	// 设置范围请求
-	QString rangeHeader;
-	if (rangeEnd >= 0) {
-		rangeHeader = QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd);
-	}
-	else {
-		rangeHeader = QString("bytes=%1-").arg(rangeStart);
-	}
-	request.setRawHeader("Range", rangeHeader.toUtf8());
-
-	qDebug() << "Downloading part" << partNumber << ":" << rangeHeader << "->" << context.fileName;
-
-	QNetworkReply* reply = context.accessManager->get(request);
-
-	// 创建分片文件名
-	QString partFilename = "1";
-	QFile* file = new QFile(partFilename, &context);
-
-	if (!file->open(QIODevice::WriteOnly)) {
-		qDebug() << "Failed to open part file for writing:" << partFilename << file->errorString();
-		delete file;
-		reply->deleteLater();
-		emit context.downloadPartFinished(partNumber, context.totalPart, false, "Failed to create part file");
-		return;
-	}
-
-	// 设置信号连接（全部在DownloadContext内部处理）
-	context.setupPartialFileConnections(reply, file, partNumber);
-}
-
-void NetworkManager::downloadPartialFile(DownloadContext& context, int partNumber)
-{
-	// 计算分片大小和范围
-	qint64 partSize = context.fileSize / context.totalPart;
-	qint64 rangeStart = partNumber * partSize;
-	qint64 rangeEnd = (partNumber == context.totalPart - 1) ? -1 : (partNumber + 1) * partSize - 1;
-
-	downloadWithRange(context, rangeStart, rangeEnd, partNumber);
-}
-
-void NetworkManager::mergeDownloadedFiles(const QString& filename)
-{
-	//QFile finalFile(filename);
-	//if (!finalFile.open(QIODevice::WriteOnly)) {
-	//	LOG_ERROR("Network", QString("Failed to create final file: %1").arg(filename));
-	//	emit downloadFinished(filename, false, "Failed to create final file");
-	//	cleanupPartFiles(filename);
-	//	return;
-	//}
-
-	//bool success = true;
-	//QString errorString;
-
-	//// 按顺序合并所有分片文件
-	//for (int i = 0; i < 3; ++i) {
-	//	QFile partFile(filename + QString("%1").arg(i));
-	//	if (!partFile.open(QIODevice::ReadOnly)) {
-	//		LOG_ERROR("Network", QString("Failed to open part file: %1").arg(i));
-	//		success = false;
-	//		errorString = QString("Failed to open part file: %1").arg(i);
-	//		break;
-	//	}
-
-	//	// 读取分片内容并写入最终文件
-	//	QByteArray data = partFile.readAll();
-	//	if (finalFile.write(data) != data.size()) {
-	//		LOG_ERROR("Network", QString("Failed to write part %1 data").arg(i));
-	//		success = false;
-	//		errorString = QString("Failed to write part %1 data").arg(i);
-	//		partFile.close();
-	//		break;
-	//	}
-
-	//	partFile.close();
-	//}
-
-	//finalFile.close();
-
-	//if (success) {
-	//	LOG_INFO("Network", QString("File merged successfully: %1, size: %2 bytes")
-	//		.arg(filename).arg(finalFile.size()));
-	//	// 清理分片文件
-	//	cleanupPartFiles(filename);
-	//}
-	//else {
-	//	// 删除不完整的最终文件
-	//	finalFile.remove();
-	//	cleanupPartFiles(filename);
-	//}
-
-	//emit downloadFinished(filename, success, errorString);
 }

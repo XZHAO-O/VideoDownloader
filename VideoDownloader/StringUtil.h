@@ -113,7 +113,6 @@ public:
 		}
 	}
 
-private:
 	static constexpr qint64 KB = 1024;
 	static constexpr qint64 MB = 1024 * KB;
 	static constexpr qint64 GB = 1024 * MB;

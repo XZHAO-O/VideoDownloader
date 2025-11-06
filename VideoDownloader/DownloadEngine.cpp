@@ -122,9 +122,9 @@ void DownloadEngine::processDownloadingTasks()
 		switch (task->status)
 		{
 		case DownloadStatus::Downloading:
-			StringUtil::formatDownloadProgress(task->context.downloadedSize, task->context.fileSize);
-			StringUtil::formatDownloadSpeed(task->context.downloadedSize - task->context.progressedSize);
-			task->context.progressedSize = task->context.downloadedSize;
+			//StringUtil::formatDownloadProgress(task->context.downloadedSize, task->context.fileSize);
+			//StringUtil::formatDownloadSpeed(task->context.downloadedSize - task->context.progressedSize);
+			//task->context.progressedSize = task->context.downloadedSize;
 			break;
 		case DownloadStatus::Completed:
 			endDownloadContext(task);

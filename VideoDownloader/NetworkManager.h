@@ -24,6 +24,21 @@ struct NetworkResponse
 	QString errorString;
 };
 
+struct NetworkReply
+{
+	bool success;
+	QNetworkReply* reply;
+	QString errorString;
+
+	~NetworkReply()
+	{
+		if (reply)
+		{
+			reply->deleteLater();
+		}
+	}
+};
+
 struct NetworkProxy
 {
 	bool enabled = false;
@@ -46,11 +61,12 @@ public:
 	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
-	QNetworkReply* download(DownloadContext& context);
+	NetworkReply getReplyWithLoop(const QString& url, const QVariantMap& headers = {});
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QString& url,
 		const QVariantMap& headers = {});
+	QString getErrorString(QNetworkReply* reply);
 	QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},
 		const QVariantMap& headers = {});
@@ -75,7 +91,6 @@ private slots:
 	void onAuthenticationRequired(QNetworkReply* reply, QAuthenticator* authenticator);
 	void onProxyAuthenticationRequired(const QNetworkProxy& proxy, QAuthenticator* authenticator);
 	void onSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
-	void handleNetworkError(NetworkResponse& networkResponse, QNetworkReply::NetworkError errorCode);
 
 private:
 	struct RequestContext
@@ -96,15 +111,7 @@ private:
 
 	QString generateRequestId() const;
 
-	bool checkPartialDownloadSupport(const QString& url);
-
-	void downloadSingleFile(DownloadContext& context);
-
-	void downloadPartialFile(DownloadContext& context, int partNumber);
-
-	void downloadWithRange(DownloadContext& context, qint64 rangeStart, qint64 rangeEnd, int partNumber);
-
-	void mergeDownloadedFiles(const QString& filename);
+	bool checkPartialDownloadSupport(QNetworkReply* reply);
 
 	QNetworkAccessManager* m_networkManager;
 	QSharedPointer<ConfigManager> m_configManager;

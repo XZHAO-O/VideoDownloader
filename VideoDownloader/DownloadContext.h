@@ -6,6 +6,7 @@
 #include <QObject>
 
 #include "NetworkManager.h"
+#include "StringUtil.h"
 
 class DownloadContext : public QObject
 {
@@ -15,38 +16,43 @@ public:
 
 	enum class DownloadPeriod
 	{
-		Video = 0,
-		Audio = 1,
-		Merge = 2
+		Prepare = 0,
+		Video,
+		Audio,
+		Merge,
 	};
 
+	QSharedPointer<NetworkManager> networkManager;
 	QNetworkAccessManager* accessManager;
-	QList<QNetworkReply*> replys;
-	QList<QFile*> files;
+	QHash<int, QNetworkReply*> replys;
+	QHash<int, QFile*> files;
 	QString fileName;
 	QString url;
 	std::atomic<unsigned int> downloadedPart;
 	unsigned int totalPart;
 	qint64 progressedSize;
-	std::atomic<qint64> downloadedSize;
+	QList<qint64> downloadedSize;
+	std::atomic<qint64> downloadedTotalSize;
 	qint64 fileSize;
 	DownloadPeriod downloadPeriod;
-	bool pieced;
+	bool partialDownloadSupport;
 	bool active;
 
-	DownloadContext(QString fileName = "", QString url = "", unsigned int totalPart = 3, qint64 downloadedSize = 0, qint64 fileSize = 0)
+	DownloadContext(QString fileName = "", QString url = "", unsigned int totalPart = 3, QList<qint64> downloadedSize = QList<qint64>(), qint64 downloadedTotalSize = 0, qint64 fileSize = 0)
 		: QObject(nullptr)
 		, accessManager(nullptr)
-		, replys(QList<QNetworkReply*>())
-		, files(QList<QFile*>())
+		, replys(QHash<int, QNetworkReply*>())
+		, files(QHash<int, QFile*>())
 		, fileName(fileName)
 		, url(url)
 		, progressedSize(0)
 		, downloadedPart(0)
 		, totalPart(totalPart)
 		, downloadedSize(downloadedSize)
+		, downloadedTotalSize(downloadedTotalSize)
 		, fileSize(fileSize)
-		, pieced(false)
+		, downloadPeriod(DownloadPeriod::Prepare)
+		, partialDownloadSupport(false)
 		, active(false)
 	{
 
@@ -55,6 +61,65 @@ public:
 	~DownloadContext()
 	{
 		clearNetworkResources();
+	}
+
+	void startDownload(QSharedPointer<NetworkManager> networkManager)
+	{
+		this->networkManager = networkManager;
+		active = true;
+		initNetworkResources();
+		setTotalPart();
+		qint64 partSize = fileSize / totalPart;
+		for (int i = 0; i < totalPart; i++)
+		{
+			addFile(new QFile(fileName + QString(".part%1").arg(i)), i);
+
+			qint64 rangeStart = i * partSize;
+			qint64 rangeEnd = (i == totalPart - 1) ? fileSize : (i + 1) * partSize;
+
+			QNetworkRequest request = networkManager->setRequest(url);
+			request.setRawHeader("Range", QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd).toUtf8());
+			QNetworkReply* reply = accessManager->get(request);
+			addNetworkReply(reply, i);
+		}
+	}
+
+	void stopDownload()
+	{
+		active = false;
+		for (auto reply : replys)
+		{
+			if (reply)
+			{
+				reply->disconnect();
+				if (reply->isRunning())
+				{
+					reply->abort();
+				}
+				reply->deleteLater();
+			}
+		}
+	}
+
+private:
+
+	void mergeFiles()
+	{
+		QFile* file = new QFile(fileName);
+		if (file->open(QIODevice::WriteOnly))
+		{
+			for (int i = 0; i < totalPart; i++)
+			{
+				QFile* partFile = files[i];
+				if (partFile->open(QIODevice::ReadOnly))
+				{
+					file->write(partFile->readAll());
+					partFile->close();
+				}
+				partFile->remove();
+			}
+			file->close();
+		}
 	}
 
 	void initNetworkResources()
@@ -96,18 +161,47 @@ public:
 		files.clear();
 	}
 
+	void setTotalPart()
+	{
+		if (fileSize > 0)
+		{
+			if (fileSize < 50 * StringUtil::MB)
+				totalPart = 1;
+			else
+			{
+				if (fileSize < 100 * StringUtil::MB)
+					totalPart = 2;
+				else
+				{
+					if (fileSize < 500 * StringUtil::MB)
+						totalPart = 3;
+					else
+					{
+						if (fileSize < 1 * StringUtil::GB)
+							totalPart = 4;
+						else
+							totalPart = 5;
+					}
+				}
+			}
+		}
+		downloadedSize.resize(totalPart);
+		for (int i = 0; i < totalPart; i++)
+		{
+			downloadedSize[i] = 0;
+		}
+	}
+
 	void addNetworkReply(QNetworkReply* reply, int partNumber = 0)
 	{
-		replys.append(reply);
+		replys.insert(partNumber, reply);
 		setupReplyConnections(reply, partNumber);
 	}
 
-	void addFile(QFile* file)
+	void addFile(QFile* file, int partNumber = 0)
 	{
-		files.append(file);
+		files.insert(partNumber, file);
 	}
-
-	bool isFinished() { return downloadedPart == totalPart; }
 
 	// 设置单个下载任务的信号连接
 	void setupReplyConnections(QNetworkReply* reply, int partNumber)
@@ -130,59 +224,46 @@ public:
 		// 连接 errorOccurred 信号
 		QObject::connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::errorOccurred),
 			this, [this, partNumber](QNetworkReply::NetworkError error) {
-				onErrorOccurred(error, partNumber);
+				onErrorOccurred(partNumber);
 			});
 	}
 
 	// 设置单文件下载的信号连接
-	void setupSingleFileConnections(QNetworkReply* reply, QFile* file)
+	void setupSingleFileConnections(QNetworkReply* reply, QFile* file, int partNumber = 1)
 	{
-		files.append(file);
-		replys.append(reply);
-		setupReplyConnections(reply, 0);
+		files.insert(partNumber, file);
+		replys.insert(partNumber, reply);
+		setupReplyConnections(reply, partNumber);
 	}
 
 	// 设置分片下载的信号连接
-	void setupPartialFileConnections(QNetworkReply* reply, QFile* file, int partNumber)
+	void setupPartialFileConnections(QNetworkReply* reply, QFile* file, int partNumber = 1)
 	{
-		files.append(file);
-		replys.append(reply);
+		files.insert(partNumber, file);
+		replys.insert(partNumber, reply);
 		setupReplyConnections(reply, partNumber);
 	}
 
 private slots:
 	void onReadyRead(QNetworkReply* reply, int partNumber)
 	{
-		if (partNumber < 0 || partNumber >= files.size())
-			return;
-
 		QFile* file = files[partNumber];
-		if (file && file->isOpen() && reply) {
+		if (file && file->isOpen() && reply)
+		{
 			file->write(reply->readAll());
 		}
 	}
 
 	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int partNumber)
 	{
-		Q_UNUSED(bytesTotal)
-			// 更新下载大小统计
-			downloadedSize += bytesReceived;
-
-		// 转换为MB显示
-		QString receivedBytes = QString::number(downloadedSize / (1024 * 1024.0), 'f', 2);
-		QString totalBytes = fileSize > 0 ? QString::number(fileSize / (1024 * 1024.0), 'f', 2) : "未知";
-
-		QString progressInfo = fileSize > 0 ? QString("%1/%2 MB").arg(receivedBytes).arg(totalBytes) : QString("%1 MB").arg(receivedBytes);
-		double progress = fileSize > 0 ? (double)downloadedSize / fileSize : 0.0;
-
-		emit downloadProgress(progressInfo, progress, partNumber);
+		// 更新下载大小统计
+		int downloaded = bytesReceived - downloadedSize[partNumber];
+		downloadedTotalSize += downloaded;
+		downloadedSize[partNumber] = bytesReceived;
 	}
 
 	void onFinished(int partNumber)
 	{
-		if (partNumber < 0 || partNumber >= replys.size() || partNumber >= files.size())
-			return;
-
 		QNetworkReply* reply = replys[partNumber];
 		QFile* file = files[partNumber];
 
@@ -217,24 +298,20 @@ private slots:
 			reply->deleteLater();
 		}
 
-		emit downloadPartFinished(partNumber, totalPart, success, errorString);
-
-		if (isFinished()) {
-			emit downloadFinished(success, errorString);
+		if (downloadedPart == totalPart)
+		{
+			// 所有分片下载完成，合并文件
+			mergeFiles();
+			emit downloadFinished();
 		}
 	}
 
-	void onErrorOccurred(QNetworkReply::NetworkError error, int partNumber)
+	void onErrorOccurred(int partNumber)
 	{
-		Q_UNUSED(error)
-
-			if (partNumber < 0 || partNumber >= replys.size() || partNumber >= files.size())
-				return;
-
 		QNetworkReply* reply = replys[partNumber];
 		QFile* file = files[partNumber];
-
-		qDebug() << "Part" << partNumber << "download error:" << error << "for file" << fileName;
+		networkManager->getErrorString(reply);
+		qDebug() << "Part" << partNumber << "download error:" << reply->error() << "for file" << fileName;
 
 		if (file && file->isOpen()) {
 			file->close();
@@ -242,12 +319,8 @@ private slots:
 		if (file) {
 			file->remove();
 		}
-
-		emit downloadPartFinished(partNumber, totalPart, false, QString("Network error: %1").arg(error));
 	}
 
 signals:
-	void downloadProgress(const QString& progressInfo, double progress, int partNumber);
-	void downloadPartFinished(int partNumber, int totalParts, bool success, const QString& errorString);
-	void downloadFinished(bool success, const QString& errorString);
+	void downloadFinished();
 };
