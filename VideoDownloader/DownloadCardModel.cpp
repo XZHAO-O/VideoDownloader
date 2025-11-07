@@ -118,19 +118,19 @@ void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> ta
 	// 根据状态设置卡片状态
 	switch (taskInfo->status)
 	{
-	case Queued:
+	case DownloadStatus::Queued:
 		m_state = DownloadCardState::Pending;
 		break;
-	case Downloading:
+	case DownloadStatus::Downloading:
 		m_state = DownloadCardState::Downloading;
 		break;
-	case Completed:
+	case DownloadStatus::Completed:
 		m_state = DownloadCardState::Downloaded;
 		break;
-	case Failed:
+	case DownloadStatus::Failed:
 		m_state = DownloadCardState::Error;
 		break;
-	case Paused:
+	case DownloadStatus::Paused:
 		m_state = DownloadCardState::Downloading; // 暂停状态也显示为下载中，但按钮显示为继续
 		break;
 	default:

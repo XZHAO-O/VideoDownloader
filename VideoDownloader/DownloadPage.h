@@ -21,7 +21,7 @@ public:
 	DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent = nullptr);
 	~DownloadPage();
 
-	void getVideoPlayUrl(QSharedPointer<DownloadTaskInfo> taskInfo);
+	void getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo);
 
 	void getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo);
 

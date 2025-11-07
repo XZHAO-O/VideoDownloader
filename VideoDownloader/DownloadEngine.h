@@ -30,7 +30,7 @@ public:
 	void setMaxDownloadSpeed(int maxDownloadSpeed);
 
 signals:
-	void downloadProgress(const QString& progress);
+	void downloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed);
 	void downloadFinished(const QString& taskId);
 	void downloadFailed(const QString& error);
 
@@ -49,9 +49,9 @@ private:
 	std::list<QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
 	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;
 
-	int m_maxCurrentDownloads;
-	int m_maxThreadsPerDownload;
-	int m_maxDownloadSpeed;
+	int m_maxCurrentDownloads = 5;
+	int m_maxThreadsPerDownload = 5;
+	int m_maxDownloadSpeed = -1;
 
 	QTimer* m_downloadTimer;
 	QMutex m_mutex;

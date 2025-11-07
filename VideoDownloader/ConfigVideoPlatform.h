@@ -21,7 +21,7 @@ public:
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
 	void getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo);
-	QUrl getVideoPlayUrl(StreamRequest& request);
+	void getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);

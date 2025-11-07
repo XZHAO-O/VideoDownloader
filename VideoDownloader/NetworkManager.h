@@ -27,15 +27,27 @@ struct NetworkResponse
 struct NetworkReply
 {
 	bool success;
-	QNetworkReply* reply;
+	QNetworkReply* reply = nullptr;
 	QString errorString;
 
 	~NetworkReply()
 	{
 		if (reply)
 		{
-			reply->deleteLater();
+			delete reply;
+			reply = nullptr;
 		}
+	}
+
+	QByteArray getAcceptRanges() const
+	{
+		return reply->rawHeader("Accept-Ranges");
+	}
+
+	qint64 getContentLength() const
+	{
+		QString contentLength = reply->rawHeader("Content-Length");
+		return contentLength.isEmpty() ? 0 : contentLength.toLongLong();
 	}
 };
 
@@ -58,13 +70,13 @@ public:
 		QObject* parent = nullptr);
 	~NetworkManager();
 
-	QNetworkRequest setRequest(const QString& url, const QVariantMap& headers = {});
+	QNetworkRequest setRequest(const QUrl& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
-	NetworkReply getReplyWithLoop(const QString& url, const QVariantMap& headers = {});
+	NetworkReply getReplyWithLoop(const QUrl& url, const QVariantMap& headers = {});
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
-	NetworkResponse getWithLoop(const QString& url,
+	NetworkResponse getWithLoop(const QUrl& url,
 		const QVariantMap& headers = {});
 	QString getErrorString(QNetworkReply* reply);
 	QFuture<NetworkResponse> post(const QString& url,

@@ -67,7 +67,7 @@ NetworkManager::~NetworkManager()
 	m_activeRequests.clear();
 }
 
-QNetworkRequest NetworkManager::setRequest(const QString& url, const QVariantMap& headers)
+QNetworkRequest NetworkManager::setRequest(const QUrl& url, const QVariantMap& headers)
 {
 	QNetworkRequest request = QNetworkRequest(url);
 	// 设置请求头
@@ -89,13 +89,13 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 	return NetworkResponse();
 }
 
-NetworkResponse NetworkManager::getWithLoop(const QString& url, const QVariantMap& headers)
+NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& headers)
 {
 	NetworkResponse networkResponse;
 
 	QNetworkRequest request = setRequest(url, headers);
 
-	LOG_DEBUG("Network", QString("GET request started: %1").arg(url));
+	LOG_DEBUG("Network", QString("GET request started: %1").arg(url.toString().toUtf8().constData()));
 
 	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 	QNetworkReply* reply = networkManager->get(request);
@@ -545,7 +545,7 @@ QString NetworkManager::generateRequestId() const
 		QString::number(QRandomGenerator::global()->generate64());
 }
 
-NetworkReply NetworkManager::getReplyWithLoop(const QString& url, const QVariantMap& headers)
+NetworkReply NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap& headers)
 {
 	NetworkReply networkReply;
 	QNetworkRequest request = setRequest(url, headers);

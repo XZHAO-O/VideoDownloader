@@ -52,9 +52,9 @@ public slots:
 	void onDownloadAdded(const QString& taskId);
 	void onDownloadRemoved(const QString& taskId);
 	void onDownloadStatusChanged(const QString& taskId);
-	void onDownloadCompleted(const QString& taskId, const QString& filePath);
+	void onDownloadCompleted(const QString& taskId);
 	void onDownloadFailed(const QString& taskId, const QString& error);
-	void onDownloadSpeedUpdated(qint64 bytesPerSecond);
+	void onDownloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed);
 
 	// 分页改变槽函数
 	void onPageChanged(int page);
@@ -86,7 +86,7 @@ private:
 	AntScrollArea* m_scrollArea;
 	QWidget* m_scrollWidget;
 	QVBoxLayout* m_scrollLayout;
-	QMap<QString, DownloadCard*> m_downloadCards;        // 当前显示的卡片，使用taskId作为键
+	QHash<QString, DownloadCard*> m_downloadCards;        // 当前显示的卡片，使用taskId作为键
 	QList<QSharedPointer<DownloadTaskInfo>> m_downloadTasks;     // 所有任务信息
 	NoDataWidget* m_noDataWidget;
 	PaginationWidget* m_paginationWidget;        // 分页器

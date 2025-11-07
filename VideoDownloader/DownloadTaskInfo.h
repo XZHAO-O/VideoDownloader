@@ -6,13 +6,12 @@
 #include "DownloadContext.h"
 
 // 下载任务状态
-enum DownloadStatus
+enum class DownloadPeriod
 {
-	Queued = 0,
-	Downloading,
-	Paused,
-	Completed,
-	Failed
+	Prepare = 0,
+	Video,
+	Audio,
+	Merge,
 };
 
 class DownloadTaskInfo
@@ -23,11 +22,13 @@ public:
 	VideoDownloadRequest request;
 	StreamRequest streamRequest;
 	DownloadStatus status;
+	DownloadPeriod downloadPeriod;
 	DownloadContext context;
 	QDateTime endTime;
 
 	DownloadTaskInfo()
-		: status(Queued)
+		: status(DownloadStatus::Queued)
+		, downloadPeriod(DownloadPeriod::Prepare)
 	{
 	}
 

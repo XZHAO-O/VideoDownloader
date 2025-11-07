@@ -8,19 +8,20 @@
 #include "NetworkManager.h"
 #include "StringUtil.h"
 
+enum class DownloadStatus
+{
+	Queued = 0,
+	Downloading,
+	Paused,
+	Completed,
+	Failed
+};
+
 class DownloadContext : public QObject
 {
 	Q_OBJECT
 
 public:
-
-	enum class DownloadPeriod
-	{
-		Prepare = 0,
-		Video,
-		Audio,
-		Merge,
-	};
 
 	QSharedPointer<NetworkManager> networkManager;
 	QNetworkAccessManager* accessManager;
@@ -28,17 +29,17 @@ public:
 	QHash<int, QFile*> files;
 	QString fileName;
 	QString url;
-	std::atomic<unsigned int> downloadedPart;
-	unsigned int totalPart;
+	std::atomic<int> downloadedPart;
+	int totalPart;
 	qint64 progressedSize;
 	QList<qint64> downloadedSize;
 	std::atomic<qint64> downloadedTotalSize;
 	qint64 fileSize;
-	DownloadPeriod downloadPeriod;
+	std::atomic<DownloadStatus> downloadStatus;
 	bool partialDownloadSupport;
 	bool active;
 
-	DownloadContext(QString fileName = "", QString url = "", unsigned int totalPart = 3, QList<qint64> downloadedSize = QList<qint64>(), qint64 downloadedTotalSize = 0, qint64 fileSize = 0)
+	DownloadContext(QString fileName = "", QString url = "", int totalPart = 3, QList<qint64> downloadedSize = QList<qint64>(), qint64 downloadedTotalSize = 0, qint64 fileSize = 0)
 		: QObject(nullptr)
 		, accessManager(nullptr)
 		, replys(QHash<int, QNetworkReply*>())
@@ -51,7 +52,7 @@ public:
 		, downloadedSize(downloadedSize)
 		, downloadedTotalSize(downloadedTotalSize)
 		, fileSize(fileSize)
-		, downloadPeriod(DownloadPeriod::Prepare)
+		, downloadStatus(DownloadStatus::Queued)
 		, partialDownloadSupport(false)
 		, active(false)
 	{
@@ -97,6 +98,17 @@ public:
 					reply->abort();
 				}
 				reply->deleteLater();
+			}
+		}
+		for (auto file : files)
+		{
+			if (file)
+			{
+				if (file->isOpen())
+				{
+					file->close();
+				}
+				file->deleteLater();
 			}
 		}
 	}
@@ -323,4 +335,5 @@ private slots:
 
 signals:
 	void downloadFinished();
+	void downloadFailed();
 };

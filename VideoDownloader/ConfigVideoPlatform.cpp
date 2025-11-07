@@ -100,12 +100,10 @@ void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInf
 	taskInfo->videoInfo.cover = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers).data;
 }
 
-QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
+void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
+	StreamRequest request = taskInfo->streamRequest;
 	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
-	if (apiUrl.isEmpty()) {
-		throw std::runtime_error("Play URL API endpoint not configured");
-	}
 
 	// 构建请求参数
 	QVariantMap params;
@@ -153,8 +151,12 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 		response = m_networkManager->getWithLoop(apiUrl, headers);
 	}
 
-	if (!response.success) {
-		throw std::runtime_error(response.errorString.toStdString());
+	if (!response.success)
+	{
+		//平台请求头待包含，访问会被拒绝
+		//在主线程显示，会触发断言
+		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, response.errorString);
+		return;
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
@@ -164,7 +166,20 @@ QUrl ConfigVideoPlatform::getVideoPlayUrl(StreamRequest& request)
 	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
 	LOG_INFO("ConfigVideoPlatform", "Video Play Url retrieved: %s", videoPlayUrl.toUtf8().constData());
 
-	return videoPlayUrl;
+	taskInfo->request.videoPlayUrl = videoPlayUrl;
+
+	NetworkReply reply = m_networkManager->getReplyWithLoop(videoPlayUrl);
+	if (!reply.success)
+	{
+		//在主线程显示，会触发断言
+		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, reply.errorString);
+		return;
+	}
+	taskInfo->context.fileSize = reply.getContentLength();
+	if (reply.getAcceptRanges() == "bytes" && taskInfo->context.fileSize > 0)
+		taskInfo->context.partialDownloadSupport = true;
+	else
+		taskInfo->context.partialDownloadSupport = false;
 }
 
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)

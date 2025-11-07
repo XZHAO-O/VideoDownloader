@@ -43,10 +43,11 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		m_noDataText = tr("暂无下载任务");
 		cardState = DownloadCardState::Downloading;
 		// 连接下载管理器信号
-		/*connect(m_downloadManager.get(), &DownloadManager::downloadCompleted, this, &DownloadCardContainerWidget::onDownloadCompleted);
-		connect(m_downloadManager.get(), &DownloadManager::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
-		connect(m_downloadManager.get(), &DownloadManager::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);*/
+		connect(m_downloadEngine.get(), &DownloadEngine::downloadProgress, this, &DownloadCardContainerWidget::onDownloadProgress);
+		connect(m_downloadEngine.get(), &DownloadEngine::downloadFinished, this, &DownloadCardContainerWidget::onDownloadCompleted);
+		//connect(m_downloadEngine.get(), &DownloadEngine::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
+		//connect(m_downloadEngine.get(), &DownloadEngine::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
+		//connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
 		//connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
@@ -246,25 +247,16 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		card->disconnect();
 
-		//connect(m_downloadManager.get(), &DownloadManager::downloadProgress, card, &DownloadCard::onDownloadProgress);
-
 		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
-			//if (m_downloadManager) {
-				//m_downloadManager->pauseDownload(taskInfo->taskId);
-			//}
+			QMetaObject::invokeMethod(m_downloadEngine.get(), "pauseDownload", taskInfo->taskId);
 			});
 
 		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
-			//if (m_downloadManager) {
-				//m_downloadManager->resumeDownload(taskInfo->taskId);
-			//}
+
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
-			//if (m_downloadManager) {
-				//m_downloadManager->cancelDownload(taskInfo->taskId);
-			//}
-
+			QMetaObject::invokeMethod(m_downloadEngine.get(), "cancelDownload", taskInfo->taskId);
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);
 
@@ -523,17 +515,15 @@ void DownloadCardContainerWidget::onDownloadStatusChanged(const QString& taskId)
 	// 可以在这里更新卡片状态显示
 }
 
-void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId, const QString& filePath)
+void DownloadCardContainerWidget::onDownloadCompleted(const QString& taskId)
 {
 	BENCHMARKING_FUNCTION();
-	//// 更新任务信息
-	//for (auto& task : m_downloadTasks) {
-	//	if (task.taskId == taskId) {
-	//		task.status = Completed;
-	//		task.request.outputPath = filePath;
-	//		break;
-	//	}
-	//}
+
+	auto card = m_downloadCards.find(taskId);
+	if (card != m_downloadCards.end())
+	{
+		//card->second->updateState(DownloadStatus::Completed);
+	}
 
 	// 发出任务完成信号
 	emit taskStateChanged(taskId, ContainerState::Downloaded);
@@ -547,19 +537,14 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 	// emit taskStateChanged(taskId, ContainerState::DownloadReady);
 }
 
-void DownloadCardContainerWidget::onDownloadSpeedUpdated(qint64 bytesPerSecond)
+void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed)
 {
-	// 更新所有卡片的下载速度
-	//for (auto it = m_downloadCards.begin(); it != m_downloadCards.end(); ++it)
-	//{
-	//    DownloadCard* card = it.value();
-	//    auto model = card->model();
-	//    if (model && model->state() == DownloadCardState::Downloading)
-	//    {
-	//        model->setDownloadSpeed(bytesPerSecond);
-	//        //card->updateUI();
-	//    }
-	//}
+	// 处理下载进度更新
+	auto card = m_downloadCards.find(taskId);
+	if (card != m_downloadCards.end())
+	{
+		//card->second->updateProgress(progress, downloadSpeed);
+	}
 }
 
 void DownloadCardContainerWidget::transferTaskToThis(QSharedPointer<DownloadTaskInfo> taskInfo)
@@ -570,13 +555,13 @@ void DownloadCardContainerWidget::transferTaskToThis(QSharedPointer<DownloadTask
 
 	switch (m_containerState) {
 	case ContainerState::DownloadReady:
-		updatedTaskInfo->status = Queued;
+		updatedTaskInfo->status = DownloadStatus::Queued;
 		break;
 	case ContainerState::Downloading:
-		updatedTaskInfo->status = Downloading;
+		updatedTaskInfo->status = DownloadStatus::Downloading;
 		break;
 	case ContainerState::Downloaded:
-		updatedTaskInfo->status = Completed;
+		updatedTaskInfo->status = DownloadStatus::Completed;
 		break;
 	}
 
