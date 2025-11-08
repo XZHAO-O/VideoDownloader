@@ -51,20 +51,11 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 NetworkManager::~NetworkManager()
 {
 	// 取消所有活跃请求
-	QMutexLocker locker(&m_requestsMutex);
-	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it) {
-		if (it.value()->timeoutTimer) {
-			it.value()->timeoutTimer->stop();
-			delete it.value()->timeoutTimer;
-		}
-		if (!it.value()->finished) {
-			NetworkResponse response;
-			response.success = false;
-			response.errorString = "Request cancelled";
-			completeRequest(it.value(), response);
-		}
+	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
+	{
+		it.value()->abort();
+		it.value()->deleteLater();
 	}
-	m_activeRequests.clear();
 }
 
 QNetworkRequest NetworkManager::setRequest(const QUrl& url, const QVariantMap& headers)
@@ -100,11 +91,22 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 	QNetworkReply* reply = networkManager->get(request);
 
+	QString requestId = generateRequestId();
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests.insert(requestId, reply);
+	}
+
 	// 创建事件循环等待请求完成
 	QEventLoop loop;
 	QObject::connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
+
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests.remove(requestId);
+	}
 
 	// 检查错误
 	if (reply->error() != QNetworkReply::NoError)
@@ -252,58 +254,7 @@ QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QVariant
 
 QFuture<NetworkResponse> NetworkManager::post(const QString& url, const QByteArray& data, const QVariantMap& headers)
 {
-	QFutureInterface<NetworkResponse> futureInterface;
-	futureInterface.reportStarted();
-	QFuture<NetworkResponse> future = futureInterface.future();
-
-	if (m_activeRequests.size() >= MAX_CONCURRENT_REQUESTS) {
-		NetworkResponse response;
-		response.success = false;
-		response.errorString = "Too many concurrent requests";
-		futureInterface.reportResult(response);
-		futureInterface.reportFinished();
-		return future;
-	}
-
-	auto context = std::make_shared<RequestContext>();
-	context->id = generateRequestId();
-	context->request = QNetworkRequest(QUrl(url));
-	context->data = data;
-	context->maxRetries = m_defaultRetryCount;
-	context->futureInterface = futureInterface;
-	context->finished = false;
-
-	// 设置请求头
-	context->request.setRawHeader("User-Agent", m_userAgent.toUtf8());
-	context->request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-	// 设置自定义头
-	for (auto it = headers.begin(); it != headers.end(); ++it) {
-		context->request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
-	}
-
-	// 设置超时定时器
-	context->timeoutTimer = new QTimer(this);
-	context->timeoutTimer->setSingleShot(true);
-	connect(context->timeoutTimer, &QTimer::timeout, this, [this, context]() {
-		NetworkResponse response;
-		response.success = false;
-		response.errorString = "Request timeout";
-		completeRequest(context, response);
-		});
-	context->timeoutTimer->start(m_timeoutMs);
-
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests[context->id] = context;
-	}
-
-	LOG_DEBUG("Network", QString("POST request started: %1, data size: %2").arg(url).arg(data.size()));
-
-	QNetworkReply* reply = m_networkManager->post(context->request, data);
-	handleReply(reply, context);
-
-	return future;
+	return QFuture<NetworkResponse>();
 }
 
 void NetworkManager::setProxy(const NetworkProxy& proxy)
@@ -431,71 +382,6 @@ void NetworkManager::onSslErrors(QNetworkReply* reply, const QList<QSslError>& e
 	reply->ignoreSslErrors(); // 忽略SSL错误（在生产环境中应该更谨慎）
 }
 
-void NetworkManager::handleReply(QNetworkReply* reply, std::shared_ptr<RequestContext> context)
-{
-	//// 连接完成信号
-	//connect(reply, &QNetworkReply::finished, this, [this, reply, context]() {
-	//	NetworkResponse response;
-
-	//	if (reply->error() == QNetworkReply::NoError) {
-	//		response.success = true;
-	//		response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-	//		response.data = reply->readAll();
-
-	//		// 获取响应头
-	//		QList<QByteArray> headerList = reply->rawHeaderList();
-	//		for (const QByteArray& header : headerList) {
-	//			response.headers[QString::fromUtf8(header)] = QString::fromUtf8(reply->rawHeader(header));
-	//		}
-
-	//		LOG_DEBUG("Network", QString("Request succeeded: %1, status: %2, size: %3")
-	//			.arg(context->request.url().toString())
-	//			.arg(response.statusCode)
-	//			.arg(response.data.size()));
-
-	//		completeRequest(context, response);
-	//	}
-	//	else {
-	//		response.success = false;
-	//		response.statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-	//		response.errorString = reply->errorString();
-
-	//		LOG_WARN("Network", QString("Request failed: %1, error: %2, status: %3")
-	//			.arg(context->request.url().toString())
-	//			.arg(response.errorString)
-	//			.arg(response.statusCode));
-
-	//		// 检查是否应该重试
-	//		if (context->retryCount < context->maxRetries &&
-	//			(reply->error() == QNetworkReply::TimeoutError ||
-	//				reply->error() == QNetworkReply::ConnectionRefusedError ||
-	//				reply->error() == QNetworkReply::RemoteHostClosedError)) {
-
-	//			context->retryCount++;
-	//			LOG_INFO("Network", QString("Retrying request (%1/%2): %3")
-	//				.arg(context->retryCount)
-	//				.arg(context->maxRetries)
-	//				.arg(context->request.url().toString()));
-
-	//			// 取消超时定时器
-	//			if (context->timeoutTimer) {
-	//				context->timeoutTimer->stop();
-	//			}
-
-	//			// 延迟后重试
-	//			QTimer::singleShot(1000 * context->retryCount, this, [this, context]() {
-	//				retryRequest(context);
-	//				});
-	//		}
-	//		else {
-	//			completeRequest(context, response);
-	//		}
-	//	}
-
-	//	reply->deleteLater();
-	//	});
-}
-
 void NetworkManager::retryRequest(std::shared_ptr<RequestContext> context)
 {
 	// 重新启动超时定时器
@@ -511,32 +397,7 @@ void NetworkManager::retryRequest(std::shared_ptr<RequestContext> context)
 		reply = m_networkManager->post(context->request, context->data);
 	}
 
-	handleReply(reply, context);
-}
-
-void NetworkManager::completeRequest(std::shared_ptr<RequestContext> context, const NetworkResponse& response)
-{
-	if (context->finished) {
-		return; // 避免重复完成
-	}
-	context->finished = true;
-
-	// 停止并清理超时定时器
-	if (context->timeoutTimer) {
-		context->timeoutTimer->stop();
-		context->timeoutTimer->deleteLater();
-		context->timeoutTimer = nullptr;
-	}
-
-	// 从活跃请求中移除
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.remove(context->id);
-	}
-
-	// 报告结果
-	context->futureInterface.reportResult(response);
-	context->futureInterface.reportFinished();
+	//handleReply(reply, context);
 }
 
 QString NetworkManager::generateRequestId() const
@@ -549,29 +410,61 @@ NetworkReply NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap
 {
 	NetworkReply networkReply;
 	QNetworkRequest request = setRequest(url, headers);
-	QNetworkAccessManager manager;
-	QNetworkReply* reply = manager.head(request);
+	QNetworkAccessManager* manager = new QNetworkAccessManager();
+	QNetworkReply* reply = manager->get(request);
+	networkReply.success = true;
+
+	QString requestId = generateRequestId();
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests.insert(requestId, reply);
+	}
 
 	QEventLoop loop;
 	QObject::connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
+	QObject::connect(reply, &QNetworkReply::metaDataChanged, [this, &networkReply, &manager, &reply, &loop]() {
+
+		int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+
+		if (statusCode >= 400)
+		{
+			// HTTP 错误
+			networkReply.success = false;
+			loop.quit();
+		}
+
+		if (reply->hasRawHeader("Content-Length") && reply->hasRawHeader("Accept-Ranges"))
+		{
+			// 获取到需要的头部信息后中止
+			loop.quit();
+		}
+		});
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
 
+	{
+		QMutexLocker locker(&m_requestsMutex);
+		m_activeRequests.remove(requestId);
+	}
+
 	// 检查错误
-	if (reply->error() != QNetworkReply::NoError)
+	if (reply->error() != QNetworkReply::NoError || !networkReply.success)
 	{
 		networkReply.success = false;
 		networkReply.errorString = getErrorString(reply);
 		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
 			.arg(reply->error())
 			.arg(networkReply.errorString));
+		reply->abort();
+		manager->deleteLater();
 		reply->deleteLater();
 		return networkReply;
 	}
 
 	// 读取响应
-	networkReply.success = true;
+	reply->abort();
 	networkReply.reply = reply;
+	manager->deleteLater();
 
 	return networkReply;
 }

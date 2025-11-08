@@ -117,9 +117,7 @@ private:
 		bool finished = false;
 	};
 
-	void handleReply(QNetworkReply* reply, std::shared_ptr<RequestContext> context);
 	void retryRequest(std::shared_ptr<RequestContext> context);
-	void completeRequest(std::shared_ptr<RequestContext> context, const NetworkResponse& response);
 
 	QString generateRequestId() const;
 
@@ -129,8 +127,8 @@ private:
 	QSharedPointer<ConfigManager> m_configManager;
 	QNetworkCookieJar* m_cookieJar;
 
-	QMap<QString, std::shared_ptr<RequestContext>> m_activeRequests;
 	QMutex m_requestsMutex;
+	QHash<QString, QNetworkReply*> m_activeRequests;
 
 	NetworkProxy m_proxy;
 	int m_timeoutMs = 30000;

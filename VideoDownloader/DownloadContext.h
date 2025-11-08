@@ -78,6 +78,7 @@ public:
 			qint64 rangeStart = i * partSize;
 			qint64 rangeEnd = (i == totalPart - 1) ? fileSize : (i + 1) * partSize;
 
+			//平台header待增加
 			QNetworkRequest request = networkManager->setRequest(url);
 			request.setRawHeader("Range", QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd).toUtf8());
 			QNetworkReply* reply = accessManager->get(request);

@@ -5,7 +5,7 @@
 #include "AntScrollArea.h"
 #include "MaterialTabWidget.h"
 #include "DownloadCard.h"
-//#include "DownloadManager.h"
+#include "DownloadEngine.h"
 #include "ApplicationController.h"
 #include "PlatformAggregatorService.h"
 #include "ConfigVideoPlatform.h"
@@ -213,7 +213,7 @@ void DownloadPage::onTaskStateChanged(const QString& taskId, ContainerState newS
 		// 如果是转移到下载中，开始下载
 		if (m_downloadEngine && sourceState == ContainerState::DownloadReady) {
 			// 只有从待下载转移时才调用addDownload
-			//m_downloadEngine->addDownload(taskInfo);
+			m_downloadEngine->addDownloadTask(taskInfo);
 		}
 		break;
 	case ContainerState::Downloaded:

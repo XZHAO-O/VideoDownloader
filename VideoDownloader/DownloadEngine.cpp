@@ -32,6 +32,8 @@ void DownloadEngine::addDownloadTask(QSharedPointer<DownloadTaskInfo> task)
 {
 	m_queuedTasks.push_back(task);
 	m_tasks.insert(task->taskId, m_queuedTasks.end());
+	if (!m_downloadTimer->isActive())
+		m_downloadTimer->start();
 	startDownload();
 }
 
