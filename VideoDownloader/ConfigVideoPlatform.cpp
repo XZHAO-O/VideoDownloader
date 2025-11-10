@@ -175,11 +175,11 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, reply.errorString);
 		return;
 	}
-	taskInfo->context.fileSize = reply.getContentLength();
-	if (reply.getAcceptRanges() == "bytes" && taskInfo->context.fileSize > 0)
-		taskInfo->context.partialDownloadSupport = true;
+	taskInfo->context->fileSize = reply.getContentLength();
+	if (reply.getAcceptRanges() == "bytes" && taskInfo->context->fileSize > 0)
+		taskInfo->context->partialDownloadSupport = true;
 	else
-		taskInfo->context.partialDownloadSupport = false;
+		taskInfo->context->partialDownloadSupport = false;
 }
 
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)

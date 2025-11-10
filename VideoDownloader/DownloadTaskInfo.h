@@ -21,13 +21,14 @@ public:
 	VideoInfo videoInfo;
 	VideoDownloadRequest request;
 	StreamRequest streamRequest;
+	DownloadContext* context;
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
-	DownloadContext context;
 	QDateTime endTime;
 
 	DownloadTaskInfo()
-		: status(DownloadStatus::Queued)
+		: context(nullptr)
+		, status(DownloadStatus::Queued)
 		, downloadPeriod(DownloadPeriod::Prepare)
 	{
 	}
@@ -35,6 +36,11 @@ public:
 	bool operator==(const DownloadTaskInfo& other) const
 	{
 		return taskId == other.taskId;
+	}
+
+	void createContext()
+	{
+		context = new DownloadContext();
 	}
 
 	// 估计剩余时间

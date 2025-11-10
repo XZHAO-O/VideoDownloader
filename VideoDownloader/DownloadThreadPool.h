@@ -54,12 +54,14 @@ public:
 		return false;
 	}
 
-	void releaseThread(T downloadWorker, bool quitThread = false)
+	void releaseThread(T downloadWorker, QThread* targetThread = QThread::currentThread(), bool quitThread = false)
 	{
 		auto it = m_downloadThreadPool.find(downloadWorker);
 		if (it != m_downloadThreadPool.end())
 		{
 			QThread* thread = it.value();
+
+			getPointer(downloadWorker)->moveToThread(targetThread);
 
 			if (m_downloadThreadPool.size() <= MAX_POOL_SIZE)
 			{
@@ -101,6 +103,20 @@ public:
 	int getPoolSize() const { return m_downloadThreadPool.size(); }
 
 private:
+	//QObject* getQObject(T worker) const
+	//{
+	//	if constexpr (std::is_pointer<T>::value) {
+	//		if constexpr (std::is_base_of<QObject, std::remove_pointer_t<T>>::value) {
+	//			return static_cast<QObject*>(worker);
+	//		}
+	//	}
+	//	else {
+	//		if constexpr (std::is_base_of<QObject, T>::value) {
+	//			return static_cast<QObject*>(&worker);
+	//		}
+	//	}
+	//	return nullptr;
+	//}
 	// 获取对象的指针
 	auto getPointer(T worker) const
 	{

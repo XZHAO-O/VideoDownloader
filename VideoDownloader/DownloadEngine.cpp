@@ -45,7 +45,7 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		auto task = *downloadingTask;
 		task->status = DownloadStatus::Paused;
 
-		QMetaObject::invokeMethod(&(task->context), "stopDownload");
+		QMetaObject::invokeMethod(task->context, "stopDownload");
 
 		m_downloadingTasks.erase(downloadingTask);
 		m_queuedTasks.push_back(task);
@@ -77,7 +77,7 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	if (downloadingTask != m_downloadingTasks.end())
 	{
 		auto task = *downloadingTask;
-		QMetaObject::invokeMethod(&(task->context), "stopDownload");
+		QMetaObject::invokeMethod(task->context, "stopDownload");
 		m_downloadingTasks.erase(downloadingTask);
 		endDownloadContext(task);
 		startDownload();
@@ -116,10 +116,12 @@ void DownloadEngine::startDownload()
 		m_tasks.remove(task->taskId);
 		m_downloadingTasks.insert(task->taskId, task);
 
-		auto context = &(task->context);
-		m_downloadThreadPool.allocateThread(context);
+		//创建downloadcontext
+		if (!task->context)
+			task->createContext();
+		m_downloadThreadPool.allocateThread(task->context);
 		//connect(context, &DownloadContext::downloadFinished, this, &DownloadEngine::processDownloadingTasks);
-		QMetaObject::invokeMethod(context, "startDownload", m_networkManager);
+		QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
 
 	}
 }
@@ -133,11 +135,11 @@ void DownloadEngine::processDownloadingTasks()
 		{
 		case DownloadStatus::Downloading:
 		{
-			qint64 downloadedBytes = task->context.downloadedTotalSize;
-			QString progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, task->context.fileSize);
-			int progress = downloadedBytes * 100 / task->context.fileSize;
-			QString downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - task->context.progressedSize);
-			task->context.progressedSize = downloadedBytes;
+			qint64 downloadedBytes = task->context->downloadedTotalSize;
+			QString progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, task->context->fileSize);
+			int progress = downloadedBytes * 100 / task->context->fileSize;
+			QString downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - task->context->progressedSize);
+			task->context->progressedSize = downloadedBytes;
 			emit downloadProgress(task->taskId, progressInfo, progress, downloadSpeed);
 		}
 
@@ -164,8 +166,7 @@ void DownloadEngine::processFailedTasks(QSharedPointer<DownloadTaskInfo> task)
 
 void DownloadEngine::endDownloadContext(QSharedPointer<DownloadTaskInfo> task)
 {
-	auto context = &(task->context);
-	m_downloadThreadPool.releaseThread(context);
-	context->moveToThread(QThread::currentThread());
-	disconnect(context, nullptr, this, nullptr);
+	m_downloadThreadPool.releaseThread(task->context);
+	task->context->moveToThread(QThread::currentThread());
+	disconnect(task->context, nullptr, this, nullptr);
 }
