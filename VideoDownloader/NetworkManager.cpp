@@ -54,7 +54,7 @@ NetworkManager::~NetworkManager()
 	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
 	{
 		it.value()->abort();
-		it.value()->deleteLater();
+		delete it.value();
 	}
 }
 

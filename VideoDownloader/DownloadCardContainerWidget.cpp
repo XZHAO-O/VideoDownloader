@@ -248,7 +248,10 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 		card->disconnect();
 
 		connect(card, &DownloadCard::pauseClicked, this, [this, taskInfo]() {
-			QMetaObject::invokeMethod(m_downloadEngine.get(), "pauseDownload", taskInfo->taskId);
+			auto downloadEngine = m_downloadEngine.get();
+			QMetaObject::invokeMethod(downloadEngine, [this, downloadEngine, taskInfo]() {
+				downloadEngine->pauseDownload(taskInfo->taskId);
+				}, Qt::QueuedConnection);
 			});
 
 		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
@@ -256,7 +259,10 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
-			QMetaObject::invokeMethod(m_downloadEngine.get(), "cancelDownload", taskInfo->taskId);
+			auto downloadEngine = m_downloadEngine.get();
+			QMetaObject::invokeMethod(downloadEngine, [this, downloadEngine, taskInfo]() {
+				downloadEngine->cancelDownload(taskInfo->taskId);
+				}, Qt::QueuedConnection);
 			// 从任务列表中移除
 			m_downloadTasks.removeOne(taskInfo);
 

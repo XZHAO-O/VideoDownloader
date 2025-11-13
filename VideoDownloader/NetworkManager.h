@@ -34,6 +34,10 @@ struct NetworkReply
 	{
 		if (reply)
 		{
+			if (reply->isRunning())
+			{
+				reply->abort();
+			}
 			delete reply;
 			reply = nullptr;
 		}

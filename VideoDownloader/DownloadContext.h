@@ -64,8 +64,6 @@ public:
 		clearNetworkResources();
 	}
 
-public slots:
-
 	void startDownload(QSharedPointer<NetworkManager> networkManager)
 	{
 		this->networkManager = networkManager;
@@ -112,6 +110,7 @@ public slots:
 				if (file->isOpen())
 				{
 					file->close();
+					file->remove();
 				}
 				file->deleteLater();
 			}
@@ -222,7 +221,7 @@ private:
 		if (fileSize > 0)
 		{
 			if (fileSize < 50 * StringUtil::MB)
-				totalPart = 1;
+				totalPart = 5;
 			else
 			{
 				if (fileSize < 100 * StringUtil::MB)

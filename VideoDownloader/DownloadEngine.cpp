@@ -31,7 +31,7 @@ DownloadEngine::~DownloadEngine()
 void DownloadEngine::addDownloadTask(QSharedPointer<DownloadTaskInfo> task)
 {
 	m_queuedTasks.push_back(task);
-	m_tasks.insert(task->taskId, m_queuedTasks.end());
+	m_tasks.insert(task->taskId, --m_queuedTasks.end());
 	if (!m_downloadTimer->isActive())
 		m_downloadTimer->start();
 	startDownload();
@@ -45,11 +45,13 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		auto task = *downloadingTask;
 		task->status = DownloadStatus::Paused;
 
-		QMetaObject::invokeMethod(task->context, "stopDownload");
+		QMetaObject::invokeMethod(task->context, [this, task]() {
+			task->context->stopDownload();
+			}, Qt::QueuedConnection);
 
 		m_downloadingTasks.erase(downloadingTask);
 		m_queuedTasks.push_back(task);
-		m_tasks.insert(task->taskId, m_queuedTasks.end());
+		m_tasks.insert(task->taskId, --m_queuedTasks.end());
 
 		endDownloadContext(task);
 		startDownload();
@@ -62,7 +64,7 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 			(*task)->status = DownloadStatus::Paused;
 			m_queuedTasks.erase(task);
 			m_queuedTasks.push_back(*task);
-			m_tasks[taskId] = m_queuedTasks.end();
+			m_tasks[taskId] = --m_queuedTasks.end();
 		}
 	}
 }
@@ -77,18 +79,22 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	if (downloadingTask != m_downloadingTasks.end())
 	{
 		auto task = *downloadingTask;
-		QMetaObject::invokeMethod(task->context, "stopDownload");
+		QMetaObject::invokeMethod(task->context, [this, task]() {
+			task->context->stopDownload();
+			}, Qt::QueuedConnection);
+
 		m_downloadingTasks.erase(downloadingTask);
 		endDownloadContext(task);
 		startDownload();
 	}
 	else
 	{
-		auto task = m_tasks.find(taskId);
-		if (task != m_tasks.end())
+		auto it = m_tasks.find(taskId);
+		if (it != m_tasks.end())
 		{
-			m_queuedTasks.erase(*task);
-			m_tasks.erase(task);
+			auto task = *it;
+			m_tasks.erase(it);
+			m_queuedTasks.erase(task);
 		}
 	}
 }
@@ -120,7 +126,9 @@ void DownloadEngine::startDownload()
 		if (!task->context)
 			task->createContext();
 		m_downloadThreadPool.allocateThread(task->context);
-		QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
+		QMetaObject::invokeMethod(task->context, [this, task]() {
+			task->context->startDownload(m_networkManager);
+			}, Qt::QueuedConnection);
 	}
 }
 
