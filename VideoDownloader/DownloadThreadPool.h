@@ -61,7 +61,11 @@ public:
 		{
 			QThread* thread = it.value();
 
-			getPointer(downloadWorker)->moveToThread(targetThread);
+			auto workerObj = getPointer(downloadWorker);
+
+			QMetaObject::invokeMethod(workerObj, [workerObj, targetThread]() {
+				workerObj->moveToThread(targetThread);
+				}, Qt::BlockingQueuedConnection);
 
 			if (m_downloadThreadPool.size() <= MAX_POOL_SIZE)
 			{

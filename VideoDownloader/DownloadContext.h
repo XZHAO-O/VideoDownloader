@@ -64,6 +64,8 @@ public:
 		clearNetworkResources();
 	}
 
+public slots:
+
 	void startDownload(QSharedPointer<NetworkManager> networkManager)
 	{
 		this->networkManager = networkManager;
@@ -76,7 +78,7 @@ public:
 			addFile(new QFile(fileName + QString(".part%1").arg(i)), i);
 
 			qint64 rangeStart = i * partSize;
-			qint64 rangeEnd = (i == totalPart - 1) ? fileSize : (i + 1) * partSize;
+			qint64 rangeEnd = (i == totalPart - 1) ? fileSize - 1 : (i + 1) * partSize - 1;
 
 			//平台header待增加
 			QNetworkRequest request = networkManager->setRequest(url);
@@ -146,6 +148,7 @@ private:
 			partFile->remove();
 			delete partFile; // 清理内存
 			files[i] = nullptr;
+			files.remove(i);
 		}
 		file->close();
 
@@ -169,10 +172,9 @@ private:
 			qDebug() << "重命名失败";
 		}
 
-		delete file; // 清理内存
+		delete file;
 		files[0] = nullptr;
-
-		files.clear();
+		files.remove(0);
 	}
 
 	void initNetworkResources()
@@ -186,7 +188,7 @@ private:
 		if (accessManager)
 		{
 			accessManager->disconnect();
-			accessManager->deleteLater();
+			delete accessManager;
 			accessManager = nullptr;
 		}
 
@@ -208,7 +210,8 @@ private:
 			{
 				if (file->isOpen())
 					file->close();
-				file->deleteLater();
+				delete file;
+				file = nullptr;
 			}
 		}
 		files.clear();
@@ -260,8 +263,8 @@ private:
 	void setupReplyConnections(QNetworkReply* reply, int partNumber)
 	{
 		// 连接 readyRead 信号
-		QObject::connect(reply, &QNetworkReply::readyRead, this, [this, reply, partNumber]() {
-			onReadyRead(reply, partNumber);
+		QObject::connect(reply, &QNetworkReply::readyRead, this, [this, partNumber]() {
+			onReadyRead(partNumber);
 			});
 
 		// 连接 downloadProgress 信号
@@ -298,14 +301,27 @@ private:
 	}
 
 private slots:
-	void onReadyRead(QNetworkReply* reply, int partNumber)
+	void onReadyRead(int partNumber)
 	{
+		QNetworkReply* reply = replys[partNumber];
 		QFile* file = files[partNumber];
+
 		if (!file->isOpen())
 		{
-			file->open(QIODevice::WriteOnly | QIODevice::Append);
+			if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
+			{
+				qDebug() << "无法打开文件:" << fileName + QString(".part%1").arg(partNumber);
+				return;
+			}
 		}
-		file->write(reply->readAll());
+
+		QByteArray data = reply->readAll();
+		qint64 bytesWritten = file->write(data);
+
+		if (bytesWritten != data.size())
+		{
+			qDebug() << "写入数据不完整，分片:" << partNumber << "期望:" << data.size() << "实际:" << bytesWritten;
+		}
 	}
 
 	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int partNumber)
@@ -314,13 +330,6 @@ private slots:
 		int downloaded = bytesReceived - downloadedSize[partNumber];
 		downloadedTotalSize += downloaded;
 		downloadedSize[partNumber] = bytesReceived;
-
-		QFile* file = files[partNumber];
-		QNetworkReply* reply = replys[partNumber];
-		if (file && file->isOpen() && reply)
-		{
-			file->write(reply->readAll());
-		}
 	}
 
 	void onFinished(int partNumber)
@@ -328,44 +337,34 @@ private slots:
 		QNetworkReply* reply = replys[partNumber];
 		QFile* file = files[partNumber];
 
-		bool success = false;
-		QString errorString;
-
-		if (reply && reply->error() == QNetworkReply::NoError) {
+		if (reply->error() == QNetworkReply::NoError)
+		{
 			// 确保所有数据都已写入
-			if (file && file->isOpen()) {
+			if (file->isOpen())
+			{
 				file->write(reply->readAll());
 				file->close();
 			}
-			success = true;
 			downloadedPart++;
 
 			qDebug() << "Part" << partNumber << "download completed:" << fileName;
 		}
-		else {
-			if (reply) {
-				errorString = reply->errorString();
-			}
-			if (file && file->isOpen()) {
-				file->close();
-			}
-			// 删除不完整的文件
-			if (file) {
-				file->remove();
-			}
+		else
+		{
+			onErrorOccurred(partNumber);
 		}
 
-		if (reply) {
-			reply->deleteLater();
-			replys.remove(partNumber);
-		}
+		QObject::disconnect(reply, nullptr, this, nullptr);
+		delete reply;
+		replys[partNumber] = nullptr;
+		replys.remove(partNumber);
 
 		if (downloadedPart == totalPart)
 		{
 			// 所有分片下载完成，合并文件
 			mergeFiles();
+			clearNetworkResources();
 			downloadStatus = DownloadStatus::Completed;
-			//emit downloadFinished();
 		}
 	}
 
@@ -376,10 +375,9 @@ private slots:
 		networkManager->getErrorString(reply);
 		qDebug() << "Part" << partNumber << "download error:" << reply->error() << "for file" << fileName;
 
-		if (file && file->isOpen()) {
+		if (file->isOpen())
+		{
 			file->close();
-		}
-		if (file) {
 			file->remove();
 		}
 	}

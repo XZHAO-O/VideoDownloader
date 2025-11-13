@@ -120,43 +120,53 @@ void DownloadEngine::startDownload()
 		if (!task->context)
 			task->createContext();
 		m_downloadThreadPool.allocateThread(task->context);
-		connect(this, &DownloadEngine::startDownloadContext, task->context, &DownloadContext::startDownload);
-		//QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
-		emit startDownloadContext(m_networkManager);
-
+		QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
 	}
 }
 
 void DownloadEngine::processDownloadingTasks()
 {
+	QList<QString> completedTasks;
+
 	for (auto it = m_downloadingTasks.begin(); it != m_downloadingTasks.end(); ++it)
 	{
 		auto task = *it;
 
 		if (task->status == DownloadStatus::Downloading)
 		{
+			if (task->context->downloadStatus == DownloadStatus::Completed)
+			{
+				completedTasks.append(task->taskId);
+				endDownloadContext(task);
+				emit downloadFinished(task->taskId);
+				continue;
+			}
+
+			if (task->context->downloadStatus == DownloadStatus::Failed)
+			{
+				completedTasks.append(task->taskId);
+				processFailedTasks(task);
+				continue;
+			}
+
 			qint64 downloadedBytes = task->context->downloadedTotalSize;
 			QString progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, task->context->fileSize);
 			int progress = downloadedBytes * 100 / task->context->fileSize;
 			QString downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - task->context->progressedSize);
 			task->context->progressedSize = downloadedBytes;
 			emit downloadProgress(task->taskId, progressInfo, progress, downloadSpeed);
-
-			if (task->context->downloadStatus == DownloadStatus::Completed)
-			{
-				endDownloadContext(task);
-				m_downloadingTasks.erase(it);
-				emit downloadFinished(task->taskId);
-				startDownload();
-			}
-
-			if (task->context->downloadStatus == DownloadStatus::Failed)
-			{
-				processFailedTasks(task);
-				m_downloadingTasks.erase(it);
-				startDownload();
-			}
 		}
+	}
+
+	// 在循环外移除已完成任务
+	for (const QString& taskId : completedTasks)
+	{
+		m_downloadingTasks.remove(taskId);
+	}
+
+	if (!completedTasks.isEmpty())
+	{
+		startDownload();
 	}
 }
 
@@ -168,6 +178,6 @@ void DownloadEngine::processFailedTasks(QSharedPointer<DownloadTaskInfo> task)
 void DownloadEngine::endDownloadContext(QSharedPointer<DownloadTaskInfo> task)
 {
 	m_downloadThreadPool.releaseThread(task->context);
-	task->context->moveToThread(QThread::currentThread());
+	//task->context->moveToThread(QThread::currentThread());
 	disconnect(task->context, nullptr, this, nullptr);
 }
