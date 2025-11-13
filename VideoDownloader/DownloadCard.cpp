@@ -778,7 +778,7 @@ void DownloadCard::updateDownloadingUI()
 
 	m_progressBar->setValue(m_model->progress());
 
-	m_speedLabel->setText(StringUtil::formatDownloadSpeed(m_model->downloadSpeed()));
+	m_speedLabel->setText(m_model->downloadSpeed());
 
 	m_progressInfoLabel->setText(m_model->progressInfo());
 }

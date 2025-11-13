@@ -25,6 +25,8 @@ public:
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
 	QDateTime endTime;
+	qint64 fileSize;
+	bool partialDownloadSupport;
 
 	DownloadTaskInfo()
 		: context(nullptr)
@@ -40,7 +42,9 @@ public:
 
 	void createContext()
 	{
-		context = new DownloadContext();
+		context = new DownloadContext("E:/CProject/" + videoInfo.title, request.videoPlayUrl);
+		context->fileSize = fileSize;
+		context->partialDownloadSupport = partialDownloadSupport;
 	}
 
 	// 估计剩余时间

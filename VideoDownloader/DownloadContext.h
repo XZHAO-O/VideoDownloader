@@ -3,6 +3,7 @@
 #include <atomic>
 #include <QNetworkReply>
 #include <QFile>
+#include <QFileInfo>
 #include <QObject>
 
 #include "NetworkManager.h"
@@ -28,7 +29,7 @@ public:
 	QHash<int, QNetworkReply*> replys;
 	QHash<int, QFile*> files;
 	QString fileName;
-	QString url;
+	QUrl url;
 	std::atomic<int> downloadedPart;
 	int totalPart;
 	qint64 progressedSize;
@@ -39,7 +40,7 @@ public:
 	bool partialDownloadSupport;
 	bool active;
 
-	DownloadContext(QString fileName = "", QString url = "", int totalPart = 3, QList<qint64> downloadedSize = QList<qint64>(), qint64 downloadedTotalSize = 0, qint64 fileSize = 0)
+	DownloadContext(QString fileName = "", QUrl url = QUrl(""), int totalPart = 3)
 		: QObject(nullptr)
 		, accessManager(nullptr)
 		, replys(QHash<int, QNetworkReply*>())
@@ -49,14 +50,13 @@ public:
 		, progressedSize(0)
 		, downloadedPart(0)
 		, totalPart(totalPart)
-		, downloadedSize(downloadedSize)
-		, downloadedTotalSize(downloadedTotalSize)
-		, fileSize(fileSize)
+		, downloadedSize(QList<qint64>(totalPart, 0))
+		, downloadedTotalSize(0)
+		, fileSize(0)
 		, downloadStatus(DownloadStatus::Queued)
 		, partialDownloadSupport(false)
 		, active(false)
 	{
-
 	}
 
 	~DownloadContext()
@@ -81,6 +81,8 @@ public:
 			//平台header待增加
 			QNetworkRequest request = networkManager->setRequest(url);
 			request.setRawHeader("Range", QString("bytes=%1-%2").arg(rangeStart).arg(rangeEnd).toUtf8());
+			request.setRawHeader("Referer", "https://www.bilibili.com");
+			request.setRawHeader("Origin", "https://www.bilibili.com");
 			QNetworkReply* reply = accessManager->get(request);
 			addNetworkReply(reply, i);
 		}
@@ -118,21 +120,59 @@ private:
 
 	void mergeFiles()
 	{
-		QFile* file = new QFile(fileName);
-		if (file->open(QIODevice::WriteOnly))
+		QFile* file = files[0];
+		if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
 		{
-			for (int i = 0; i < totalPart; i++)
-			{
-				QFile* partFile = files[i];
-				if (partFile->open(QIODevice::ReadOnly))
-				{
-					file->write(partFile->readAll());
-					partFile->close();
-				}
-				partFile->remove();
-			}
-			file->close();
+			qDebug() << "无法打开文件:" << fileName;
+			return;
 		}
+		for (int i = 1; i < totalPart; i++)
+		{
+			QFile* partFile = files[i];
+			if (!partFile->open(QIODevice::ReadOnly))
+			{
+				qDebug() << "无法打开文件:" << fileName + QString(".part%1").arg(i);
+				return;
+			}
+			QByteArray data = partFile->readAll();
+			qint64 bytesWritten = file->write(data);
+
+			if (bytesWritten != data.size())
+			{
+				qDebug() << "写入数据不完整，分片:" << i;
+				return;
+			}
+			partFile->close();
+			partFile->remove();
+			delete partFile; // 清理内存
+			files[i] = nullptr;
+		}
+		file->close();
+
+		// 获取原文件名（不含后缀）
+		QFileInfo fileInfo(fileName);
+		QString baseName = fileInfo.completeBaseName(); // 获取不含后缀的文件名
+		QString dirPath = fileInfo.absolutePath();
+
+		// 构造新的.mp4文件路径
+		QString newFilePath = dirPath + "/" + baseName + ".mp4";
+
+		// 重命名文件 逻辑待修改
+		if (QFile::exists(newFilePath))
+		{
+			QString timestamp = QDateTime::currentDateTime().toString("_yyyyMMdd_hhmmss");
+			newFilePath = dirPath + "/" + baseName + timestamp + ".mp4";
+		}
+
+		if (!file->rename(newFilePath))
+		{
+			qDebug() << "重命名失败";
+		}
+
+		delete file; // 清理内存
+		files[0] = nullptr;
+
+		files.clear();
 	}
 
 	void initNetworkResources()
@@ -261,10 +301,11 @@ private slots:
 	void onReadyRead(QNetworkReply* reply, int partNumber)
 	{
 		QFile* file = files[partNumber];
-		if (file && file->isOpen() && reply)
+		if (!file->isOpen())
 		{
-			file->write(reply->readAll());
+			file->open(QIODevice::WriteOnly | QIODevice::Append);
 		}
+		file->write(reply->readAll());
 	}
 
 	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int partNumber)
@@ -273,6 +314,13 @@ private slots:
 		int downloaded = bytesReceived - downloadedSize[partNumber];
 		downloadedTotalSize += downloaded;
 		downloadedSize[partNumber] = bytesReceived;
+
+		QFile* file = files[partNumber];
+		QNetworkReply* reply = replys[partNumber];
+		if (file && file->isOpen() && reply)
+		{
+			file->write(reply->readAll());
+		}
 	}
 
 	void onFinished(int partNumber)
@@ -309,13 +357,15 @@ private slots:
 
 		if (reply) {
 			reply->deleteLater();
+			replys.remove(partNumber);
 		}
 
 		if (downloadedPart == totalPart)
 		{
 			// 所有分片下载完成，合并文件
 			mergeFiles();
-			emit downloadFinished();
+			downloadStatus = DownloadStatus::Completed;
+			//emit downloadFinished();
 		}
 	}
 

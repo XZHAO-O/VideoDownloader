@@ -120,8 +120,9 @@ void DownloadEngine::startDownload()
 		if (!task->context)
 			task->createContext();
 		m_downloadThreadPool.allocateThread(task->context);
-		//connect(context, &DownloadContext::downloadFinished, this, &DownloadEngine::processDownloadingTasks);
-		QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
+		connect(this, &DownloadEngine::startDownloadContext, task->context, &DownloadContext::startDownload);
+		//QMetaObject::invokeMethod(task->context, "startDownload", m_networkManager);
+		emit startDownloadContext(m_networkManager);
 
 	}
 }
@@ -131,9 +132,8 @@ void DownloadEngine::processDownloadingTasks()
 	for (auto it = m_downloadingTasks.begin(); it != m_downloadingTasks.end(); ++it)
 	{
 		auto task = *it;
-		switch (task->status)
-		{
-		case DownloadStatus::Downloading:
+
+		if (task->status == DownloadStatus::Downloading)
 		{
 			qint64 downloadedBytes = task->context->downloadedTotalSize;
 			QString progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, task->context->fileSize);
@@ -141,20 +141,21 @@ void DownloadEngine::processDownloadingTasks()
 			QString downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - task->context->progressedSize);
 			task->context->progressedSize = downloadedBytes;
 			emit downloadProgress(task->taskId, progressInfo, progress, downloadSpeed);
-		}
 
-		break;
-		case DownloadStatus::Completed:
-			endDownloadContext(task);
-			m_downloadingTasks.erase(it);
-			emit downloadFinished(task->taskId);
-			startDownload();
-			break;
-		case DownloadStatus::Failed:
-			processFailedTasks(task);
-			m_downloadingTasks.erase(it);
-			startDownload();
-			break;
+			if (task->context->downloadStatus == DownloadStatus::Completed)
+			{
+				endDownloadContext(task);
+				m_downloadingTasks.erase(it);
+				emit downloadFinished(task->taskId);
+				startDownload();
+			}
+
+			if (task->context->downloadStatus == DownloadStatus::Failed)
+			{
+				processFailedTasks(task);
+				m_downloadingTasks.erase(it);
+				startDownload();
+			}
 		}
 	}
 }

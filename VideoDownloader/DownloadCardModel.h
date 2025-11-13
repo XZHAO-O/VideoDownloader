@@ -24,7 +24,7 @@ class DownloadCardModel : public QObject
 		Q_PROPERTY(DownloadCardState state READ state WRITE setState NOTIFY stateChanged)
 		Q_PROPERTY(QString progressInfo READ progressInfo WRITE setProgressInfo NOTIFY progressInfoChanged)
 		Q_PROPERTY(int progress READ progress WRITE setProgress NOTIFY progressChanged)
-		Q_PROPERTY(qint64 downloadSpeed READ downloadSpeed WRITE setDownloadSpeed NOTIFY downloadSpeedChanged)
+		Q_PROPERTY(QString downloadSpeed READ downloadSpeed WRITE setDownloadSpeed NOTIFY downloadSpeedChanged)
 		Q_PROPERTY(QString filePath READ filePath WRITE setFilePath NOTIFY filePathChanged)
 		Q_PROPERTY(VideoQualityLevel videoQuality READ videoQuality WRITE setVideoQuality NOTIFY videoQualityChanged)
 		Q_PROPERTY(AudioQualityLevel audioQuality READ audioQuality WRITE setAudioQuality NOTIFY audioQualityChanged)
@@ -46,7 +46,7 @@ public:
 	const DownloadCardState& state() const { return m_state; }
 	const QString& progressInfo() const { return m_progressInfo; }
 	const int& progress() const { return m_progress; }
-	const qint64& downloadSpeed() const { return m_downloadSpeed; }
+	const QString& downloadSpeed() const { return m_downloadSpeed; }
 	const QString& filePath() const { return m_filePath; }
 	const VideoQualityLevel& videoQuality() const { return m_videoQuality; }
 	const AudioQualityLevel& audioQuality() const { return m_audioQuality; }
@@ -64,7 +64,7 @@ public:
 	void setState(DownloadCardState state);
 	void setProgressInfo(const QString& progressInfo);
 	void setProgress(int progress);
-	void setDownloadSpeed(qint64 downloadSpeed);
+	void setDownloadSpeed(const QString& downloadSpeed);
 	void setFilePath(const QString& filePath);
 	void setVideoQuality(VideoQualityLevel quality);
 	void setAudioQuality(AudioQualityLevel quality);
@@ -103,7 +103,7 @@ private:
 	DownloadCardState m_state = DownloadCardState::Pending;
 	QString m_progressInfo;
 	int m_progress = 0;
-	qint64 m_downloadSpeed = 0;
+	QString m_downloadSpeed = 0;
 	QString m_filePath;
 	VideoQualityLevel m_videoQuality = VideoQualityLevel::High;
 	AudioQualityLevel m_audioQuality = AudioQualityLevel::High;

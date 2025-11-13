@@ -78,7 +78,7 @@ void DownloadCardModel::setProgress(int progress)
 	emit progressChanged();
 }
 
-void DownloadCardModel::setDownloadSpeed(qint64 downloadSpeed)
+void DownloadCardModel::setDownloadSpeed(const QString& downloadSpeed)
 {
 	m_downloadSpeed = downloadSpeed;
 	emit downloadSpeedChanged();

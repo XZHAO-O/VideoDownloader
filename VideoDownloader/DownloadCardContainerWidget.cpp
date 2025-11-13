@@ -540,9 +540,14 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed)
 {
 	// 处理下载进度更新
-	auto card = m_downloadCards.find(taskId);
-	if (card != m_downloadCards.end())
+	auto it = m_downloadCards.find(taskId);
+	if (it != m_downloadCards.end())
 	{
+		auto card = *it;
+		card->model()->setProgressInfo(progressInfo);
+		card->model()->setProgress(progress);
+		card->model()->setDownloadSpeed(downloadSpeed);
+		card->updateUI();
 		//card->second->updateProgress(progress, downloadSpeed);
 	}
 }
