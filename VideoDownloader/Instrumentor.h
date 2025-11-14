@@ -221,7 +221,9 @@ private:
 	bool m_Stopped;
 };
 
-#if defined(_DEBUG)
+#define BENCHMARK
+
+#if defined(BENCHMARK)
 // 平台特定的函数签名宏
 #if defined(_WIN32)
 #define FUNC_SIG __FUNCSIG__

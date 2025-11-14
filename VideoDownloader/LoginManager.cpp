@@ -67,7 +67,7 @@ bool LoginManager::isQRCodeLoginActive() const
 bool LoginManager::loadSavedCookies()
 {
 	if (CookieManageUtil::loadCookies(m_modInfo.modId, m_modPath, m_isLoggedIn, m_cookie)) {
-		LOG_INFO("LoginManager", "Loaded saved cookies, login status: %d", loginStatus);
+		LOG_INFO("LoginManager", QString("Loaded saved cookies, login status: %1").arg(m_isLoggedIn));
 		emit loginStateChanged(m_isLoggedIn);
 		emit cookieUpdated(m_cookie);
 		return true;
@@ -154,7 +154,7 @@ QUrl LoginManager::generateQRCode()
 		return qrCodeUrl;
 	}
 	catch (const std::exception& e) {
-		LOG_ERROR("LoginManager", "Failed to generate QR code: %s", e.what());
+		LOG_ERROR("LoginManager", QString("Failed to generate QR code: %1").arg(e.what()));
 		emit loginFailed(QString("生成二维码失败: %1").arg(e.what()));
 		m_isQRCodeLoginActive = false;
 		return QUrl();
@@ -211,7 +211,7 @@ void LoginManager::pollQRCodeStatus()
 		int statusCode = extractJsonValue(rootObj, statusPath).toInt();
 		QString message = rootObj["message"].toString();
 
-		LOG_INFO("LoginManager", "QR code status: %d - %s", statusCode, message.toUtf8().constData());
+		LOG_INFO("LoginManager", QString("QR code status: %1 - %2").arg(statusCode).arg(message.toUtf8().constData()));
 
 		// 根据状态码处理不同情况
 		if (statusCode == statusCodes.value("success").toInt())
@@ -243,7 +243,7 @@ void LoginManager::pollQRCodeStatus()
 
 	}
 	catch (const std::exception& e) {
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: %s", e.what());
+		LOG_ERROR("LoginManager", QString("Failed to poll QR code status: %1").arg(e.what()));
 		// 不停止轮询，继续尝试
 	}
 }
@@ -288,7 +288,7 @@ void LoginManager::handleQRCodeLoginSuccess(const QJsonObject& data)
 
 	}
 	catch (const std::exception& e) {
-		LOG_ERROR("LoginManager", "Failed to handle QR code login success: %s", e.what());
+		LOG_ERROR("LoginManager", QString("Failed to handle QR code login success: %1").arg(e.what()));
 		emit loginFailed(QString("处理登录成功数据失败: %1").arg(e.what()));
 	}
 }

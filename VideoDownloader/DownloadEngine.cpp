@@ -46,7 +46,7 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		task->status = DownloadStatus::Paused;
 
 		QMetaObject::invokeMethod(task->context, [this, task]() {
-			task->context->stopDownload();
+			task->context->pauseDownload();
 			}, Qt::QueuedConnection);
 
 		m_downloadingTasks.erase(downloadingTask);
@@ -80,7 +80,7 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	{
 		auto task = *downloadingTask;
 		QMetaObject::invokeMethod(task->context, [this, task]() {
-			task->context->stopDownload();
+			task->context->cancelDownload();
 			}, Qt::QueuedConnection);
 
 		m_downloadingTasks.erase(downloadingTask);

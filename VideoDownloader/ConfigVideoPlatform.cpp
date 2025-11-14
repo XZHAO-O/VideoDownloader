@@ -7,6 +7,7 @@
 #include "NetworkManager.h"
 #include "DownloadTaskInfo.h"
 #include "AntMessageManager.h"
+#include "Instrumentor.h"
 
 ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager,
 	QObject* parent)
@@ -41,14 +42,14 @@ bool ConfigVideoPlatform::matchesUrl(const QString& url) const
 
 QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 {
-	LOG_INFO("ConfigVideoPlatform", "Getting video info for: %s", url.toUtf8().constData());
+	LOG_INFO("ConfigVideoPlatform", QString("Getting video info for: %1").arg(url.toUtf8().constData()));
 
 	QString videoId = extractVideoId(url);
 	QString apiUrl = m_modInfo.getApiEndpoint("videoInfo");
 
 	if (apiUrl.isEmpty())
 	{
-		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", "视频信息API未设置");
+		LOG_ERROR("ConfigVideoPlatform", QString("Failed to get video info: %1").arg("视频信息API未设置"));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "视频信息API未设置");
 		return {};
 	}
@@ -78,7 +79,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 
 	if (!response.success)
 	{
-		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", response.errorString);
+		LOG_ERROR("ConfigVideoPlatform", QString("Failed to get video info: %1").arg(response.errorString));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, response.errorString);
 		return {};
 	}
@@ -86,7 +87,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
 	if (doc.isNull())
 	{
-		LOG_ERROR("ConfigVideoPlatform", "Failed to get video info: %s", "JSON数据异常!");
+		LOG_ERROR("ConfigVideoPlatform", QString("Failed to get video info: %1").arg("JSON数据异常!"));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "JSON数据异常!");
 		return {};
 	}
@@ -102,6 +103,7 @@ void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInf
 
 void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
+	BENCHMARKING_FUNCTION();
 	StreamRequest request = taskInfo->streamRequest;
 	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
 
@@ -164,19 +166,19 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	// 获取对象
 	QJsonObject obj = doc.object();
 	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
-	LOG_INFO("ConfigVideoPlatform", "Video Play Url retrieved: %s", videoPlayUrl.toUtf8().constData());
+	LOG_INFO("ConfigVideoPlatform", QString("Video Play Url retrieved: %1").arg(videoPlayUrl.toString().toUtf8().constData()));
 
 	taskInfo->request.videoPlayUrl = videoPlayUrl;
 
-	NetworkReply reply = m_networkManager->getReplyWithLoop(videoPlayUrl, headers);
-	if (!reply.success)
+	NetworkReplyHeader replyHeader = m_networkManager->getReplyWithLoop(videoPlayUrl, headers);
+	if (!replyHeader.success)
 	{
 		//在主线程显示，会触发断言
 		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, reply.errorString);
 		return;
 	}
-	taskInfo->fileSize = reply.getContentLength();
-	if (reply.getAcceptRanges() == "bytes" && taskInfo->fileSize > 0)
+	taskInfo->fileSize = replyHeader.getContentLength();
+	if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->fileSize > 0)
 		taskInfo->partialDownloadSupport = true;
 	else
 		taskInfo->partialDownloadSupport = false;
@@ -186,8 +188,7 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo&
 {
 	return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
 		try {
-			LOG_INFO("ConfigVideoPlatform", "Getting video streams for: %s",
-				videoInfo.title.toUtf8().constData());
+			//LOG_INFO("ConfigVideoPlatform", QString("Getting video streams for: %1").arg(videoInfo.title.toUtf8().constData()));
 
 			QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
 			if (apiUrl.isEmpty()) {
@@ -211,14 +212,14 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo&
 
 			QList<StreamInfo> streams = parseStreams(doc.object(), StreamType::Video);
 
-			LOG_INFO("ConfigVideoPlatform", "Retrieved %d video streams", streams.size());
+			//LOG_INFO("ConfigVideoPlatform", QString("Retrieved %1 video streams").arg(streams.size()));
 			emit streamsReceived(streams);
 
 			return streams;
 
 		}
 		catch (const std::exception& e) {
-			LOG_ERROR("ConfigVideoPlatform", "Failed to get video streams: %s", e.what());
+			//LOG_ERROR("ConfigVideoPlatform", "Failed to get video streams: %s", e.what());
 			emit errorOccurred(QString("Failed to get video streams: %1").arg(e.what()));
 			throw;
 		}
@@ -227,104 +228,106 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo&
 
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request)
 {
-	return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
-		try {
-			LOG_INFO("ConfigVideoPlatform", "Getting audio streams for: %s",
-				videoInfo.title.toUtf8().constData());
+	//return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
+	//	try {
+	//		LOG_INFO("ConfigVideoPlatform", "Getting audio streams for: %s",
+	//			videoInfo.title.toUtf8().constData());
 
-			QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
-			if (apiUrl.isEmpty()) {
-				throw std::runtime_error("Play URL API endpoint not configured");
-			}
+	//		QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
+	//		if (apiUrl.isEmpty()) {
+	//			throw std::runtime_error("Play URL API endpoint not configured");
+	//		}
 
-			// 构建请求参数
-			QVariantMap params = buildRequestParams(videoInfo, request);
-			QVariantMap headers = m_modInfo.getRequestHeaders();
+	//		// 构建请求参数
+	//		QVariantMap params = buildRequestParams(videoInfo, request);
+	//		QVariantMap headers = m_modInfo.getRequestHeaders();
 
-			// 发送请求
-			NetworkResponse response = m_networkManager->get(apiUrl, headers);
-			if (!response.success) {
-				throw std::runtime_error(response.errorString.toStdString());
-			}
+	//		// 发送请求
+	//		NetworkResponse response = m_networkManager->get(apiUrl, headers);
+	//		if (!response.success) {
+	//			throw std::runtime_error(response.errorString.toStdString());
+	//		}
 
-			QJsonDocument doc = QJsonDocument::fromJson(response.data);
-			if (doc.isNull()) {
-				throw std::runtime_error("Invalid JSON response");
-			}
+	//		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+	//		if (doc.isNull()) {
+	//			throw std::runtime_error("Invalid JSON response");
+	//		}
 
-			QList<StreamInfo> streams = parseStreams(doc.object(), StreamType::Audio);
+	//		QList<StreamInfo> streams = parseStreams(doc.object(), StreamType::Audio);
 
-			LOG_INFO("ConfigVideoPlatform", "Retrieved %d audio streams", streams.size());
-			emit streamsReceived(streams);
+	//		LOG_INFO("ConfigVideoPlatform", "Retrieved %d audio streams", streams.size());
+	//		emit streamsReceived(streams);
 
-			return streams;
+	//		return streams;
 
-		}
-		catch (const std::exception& e) {
-			LOG_ERROR("ConfigVideoPlatform", "Failed to get audio streams: %s", e.what());
-			emit errorOccurred(QString("Failed to get audio streams: %1").arg(e.what()));
-			throw;
-		}
-		});
+	//	}
+	//	catch (const std::exception& e) {
+	//		LOG_ERROR("ConfigVideoPlatform", "Failed to get audio streams: %s", e.what());
+	//		emit errorOccurred(QString("Failed to get audio streams: %1").arg(e.what()));
+	//		throw;
+	//	}
+	//	});
+	return {};
 }
 
 QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, int page)
 {
-	return QtConcurrent::run([this, keyword, page]() -> SearchResult {
-		try {
-			LOG_INFO("ConfigVideoPlatform", "Searching videos: %s", keyword.toUtf8().constData());
+	//return QtConcurrent::run([this, keyword, page]() -> SearchResult {
+	//	try {
+	//		LOG_INFO("ConfigVideoPlatform", "Searching videos: %s", keyword.toUtf8().constData());
 
-			QString apiUrl = m_modInfo.getApiEndpoint("search");
-			if (apiUrl.isEmpty()) {
-				throw std::runtime_error("Search API endpoint not configured");
-			}
+	//		QString apiUrl = m_modInfo.getApiEndpoint("search");
+	//		if (apiUrl.isEmpty()) {
+	//			throw std::runtime_error("Search API endpoint not configured");
+	//		}
 
-			// 构建请求参数
-			QVariantMap params;
-			QVariantMap headers = m_modInfo.getRequestHeaders();
+	//		// 构建请求参数
+	//		QVariantMap params;
+	//		QVariantMap headers = m_modInfo.getRequestHeaders();
 
-			// 根据平台构建搜索参数
-			if (m_modInfo.modId == "bilibili") {
-				params["keyword"] = keyword;
-				params["page"] = page;
-				params["search_type"] = "video";
-			}
-			else if (m_modInfo.modId == "youtube") {
-				params["q"] = keyword;
-				params["page"] = page;
-			}
+	//		// 根据平台构建搜索参数
+	//		if (m_modInfo.modId == "bilibili") {
+	//			params["keyword"] = keyword;
+	//			params["page"] = page;
+	//			params["search_type"] = "video";
+	//		}
+	//		else if (m_modInfo.modId == "youtube") {
+	//			params["q"] = keyword;
+	//			params["page"] = page;
+	//		}
 
-			// 发送请求
-			NetworkResponse response = m_networkManager->get(apiUrl, headers);
-			if (!response.success) {
-				throw std::runtime_error(response.errorString.toStdString());
-			}
+	//		// 发送请求
+	//		NetworkResponse response = m_networkManager->get(apiUrl, headers);
+	//		if (!response.success) {
+	//			throw std::runtime_error(response.errorString.toStdString());
+	//		}
 
-			QJsonDocument doc = QJsonDocument::fromJson(response.data);
-			if (doc.isNull()) {
-				throw std::runtime_error("Invalid JSON response");
-			}
+	//		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+	//		if (doc.isNull()) {
+	//			throw std::runtime_error("Invalid JSON response");
+	//		}
 
-			// 解析搜索结果（简化实现）
-			SearchResult result;
-			result.searchQuery = keyword;
-			result.platformId = m_modInfo.modId;
+	//		// 解析搜索结果（简化实现）
+	//		SearchResult result;
+	//		result.searchQuery = keyword;
+	//		result.platformId = m_modInfo.modId;
 
-			// 这里需要根据具体平台的响应格式进行解析
-			// 暂时返回空结果，实际实现时需要根据平台API文档实现
+	//		// 这里需要根据具体平台的响应格式进行解析
+	//		// 暂时返回空结果，实际实现时需要根据平台API文档实现
 
-			LOG_INFO("ConfigVideoPlatform", "Search completed, found %d results", result.items.size());
-			emit searchResultsReceived(result);
+	//		LOG_INFO("ConfigVideoPlatform", "Search completed, found %d results", result.items.size());
+	//		emit searchResultsReceived(result);
 
-			return result;
+	//		return result;
 
-		}
-		catch (const std::exception& e) {
-			LOG_ERROR("ConfigVideoPlatform", "Failed to search videos: %s", e.what());
-			emit errorOccurred(QString("Failed to search videos: %1").arg(e.what()));
-			throw;
-		}
-		});
+	//	}
+	//	catch (const std::exception& e) {
+	//		LOG_ERROR("ConfigVideoPlatform", "Failed to search videos: %s", e.what());
+	//		emit errorOccurred(QString("Failed to search videos: %1").arg(e.what()));
+	//		throw;
+	//	}
+	//	});
+	return {};
 }
 
 QUrl ConfigVideoPlatform::parseVideoPlayUrl(const QJsonObject& data)
@@ -334,7 +337,7 @@ QUrl ConfigVideoPlatform::parseVideoPlayUrl(const QJsonObject& data)
 	urlPath.replace("#", "0");
 	QUrl videoUrl(extractJsonValue(data, urlPath).toString());
 
-	LOG_INFO("ConfigVideoPlatform", "Successfully parsed video URL: %s", videoUrl.toUtf8().constData());
+	LOG_INFO("ConfigVideoPlatform", QString("Successfully parsed video URL: %1").arg(videoUrl.toString().toUtf8().constData()));
 	return videoUrl;
 }
 

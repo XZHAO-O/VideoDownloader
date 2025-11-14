@@ -24,33 +24,26 @@ struct NetworkResponse
 	QString errorString;
 };
 
-struct NetworkReply
+struct NetworkReplyHeader
 {
-	bool success;
-	QNetworkReply* reply = nullptr;
+	bool success = true;
+	QHash<QByteArray, QByteArray> headers;
 	QString errorString;
-
-	~NetworkReply()
-	{
-		if (reply)
-		{
-			if (reply->isRunning())
-			{
-				reply->abort();
-			}
-			delete reply;
-			reply = nullptr;
-		}
-	}
 
 	QByteArray getAcceptRanges() const
 	{
-		return reply->rawHeader("Accept-Ranges");
+		auto it = headers.find("accept-ranges");
+		if (it != headers.end())
+			return it.value();
+		return QByteArray();
 	}
 
 	qint64 getContentLength() const
 	{
-		QString contentLength = reply->rawHeader("Content-Length");
+		QString contentLength;
+		auto it = headers.find("content-length");
+		if (it != headers.end())
+			contentLength = it.value();
 		return contentLength.isEmpty() ? 0 : contentLength.toLongLong();
 	}
 };
@@ -77,7 +70,7 @@ public:
 	QNetworkRequest setRequest(const QUrl& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
-	NetworkReply getReplyWithLoop(const QUrl& url, const QVariantMap& headers = {});
+	NetworkReplyHeader getReplyWithLoop(const QUrl& url, const QVariantMap& headers = {});
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QUrl& url,

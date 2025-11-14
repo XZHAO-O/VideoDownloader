@@ -1,12 +1,36 @@
 #pragma once
 
-#include <QString>
+//#include <QString>
+#include <QRegularExpression>
 
 class StringUtil
 {
 public:
 	StringUtil();
 	~StringUtil();
+
+	static QString formatFileName(const QString& fileName)
+	{
+		// 移除或替换非法字符
+		QString cleanName = fileName;
+
+		// 根据编译环境定义不同的非法字符规则
+		#ifdef Q_OS_WIN
+		// Windows 环境下的非法字符: < > : " / \ | ? *
+		QRegularExpression invalidChars("[<>:\"/\\\\|?*]");
+		#elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
+		// Linux/Unix 环境下的非法字符: / 和空字符
+		// 注意：Linux 实际上允许更多字符，但为了安全还是过滤一些特殊字符
+		QRegularExpression invalidChars("[\\x00-\\x1F\\x7F/]"); // 控制字符和斜杠
+		#else
+		// 其他平台的默认规则
+		QRegularExpression invalidChars("[<>:\"/\\\\|?*\\x00-\\x1F\\x7F]");
+		#endif
+
+		// 移除首尾空格和点
+		return cleanName.replace(invalidChars, "_").trimmed();
+	}
+
 	// 格式化文件大小
 	static QString formatFileSize(qint64 bytes)
 	{
@@ -112,6 +136,8 @@ public:
 			return dateTime.toString("yyyy-MM-dd");
 		}
 	}
+
+	static constexpr unsigned int MAX_FILENAME_LENGTH = 255;
 
 	static constexpr qint64 KB = 1024;
 	static constexpr qint64 MB = 1024 * KB;

@@ -11,7 +11,7 @@ class ApplicationController;
 class ConfigModManager;
 class ModCardModel;
 class ModCardWidget;
-class ModInfo;
+struct ModInfo;
 
 class ModManagerPage : public QWidget
 {

@@ -42,7 +42,7 @@ public:
 
 	void createContext()
 	{
-		context = new DownloadContext("E:/CProject/" + videoInfo.title, request.videoPlayUrl);
+		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), request.videoPlayUrl);
 		context->fileSize = fileSize;
 		context->partialDownloadSupport = partialDownloadSupport;
 	}

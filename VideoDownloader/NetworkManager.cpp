@@ -11,6 +11,7 @@
 #include "ConfigManager.h"
 #include "LogSystem.h"
 #include "DownloadContext.h"
+#include "Instrumentor.h"
 
 NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObject* parent)
 	: QObject(parent)
@@ -51,6 +52,7 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 NetworkManager::~NetworkManager()
 {
 	// 取消所有活跃请求
+	QMutexLocker locker(&m_requestsMutex);
 	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
 	{
 		it.value()->abort();
@@ -60,6 +62,7 @@ NetworkManager::~NetworkManager()
 
 QNetworkRequest NetworkManager::setRequest(const QUrl& url, const QVariantMap& headers)
 {
+	BENCHMARKING_FUNCTION();
 	QNetworkRequest request = QNetworkRequest(url);
 	// 设置请求头
 	request.setRawHeader("User-Agent", m_userAgent.toUtf8());
@@ -82,6 +85,7 @@ NetworkResponse NetworkManager::get(const QString& url, const QVariantMap& heade
 
 NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& headers)
 {
+	BENCHMARKING_FUNCTION();
 	NetworkResponse networkResponse;
 
 	QNetworkRequest request = setRequest(url, headers);
@@ -406,13 +410,13 @@ QString NetworkManager::generateRequestId() const
 		QString::number(QRandomGenerator::global()->generate64());
 }
 
-NetworkReply NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap& headers)
+NetworkReplyHeader NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap& headers)
 {
-	NetworkReply networkReply;
+	BENCHMARKING_FUNCTION();
+	NetworkReplyHeader networkReplyHeader;
 	QNetworkRequest request = setRequest(url, headers);
 	QNetworkAccessManager* manager = new QNetworkAccessManager();
 	QNetworkReply* reply = manager->get(request);
-	networkReply.success = true;
 
 	QString requestId = generateRequestId();
 	{
@@ -421,23 +425,30 @@ NetworkReply NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap
 	}
 
 	QEventLoop loop;
-	QObject::connect(reply, &QNetworkReply::errorOccurred, &loop, &QEventLoop::quit);
-	QObject::connect(reply, &QNetworkReply::metaDataChanged, [this, &networkReply, &manager, &reply, &loop]() {
+	QObject::connect(reply, &QNetworkReply::errorOccurred, [this, &networkReplyHeader, &reply, &loop]() {
+		networkReplyHeader.success = false;
+		networkReplyHeader.errorString = getErrorString(reply);
 
-		int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		loop.quit();
+		});
+	QObject::connect(reply, &QNetworkReply::metaDataChanged, [this, &networkReplyHeader, &reply, &loop]() {
 
-		if (statusCode >= 400)
+		if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() >= 400)
 		{
-			// HTTP 错误
-			networkReply.success = false;
-			loop.quit();
+			networkReplyHeader.success = false;
+			networkReplyHeader.errorString = getErrorString(reply);
 		}
 
-		if (reply->hasRawHeader("Content-Length") && reply->hasRawHeader("Accept-Ranges"))
+		QList<QByteArray> headerNames = reply->rawHeaderList();
+		for (const QByteArray& header : headerNames)
 		{
-			// 获取到需要的头部信息后中止
-			loop.quit();
+			networkReplyHeader.headers[header] = reply->rawHeader(header);
+			//qDebug() << "Header: " << header << "Value: " << reply->rawHeader(header);
 		}
+
+		disconnect(reply, nullptr, nullptr, nullptr);
+		reply->abort();
+		loop.quit();
 		});
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
@@ -448,25 +459,16 @@ NetworkReply NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap
 	}
 
 	// 检查错误
-	if (reply->error() != QNetworkReply::NoError || !networkReply.success)
+	if (!networkReplyHeader.success)
 	{
-		networkReply.success = false;
-		networkReply.errorString = getErrorString(reply);
-		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
-			.arg(reply->error())
-			.arg(networkReply.errorString));
-		reply->abort();
-		manager->deleteLater();
-		reply->deleteLater();
-		return networkReply;
+		LOG_ERROR("NetworkManager", QString("错误代码: %1")
+			.arg(networkReplyHeader.errorString));
 	}
 
-	// 读取响应
-	reply->abort();
-	networkReply.reply = reply;
 	manager->deleteLater();
+	reply->deleteLater();
 
-	return networkReply;
+	return networkReplyHeader;
 }
 
 bool NetworkManager::checkPartialDownloadSupport(QNetworkReply* reply)

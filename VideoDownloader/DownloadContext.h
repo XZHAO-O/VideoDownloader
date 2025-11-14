@@ -88,7 +88,30 @@ public:
 		}
 	}
 
-	void stopDownload()
+	void pauseDownload()
+	{
+		active = false;
+		if (accessManager)
+		{
+			accessManager->disconnect();
+			accessManager->deleteLater();
+		}
+		for (auto reply : replys)
+		{
+			if (reply)
+			{
+				reply->disconnect();
+				if (reply->isRunning())
+				{
+					reply->abort();
+				}
+				reply->deleteLater();
+			}
+		}
+		replys.clear();
+	}
+
+	void cancelDownload()
 	{
 		active = false;
 		for (auto reply : replys)

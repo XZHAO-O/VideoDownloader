@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include <QString>
 #include <QColor>
 
@@ -320,6 +321,7 @@ namespace StyleSheet
 		QScrollBar::handle:vertical {
 			background: %1;
 			border-radius: 3px;
+			min-height: 20px;  /* 弹窗滚动条最小高度 */
 		}
 
 		QScrollBar::sub-line:vertical,
@@ -361,11 +363,13 @@ namespace StyleSheet
 		#AntScrollArea QScrollBar::handle:vertical {
 			background: %2;
 			border-radius: 3px;
+			min-height: 20px;  /* 滚动区域滑块最小高度 */
 		}
 
 		#AntScrollArea QScrollBar::handle:horizontal {
 			background: %2;
 			border-radius: 3px;
+			min-width: 20px;   /* 滚动区域滑块最小宽度 */
 		}
 
 		#AntScrollArea QScrollBar::handle:vertical:hover,
@@ -449,6 +453,7 @@ namespace StyleSheet
 		QScrollBar::handle:vertical {
 			background: %1;
 			border-radius: 3px;
+			min-height: 20px;  /* 设置垂直滚动条滑块最小高度 */
 		}
 
 		QScrollBar::sub-line:vertical,

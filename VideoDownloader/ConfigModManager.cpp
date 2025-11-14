@@ -24,25 +24,25 @@ bool ConfigModManager::initialize()
 	}
 
 	try {
-		LOG_INFO("ModManager", "Initializing ConfigModManager");
+		LOG_INFO("ModManager", QString("Initializing ConfigModManager"));
 
 		// 发现并加载所有Mod
 		discoverMods();
 
 		m_initialized = true;
-		LOG_INFO("ModManager", "ConfigModManager initialized successfully, loaded %d mods", m_mods.size());
+		LOG_INFO("ModManager", QString("ConfigModManager initialized successfully, loaded %1 mods").arg(m_mods.size()));
 		return true;
 
 	}
 	catch (const std::exception& e) {
-		LOG_ERROR("ModManager", "Failed to initialize ConfigModManager: %s", e.what());
+		LOG_ERROR("ModManager", QString("Failed to initialize ConfigModManager: %1").arg(e.what()));
 		return false;
 	}
 }
 
 void ConfigModManager::shutdown()
 {
-	LOG_INFO("ModManager", "Shutting down ConfigModManager");
+	LOG_INFO("ModManager", QString("Shutting down ConfigModManager"));
 
 	// 清理所有平台实例
 	m_platforms.clear();
@@ -53,13 +53,13 @@ void ConfigModManager::shutdown()
 
 void ConfigModManager::discoverMods()
 {
-	LOG_INFO("ModManager", "Discovering mods");
+	LOG_INFO("ModManager", QString("Discovering mods"));
 
 	QString modsDir = m_configManager->getValue("mods/directory", "mods").toString();
 	QDir dir(modsDir);
 
 	if (!dir.exists()) {
-		LOG_INFO("ModManager", "Mods directory does not exist, creating: %s", modsDir.toUtf8().constData());
+		LOG_INFO("ModManager", QString("Mods directory does not exist, creating: %1").arg(modsDir));
 		dir.mkpath(".");
 		return;
 	}
@@ -76,7 +76,7 @@ void ConfigModManager::discoverMods()
 	}
 
 	buildUrlPatterns();
-	LOG_INFO("ModManager", "Discovered %d mods", m_mods.size());
+	LOG_INFO("ModManager", QString("Discovered %1 mods").arg(m_mods.size()));
 	emit modsChanged();
 }
 
@@ -87,25 +87,25 @@ bool ConfigModManager::loadMod(const QString& configPath)
 
 	QFile file(configPath);
 	if (!file.open(QIODevice::ReadOnly)) {
-		LOG_ERROR("ModManager", "Failed to open mod config: %s", configPath.toUtf8().constData());
+		LOG_ERROR("ModManager", QString("Failed to open mod config: %1").arg(configPath));
 		return false;
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
 	if (doc.isNull()) {
-		LOG_ERROR("ModManager", "Invalid JSON in mod config: %s", configPath.toUtf8().constData());
+		LOG_ERROR("ModManager", QString("Invalid JSON in mod config: %1").arg(configPath));
 		return false;
 	}
 
 	QJsonObject config = doc.object();
 	if (!validateModConfig(config)) {
-		LOG_ERROR("ModManager", "Invalid mod config: %s", configPath.toUtf8().constData());
+		LOG_ERROR("ModManager", QString("Invalid mod config: %1").arg(configPath));
 		return false;
 	}
 
 	ModInfo modInfo = ModInfo::fromJson(config, modDir);
 	if (!modInfo.isValid()) {
-		LOG_ERROR("ModManager", "Invalid mod info: %s", configPath.toUtf8().constData());
+		LOG_ERROR("ModManager", QString("Invalid mod info: %1").arg(configPath));
 		return false;
 	}
 
@@ -128,15 +128,11 @@ bool ConfigModManager::loadMod(const QString& configPath)
 	if (enabled) {
 		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory", "mods").toString(), m_networkManager);
 		m_platforms[modInfo.modId] = platform;
-		LOG_INFO("ModManager", "Loaded mod: %s v%s",
-			modInfo.name.toUtf8().constData(),
-			modInfo.version.toUtf8().constData());
+		LOG_INFO("ModManager", QString("Loaded mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
 		emit modLoaded(modInfo);
 	}
 	else {
-		LOG_INFO("ModManager", "Loaded disabled mod: %s v%s",
-			modInfo.name.toUtf8().constData(),
-			modInfo.version.toUtf8().constData());
+		LOG_INFO("ModManager", QString("Loaded disabled mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
 	}
 
 	return true;
@@ -185,14 +181,10 @@ void ConfigModManager::buildUrlPatterns()
 			if (regex.isValid()) {
 				// 使用 QPair 而不是直接使用 QRegularExpression 作为键
 				m_urlPatterns.insert(regex.pattern(), modInfo.modId);
-				LOG_DEBUG("ModManager", "Registered URL pattern: %s -> %s",
-					pattern.toUtf8().constData(),
-					modInfo.modId.toUtf8().constData());
+				LOG_DEBUG("ModManager", QString("Registered URL pattern: %1 -> %2").arg(pattern).arg(modInfo.modId));
 			}
 			else {
-				LOG_ERROR("ModManager", "Invalid URL pattern: %s for mod %s",
-					pattern.toUtf8().constData(),
-					modInfo.modId.toUtf8().constData());
+				LOG_ERROR("ModManager", QString("Invalid URL pattern: %1 for mod %2").arg(pattern).arg(modInfo.modId));
 			}
 		}
 	}
@@ -231,7 +223,7 @@ bool ConfigModManager::enableMod(const QString& modId)
 
 	buildUrlPatterns();
 
-	LOG_INFO("ModManager", "Enabled mod: %s", modId.toUtf8().constData());
+	LOG_INFO("ModManager", QString("Enabled mod: %1").arg(modId));
 	emit modEnabled(modId);
 	emit modsChanged();
 
@@ -260,7 +252,7 @@ bool ConfigModManager::disableMod(const QString& modId)
 
 	buildUrlPatterns();
 
-	LOG_INFO("ModManager", "Disabled mod: %s", modId.toUtf8().constData());
+	LOG_INFO("ModManager", QString("Disabled mod: %1").arg(modId));
 	emit modDisabled(modId);
 	emit modsChanged();
 
@@ -338,14 +330,15 @@ QList<VideoInfo> ConfigModManager::getVideoInfo(const QString& url)
 
 QFuture<QList<StreamInfo>> ConfigModManager::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)
 {
-	return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
+	/*return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
 		auto platform = getPlatformForMod(videoInfo.platformId);
 		if (!platform) {
 			throw std::runtime_error("Platform not available: " + videoInfo.platformId.toStdString());
 		}
 
 		return platform->getVideoStreams(videoInfo, request).result();
-		});
+		});*/
+	return {};
 }
 
 QFuture<QList<StreamInfo>> ConfigModManager::getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request)
@@ -390,7 +383,7 @@ QFuture<SearchResult> ConfigModManager::searchVideos(const QString& keyword, con
 				combinedResult.totalResults += result.totalResults;
 			}
 			catch (const std::exception& e) {
-				LOG_WARN("ModManager", "Search failed for one platform: %s", e.what());
+				LOG_WARN("ModManager", QString("Search failed for one platform: %1").arg(e.what()));
 				// 忽略单个平台的搜索失败，继续处理其他平台
 			}
 		}
@@ -416,7 +409,7 @@ bool ConfigModManager::unloadMod(const QString& modId)
 	m_platforms.remove(modId);
 	m_mods.remove(modId);
 
-	LOG_INFO("ModManager", "Unloaded mod: %s", modId.toUtf8().constData());
+	LOG_INFO("ModManager", QString("Unloaded mod: %1").arg(modId));
 	emit modUnloaded(modId);
 
 	// 重新构建 URL 模式
