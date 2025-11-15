@@ -28,6 +28,7 @@ public:
 	// 获取服务实例
 	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
 	QSharedPointer<ConfigModManager> getConfigModManager() const { return m_modManager; }
+	QSharedPointer<NetworkManager> getNetworkManager() const { return m_networkManager; }
 	QSharedPointer<DownloadEngine> getDownloadEngine() const { return m_downloadEngine; }
 	QSharedPointer<PlatformAggregatorService> getPlatformService() const { return m_platformService; }
 	QSharedPointer<MediaProcessingService> getMediaService() const { return m_mediaService; }

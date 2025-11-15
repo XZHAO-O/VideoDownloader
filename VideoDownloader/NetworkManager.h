@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QSharedPointer>
 
+class QEventLoop;
 class QNetworkAccessManager;
 class QNetworkProxy;
 class QNetworkCookieJar;
@@ -67,10 +68,12 @@ public:
 		QObject* parent = nullptr);
 	~NetworkManager();
 
+	void clear();
+
 	QNetworkRequest setRequest(const QUrl& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
-	NetworkReplyHeader getReplyWithLoop(const QUrl& url, const QVariantMap& headers = {});
+	NetworkReplyHeader getReplyHeaderWithLoop(const QUrl& url, const QVariantMap& headers = {});
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QUrl& url,
@@ -126,6 +129,7 @@ private:
 
 	QMutex m_requestsMutex;
 	QHash<QString, QNetworkReply*> m_activeRequests;
+	QHash<QString, QEventLoop*> m_activeLoops;
 
 	NetworkProxy m_proxy;
 	int m_timeoutMs = 30000;

@@ -170,7 +170,7 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 
 	taskInfo->request.videoPlayUrl = videoPlayUrl;
 
-	NetworkReplyHeader replyHeader = m_networkManager->getReplyWithLoop(videoPlayUrl, headers);
+	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers);
 	if (!replyHeader.success)
 	{
 		//在主线程显示，会触发断言

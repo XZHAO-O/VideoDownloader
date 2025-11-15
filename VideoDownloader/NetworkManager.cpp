@@ -51,13 +51,20 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 
 NetworkManager::~NetworkManager()
 {
+	clear();
+}
+
+void NetworkManager::clear()
+{
 	// 取消所有活跃请求
 	QMutexLocker locker(&m_requestsMutex);
 	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
 	{
-		it.value()->abort();
-		delete it.value();
+		QMetaObject::invokeMethod(it.value(), "abort", Qt::BlockingQueuedConnection);
+		//it.value()->deleteLater();
 	}
+	for (auto it = m_activeLoops.begin(); it != m_activeLoops.end(); ++it)
+		QMetaObject::invokeMethod(it.value(), "quit", Qt::BlockingQueuedConnection);
 }
 
 QNetworkRequest NetworkManager::setRequest(const QUrl& url, const QVariantMap& headers)
@@ -410,26 +417,27 @@ QString NetworkManager::generateRequestId() const
 		QString::number(QRandomGenerator::global()->generate64());
 }
 
-NetworkReplyHeader NetworkManager::getReplyWithLoop(const QUrl& url, const QVariantMap& headers)
+NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const QVariantMap& headers)
 {
 	BENCHMARKING_FUNCTION();
 	NetworkReplyHeader networkReplyHeader;
 	QNetworkRequest request = setRequest(url, headers);
 	QNetworkAccessManager* manager = new QNetworkAccessManager();
 	QNetworkReply* reply = manager->get(request);
+	QEventLoop* loop = new QEventLoop();
 
 	QString requestId = generateRequestId();
 	{
 		QMutexLocker locker(&m_requestsMutex);
 		m_activeRequests.insert(requestId, reply);
+		m_activeLoops.insert(requestId, loop);
 	}
 
-	QEventLoop loop;
 	QObject::connect(reply, &QNetworkReply::errorOccurred, [this, &networkReplyHeader, &reply, &loop]() {
 		networkReplyHeader.success = false;
 		networkReplyHeader.errorString = getErrorString(reply);
 
-		loop.quit();
+		loop->quit();
 		});
 	QObject::connect(reply, &QNetworkReply::metaDataChanged, [this, &networkReplyHeader, &reply, &loop]() {
 
@@ -448,14 +456,15 @@ NetworkReplyHeader NetworkManager::getReplyWithLoop(const QUrl& url, const QVari
 
 		disconnect(reply, nullptr, nullptr, nullptr);
 		reply->abort();
-		loop.quit();
+		loop->quit();
 		});
-	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-	loop.exec();
+	QObject::connect(reply, &QNetworkReply::finished, loop, &QEventLoop::quit);
+	loop->exec();
 
 	{
 		QMutexLocker locker(&m_requestsMutex);
 		m_activeRequests.remove(requestId);
+		m_activeLoops.remove(requestId);
 	}
 
 	// 检查错误
@@ -465,6 +474,7 @@ NetworkReplyHeader NetworkManager::getReplyWithLoop(const QUrl& url, const QVari
 			.arg(networkReplyHeader.errorString));
 	}
 
+	loop->deleteLater();
 	manager->deleteLater();
 	reply->deleteLater();
 

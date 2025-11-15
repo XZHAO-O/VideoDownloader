@@ -94,6 +94,7 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 
 DownloadPage::~DownloadPage()
 {
+	m_applicationController->getNetworkManager()->clear();
 }
 
 void DownloadPage::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
@@ -124,6 +125,9 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 	// 保存移动后的列表到局部变量
 	QList<VideoInfo> localVideoList = std::move(videoInfoList);
 
+	auto platformService = m_applicationController->getPlatformService();
+	auto videoPlatfrom = platformService->getPlatform(localVideoList[0].platformId);
+
 	auto* watcher = new QFutureWatcher<QSharedPointer<DownloadTaskInfo>>(this);
 
 	connect(watcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::resultReadyAt, this,
@@ -141,15 +145,15 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 
 	// 使用局部变量（左值）而不是右值引用
 	QFuture<QSharedPointer<DownloadTaskInfo>> future = QtConcurrent::mapped(localVideoList,
-		[this](const VideoInfo& videoInfo) {
+		[this, videoPlatfrom](const VideoInfo& videoInfo) {
 			QSharedPointer<DownloadTaskInfo> taskInfo = QSharedPointer<DownloadTaskInfo>::create();
 			taskInfo->taskId = taskInfo->request.generateTaskId();
 			taskInfo->request.platformId = videoInfo.platformId;
 			taskInfo->streamRequest.extraParams.insert(videoInfo.extraParams);
 			taskInfo->videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
 
-			getVideoUrlInfo(taskInfo);
-			getVideoCover(taskInfo);
+			videoPlatfrom->getVideoUrlInfo(taskInfo);
+			videoPlatfrom->getVideoCover(taskInfo);
 			taskInfo->request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
 
 			return taskInfo;
