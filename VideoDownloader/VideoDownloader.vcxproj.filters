@@ -412,6 +412,9 @@
     <ClCompile Include="OpenGLWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="CancelManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -725,6 +728,9 @@
     </QtMoc>
     <QtMoc Include="OpenGLWidget.h">
       <Filter>Ui\Widgets</Filter>
+    </QtMoc>
+    <QtMoc Include="CancelManager.h">
+      <Filter>Core</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

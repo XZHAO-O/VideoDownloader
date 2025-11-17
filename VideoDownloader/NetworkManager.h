@@ -73,11 +73,14 @@ public:
 	QNetworkRequest setRequest(const QUrl& url, const QVariantMap& headers = {});
 
 	// 网络请求方法
-	NetworkReplyHeader getReplyHeaderWithLoop(const QUrl& url, const QVariantMap& headers = {});
+	NetworkReplyHeader getReplyHeaderWithLoop(const QUrl& url,
+		const QVariantMap& headers = {},
+		const QString& cancelToken = QString());
 	NetworkResponse get(const QString& url,
 		const QVariantMap& headers = {});
 	NetworkResponse getWithLoop(const QUrl& url,
-		const QVariantMap& headers = {});
+		const QVariantMap& headers = {},
+		const QString& cancelToken = QString());
 	QString getErrorString(QNetworkReply* reply);
 	QFuture<NetworkResponse> post(const QString& url,
 		const QVariantMap& data = {},

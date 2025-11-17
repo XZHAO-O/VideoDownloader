@@ -6,6 +6,7 @@
 #include "AntProfileTable.h"
 #include "DownloadCardContainerWidget.h"
 #include "VideoInfo.h"
+#include "CancelManager.h"
 
 class AntScrollArea;
 class MaterialTabWidget;
@@ -26,6 +27,9 @@ public:
 	void getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo);
 
 	void createDownloadCards(QList<VideoInfo>&& videoInfoList);
+
+public slots:
+	void cancelCurrentOperation();
 
 signals:
 	void resized(int w, int h);				// 用于通知其他组件调整大小
@@ -48,4 +52,6 @@ private:
 	AntScrollArea* scrollArea1 = nullptr;
 
 	QMutex m_mutex;
+	QString m_currentOperationToken;
+	QFutureWatcher<QSharedPointer<DownloadTaskInfo>>* m_currentWatcher = nullptr;
 };

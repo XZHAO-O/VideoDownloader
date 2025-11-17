@@ -116,6 +116,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CancelManager.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
@@ -369,6 +370,7 @@
     <QtMoc Include="ConfigModManager.h" />
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
+    <QtMoc Include="CancelManager.h" />
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />

@@ -8,6 +8,7 @@
 #include "DownloadTaskInfo.h"
 #include "AntMessageManager.h"
 #include "Instrumentor.h"
+#include "CancelManager.h"
 
 ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager,
 	QObject* parent)
@@ -95,15 +96,35 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 	return parseVideoInfo(doc.object());
 }
 
-void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
+void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
 {
+	// 在关键操作前检查取消状态
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+		return;
+	}
+
 	QVariantMap headers = m_modInfo.getRequestHeaders();
-	taskInfo->videoInfo.cover = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers).data;
+
+	// 再次检查
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+		return;
+	}
+
+	auto response = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers, cancelToken);
+	if (response.success) {
+		taskInfo->videoInfo.cover = response.data;
+	}
 }
 
-void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
+void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
 {
 	BENCHMARKING_FUNCTION();
+
+	// 在关键操作前检查取消状态
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+		return;
+	}
+
 	StreamRequest request = taskInfo->streamRequest;
 	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
 
@@ -136,6 +157,11 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	//params.insert(requestParams.value(request.quality).toMap());
 	params.insert(requestParams.value("8K").toMap());
 
+	// 再次检查
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+		return;
+	}
+
 	// 发送请求
 	NetworkResponse response;
 	if (!params.isEmpty())
@@ -146,11 +172,22 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 			query.addQueryItem(it.key(), it.value().toString());
 		}
 		fullUrl.setQuery(query);
-		response = m_networkManager->getWithLoop(fullUrl.toString(), headers);
+
+		// 再次检查
+		if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+			return;
+		}
+
+		response = m_networkManager->getWithLoop(fullUrl.toString(), headers, cancelToken);
 	}
 	else
 	{
-		response = m_networkManager->getWithLoop(apiUrl, headers);
+		// 再次检查
+		if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+			return;
+		}
+
+		response = m_networkManager->getWithLoop(apiUrl, headers, cancelToken);
 	}
 
 	if (!response.success)
@@ -170,7 +207,12 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 
 	taskInfo->request.videoPlayUrl = videoPlayUrl;
 
-	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers);
+	// 再次检查
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+		return;
+	}
+
+	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers, cancelToken);
 	if (!replyHeader.success)
 	{
 		//在主线程显示，会触发断言
