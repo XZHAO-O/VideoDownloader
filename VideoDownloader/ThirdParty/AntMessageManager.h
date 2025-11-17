@@ -34,6 +34,7 @@ private:
 
 	void clearAllMessages();
 
+	void showMessageImpl(AntMessage::Type type, AntMessage::Mode mode, const QString& message, int msgDuration);
 private:
 	QList<AntMessage*> m_messages;          // 主队列：当前屏幕上存在的所有消息
 	static AntMessageManager* m_instance;

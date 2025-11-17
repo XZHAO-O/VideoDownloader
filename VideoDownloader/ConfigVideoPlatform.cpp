@@ -98,20 +98,11 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 
 void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
 {
-	// 在关键操作前检查取消状态
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		return;
-	}
-
 	QVariantMap headers = m_modInfo.getRequestHeaders();
 
-	// 再次检查
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		return;
-	}
-
 	auto response = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers, cancelToken);
-	if (response.success) {
+	if (response.success)
+	{
 		taskInfo->videoInfo.cover = response.data;
 	}
 }
@@ -119,11 +110,6 @@ void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInf
 void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
 {
 	BENCHMARKING_FUNCTION();
-
-	// 在关键操作前检查取消状态
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		return;
-	}
 
 	StreamRequest request = taskInfo->streamRequest;
 	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
@@ -158,7 +144,8 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	params.insert(requestParams.value("8K").toMap());
 
 	// 再次检查
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
+	{
 		return;
 	}
 
@@ -173,20 +160,10 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 		}
 		fullUrl.setQuery(query);
 
-		// 再次检查
-		if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-			return;
-		}
-
 		response = m_networkManager->getWithLoop(fullUrl.toString(), headers, cancelToken);
 	}
 	else
 	{
-		// 再次检查
-		if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-			return;
-		}
-
 		response = m_networkManager->getWithLoop(apiUrl, headers, cancelToken);
 	}
 
@@ -206,11 +183,6 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	LOG_INFO("ConfigVideoPlatform", QString("Video Play Url retrieved: %1").arg(videoPlayUrl.toString().toUtf8().constData()));
 
 	taskInfo->request.videoPlayUrl = videoPlayUrl;
-
-	// 再次检查
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		return;
-	}
 
 	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers, cancelToken);
 	if (!replyHeader.success)

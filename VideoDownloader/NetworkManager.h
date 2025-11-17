@@ -130,9 +130,9 @@ private:
 	QSharedPointer<ConfigManager> m_configManager;
 	QNetworkCookieJar* m_cookieJar;
 
-	QMutex m_requestsMutex;
-	QHash<QString, QNetworkReply*> m_activeRequests;
-	QHash<QString, QEventLoop*> m_activeLoops;
+	//QMutex m_requestsMutex;
+	//QHash<QString, QNetworkReply*> m_activeRequests;
+	//QHash<QString, QEventLoop*> m_activeLoops;
 
 	NetworkProxy m_proxy;
 	int m_timeoutMs = 30000;

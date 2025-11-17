@@ -35,7 +35,7 @@ QList<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 	auto platform = getPlatformForUrl(videoUrl);
 	if (!platform)
 	{
-		LOG_WARN("PlatformAggregator", "No platform found for URL: %1", videoUrl.toString());
+		LOG_WARN("PlatformAggregator", QString("No platform found for URL: %1").arg(videoUrl.toString()));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无法解析视频链接");
 		return QList<VideoInfo>();
 	}

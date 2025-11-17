@@ -58,14 +58,14 @@ NetworkManager::~NetworkManager()
 void NetworkManager::clear()
 {
 	// 取消所有活跃请求
-	QMutexLocker locker(&m_requestsMutex);
-	for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
-	{
-		QMetaObject::invokeMethod(it.value(), "abort", Qt::BlockingQueuedConnection);
-		//it.value()->deleteLater();
-	}
-	for (auto it = m_activeLoops.begin(); it != m_activeLoops.end(); ++it)
-		QMetaObject::invokeMethod(it.value(), "quit", Qt::BlockingQueuedConnection);
+	//QMutexLocker locker(&m_requestsMutex);
+	//for (auto it = m_activeRequests.begin(); it != m_activeRequests.end(); ++it)
+	//{
+	//	QMetaObject::invokeMethod(it.value(), "abort", Qt::BlockingQueuedConnection);
+	//	//it.value()->deleteLater();
+	//}
+	//for (auto it = m_activeLoops.begin(); it != m_activeLoops.end(); ++it)
+	//	QMetaObject::invokeMethod(it.value(), "quit", Qt::BlockingQueuedConnection);
 }
 
 QNetworkRequest NetworkManager::setRequest(const QUrl& url, const QVariantMap& headers)
@@ -96,7 +96,8 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	BENCHMARKING_FUNCTION();
 
 	// 在开始网络操作前检查取消状态
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
+	{
 		NetworkResponse response;
 		response.success = false;
 		response.errorString = "Operation cancelled";
@@ -112,28 +113,19 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 	QNetworkReply* reply = networkManager->get(request);
 
-	QString requestId = generateRequestId();
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.insert(requestId, reply);
-	}
-
 	// 创建事件循环等待请求完成
 	QEventLoop loop;
 
 	// 连接取消信号
 	QMetaObject::Connection cancelConnection;
-	if (!cancelToken.isEmpty()) {
-		cancelConnection = QObject::connect(
-			&CancelManager::instance(), &CancelManager::operationCancelled,
-			[&loop, requestId, cancelToken, this](const QString& token) {
-				if (token == cancelToken) {
-					QMutexLocker locker(&m_requestsMutex);
-					if (auto reply = m_activeRequests.value(requestId)) {
-						reply->abort();
-					}
-					loop.quit();
-				}
+	if (!cancelToken.isEmpty())
+	{
+		cancelConnection = QObject::connect(&CancelManager::instance(), &CancelManager::operationCancelled, [&loop, reply, cancelToken, this](const QString& token) {
+			if (token == cancelToken)
+			{
+				reply->abort();
+				loop.quit();
+			}
 			});
 	}
 
@@ -141,11 +133,13 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 
 	// 在进入事件循环前再次检查取消状态
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
+	{
 		reply->abort();
 		networkManager->deleteLater();
 		reply->deleteLater();
-		if (!cancelToken.isEmpty()) {
+		if (!cancelToken.isEmpty())
+		{
 			QObject::disconnect(cancelConnection);
 		}
 
@@ -157,41 +151,19 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	loop.exec();
 
 	// 清理连接
-	if (!cancelToken.isEmpty()) {
+	if (!cancelToken.isEmpty())
+	{
 		QObject::disconnect(cancelConnection);
 	}
 
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.remove(requestId);
-	}
-
-	// 检查是否被取消
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		networkResponse.success = false;
-		networkResponse.errorString = "Operation cancelled during network request";
-		networkManager->deleteLater();
-		reply->deleteLater();
-		return networkResponse;
-	}
-
 	// 检查错误
-	if (reply->error() != QNetworkReply::NoError && reply->error() != QNetworkReply::OperationCanceledError)
+	if (reply->error() != QNetworkReply::NoError)
 	{
 		networkResponse.success = false;
 		networkResponse.errorString = getErrorString(reply);
 		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
 			.arg(reply->error())
 			.arg(networkResponse.errorString));
-		networkManager->deleteLater();
-		reply->deleteLater();
-		return networkResponse;
-	}
-
-	// 如果操作被取消
-	if (reply->error() == QNetworkReply::OperationCanceledError) {
-		networkResponse.success = false;
-		networkResponse.errorString = "Operation cancelled";
 		networkManager->deleteLater();
 		reply->deleteLater();
 		return networkResponse;
@@ -487,7 +459,8 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 	BENCHMARKING_FUNCTION();
 
 	// 在开始前检查取消状态
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
+	{
 		NetworkReplyHeader header;
 		header.success = false;
 		header.errorString = "Operation cancelled";
@@ -498,30 +471,18 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 	QNetworkRequest request = setRequest(url, headers);
 	QNetworkAccessManager* manager = new QNetworkAccessManager();
 	QNetworkReply* reply = manager->get(request);
-	QEventLoop* loop = new QEventLoop();
-
-	QString requestId = generateRequestId();
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.insert(requestId, reply);
-		m_activeLoops.insert(requestId, loop);
-	}
+	QEventLoop loop;
 
 	// 连接取消信号
 	QMetaObject::Connection cancelConnection;
-	if (!cancelToken.isEmpty()) {
-		cancelConnection = QObject::connect(
-			&CancelManager::instance(), &CancelManager::operationCancelled,
-			[loop, requestId, cancelToken, this](const QString& token) {
-				if (token == cancelToken) {
-					QMutexLocker locker(&m_requestsMutex);
-					if (auto reply = m_activeRequests.value(requestId)) {
-						reply->abort();
-					}
-					if (auto loop = m_activeLoops.value(requestId)) {
-						loop->quit();
-					}
-				}
+	if (!cancelToken.isEmpty())
+	{
+		cancelConnection = QObject::connect(&CancelManager::instance(), &CancelManager::operationCancelled, [&loop, reply, cancelToken, this](const QString& token) {
+			if (token == cancelToken)
+			{
+				reply->abort();
+				loop.quit();
+			}
 			});
 	}
 
@@ -529,7 +490,7 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 		networkReplyHeader.success = false;
 		networkReplyHeader.errorString = getErrorString(reply);
 
-		loop->quit();
+		loop.quit();
 		});
 	QObject::connect(reply, &QNetworkReply::metaDataChanged, [this, &networkReplyHeader, &reply, &loop]() {
 
@@ -548,53 +509,31 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 
 		disconnect(reply, nullptr, nullptr, nullptr);
 		reply->abort();
-		loop->quit();
+		loop.quit();
 		});
-	QObject::connect(reply, &QNetworkReply::finished, loop, &QEventLoop::quit);
+	QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 
 	// 在进入事件循环前再次检查
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
+	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
+	{
 		reply->abort();
-		loop->quit();
-
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.remove(requestId);
-		m_activeLoops.remove(requestId);
+		loop.quit();
 
 		networkReplyHeader.success = false;
 		networkReplyHeader.errorString = "Operation cancelled before header request";
 
-		loop->deleteLater();
 		manager->deleteLater();
 		reply->deleteLater();
 
-		if (!cancelToken.isEmpty()) {
+		if (!cancelToken.isEmpty())
+		{
 			QObject::disconnect(cancelConnection);
 		}
 
 		return networkReplyHeader;
 	}
 
-	loop->exec();
-
-	{
-		QMutexLocker locker(&m_requestsMutex);
-		m_activeRequests.remove(requestId);
-		m_activeLoops.remove(requestId);
-	}
-
-	// 检查是否被取消
-	if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken)) {
-		networkReplyHeader.success = false;
-		networkReplyHeader.errorString = "Operation cancelled during header request";
-		loop->deleteLater();
-		manager->deleteLater();
-		reply->deleteLater();
-		if (!cancelToken.isEmpty()) {
-			QObject::disconnect(cancelConnection);
-		}
-		return networkReplyHeader;
-	}
+	loop.exec();
 
 	// 检查错误
 	if (!networkReplyHeader.success)
@@ -603,12 +542,12 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 			.arg(networkReplyHeader.errorString));
 	}
 
-	loop->deleteLater();
 	manager->deleteLater();
 	reply->deleteLater();
 
 	// 清理取消连接
-	if (!cancelToken.isEmpty()) {
+	if (!cancelToken.isEmpty())
+	{
 		QObject::disconnect(cancelConnection);
 	}
 

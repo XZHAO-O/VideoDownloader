@@ -2,10 +2,8 @@
 
 #include <QObject>
 #include <QMutex>
-#include <QHash>
 #include <QSet>
 #include <atomic>
-#include <memory>
 
 class CancelManager : public QObject
 {

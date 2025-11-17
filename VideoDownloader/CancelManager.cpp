@@ -26,20 +26,42 @@ QString CancelManager::createCancelToken(const QString& operationType)
 
 void CancelManager::cancelOperation(const QString& token)
 {
-	QMutexLocker locker(&m_mutex);
-	auto it = m_cancelFlags.find(token);
-	if (it != m_cancelFlags.end()) {
-		it.value()->store(true);
+	// 先检查令牌是否存在并设置取消状态
+	bool shouldEmit = false;
+	{
+		QMutexLocker locker(&m_mutex);
+		auto it = m_cancelFlags.find(token);
+		if (it != m_cancelFlags.end())
+		{
+			it.value()->store(true);
+			shouldEmit = true;
+		}
+	}
+
+	// 在锁外发射信号，避免死锁和阻塞
+	if (shouldEmit)
+	{
 		emit operationCancelled(token);
 	}
 }
 
 void CancelManager::cancelAll()
 {
-	QMutexLocker locker(&m_mutex);
-	for (auto it = m_cancelFlags.begin(); it != m_cancelFlags.end(); ++it) {
-		it.value()->store(true);
-		emit operationCancelled(it.key());
+	// 先收集所有需要取消的令牌
+	QList<QString> tokensToCancel;
+	{
+		QMutexLocker locker(&m_mutex);
+		for (auto it = m_cancelFlags.begin(); it != m_cancelFlags.end(); ++it)
+		{
+			it.value()->store(true);
+			tokensToCancel.append(it.key());
+		}
+	}
+
+	// 在锁外发射所有取消信号
+	for (const QString& token : tokensToCancel)
+	{
+		emit operationCancelled(token);
 	}
 }
 
@@ -47,7 +69,8 @@ bool CancelManager::isCancelled(const QString& token) const
 {
 	QMutexLocker locker(&m_mutex);
 	auto it = m_cancelFlags.find(token);
-	if (it != m_cancelFlags.end()) {
+	if (it != m_cancelFlags.end())
+	{
 		return it.value()->load();
 	}
 	return false;

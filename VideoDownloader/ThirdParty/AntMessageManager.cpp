@@ -1,6 +1,7 @@
 ﻿#include "AntMessageManager.h"
 
 #include <QApplication>
+#include <QThread>
 
 #include "DesignSystem.h"
 
@@ -77,6 +78,16 @@ void AntMessageManager::showMessage(AntMessage::Type type, const QString& messag
 }
 
 void AntMessageManager::showMessage(AntMessage::Type type, AntMessage::Mode mode, const QString& message, int msgDuration)
+{
+	if (QThread::currentThread() == QCoreApplication::instance()->thread())
+		showMessageImpl(type, mode, message, msgDuration);
+	else
+		QMetaObject::invokeMethod(this, [this, type, mode, message, msgDuration]() {
+		showMessageImpl(type, mode, message, msgDuration);
+			}, Qt::QueuedConnection);
+}
+
+void AntMessageManager::showMessageImpl(AntMessage::Type type, AntMessage::Mode mode, const QString& message, int msgDuration)
 {
 	QWidget* mainWindow = DesignSystem::instance()->getMainWindow();
 
