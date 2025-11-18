@@ -6,6 +6,7 @@
 #include "AntInput.h"
 #include "AntMessageManager.h"
 #include "PlatformAggregatorService.h"
+#include "ConfigVideoPlatform.h"
 #include "ConfigModManager.h"
 #include "SearchResultsWidget.h"
 #include "LogSystem.h"
@@ -110,6 +111,9 @@ void HomePage::onNextButtonClicked()
 
 	for (const auto& i : selectedIndexes)
 	{
+		//待修改
+		videoInfoList[i].streamType = StreamType::AVSeparate;
+		videoInfoList[i].videoPlatform = m_selectedPlatform;
 		selectedVideoInfoList.append(std::move(videoInfoList[i]));
 	}
 
@@ -148,29 +152,33 @@ void HomePage::getVideoList(const QString& searchText)
 	m_searchResultsWidget->clearAll();
 
 	// 检查是否有可用的平台
-	if (m_availablePlatforms.isEmpty())
+	if (!m_availablePlatforms.isEmpty())
 	{
-		LOG_WARN("HomePage", "no avilable video platforms");
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, tr("无可用的视频平台！"));
-		return;
+		m_selectedPlatform = m_platformService->getPlatformForUrl(searchText);
+		if (m_selectedPlatform)
+		{
+			AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, tr("链接解析中..."));
+			LOG_INFO("HomePage", QString(tr("strating to parse link: %1")).arg(searchText.toUtf8().constData()));
+
+			// 启动搜索(搜索请求超时处理未添加)
+			videoInfoList = m_selectedPlatform->getVideoInfo(searchText);
+
+			if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
+			{
+				m_searchResultsWidget->hide();
+				return;
+			}
+
+			// 处理视频列表
+			processVideoList(videoInfoList);
+
+			AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, tr("解析成功！"));
+			return;
+		}
 	}
 
-	AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, tr("链接解析中..."));
-	LOG_INFO("HomePage", QString(tr("strating to parse link: %1")).arg(searchText.toUtf8().constData()));
-
-	// 启动搜索(搜索请求超时处理未添加)
-	videoInfoList = m_platformService->getVideoInfo(searchText);
-
-	if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
-	{
-		m_searchResultsWidget->hide();
-		return;
-	}
-
-	// 处理视频列表
-	processVideoList(videoInfoList);
-
-	AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, tr("解析成功！"));
+	LOG_WARN("HomePage", "no matched video platforms");
+	AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, tr("无对应的视频平台！"));
 }
 
 void HomePage::processVideoList(const QList<VideoInfo>& videos)

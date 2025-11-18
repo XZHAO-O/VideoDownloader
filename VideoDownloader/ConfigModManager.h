@@ -3,7 +3,7 @@
 #include <QFuture>
 
 #include "ModInfo.h"
-#include "SearchResult.h"
+#include "VideoInfo.h"
 
 class ConfigVideoPlatform;
 class NetworkManager;
@@ -43,7 +43,7 @@ public:
 	QList<VideoInfo> getVideoInfo(const QString& url);
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
-	QFuture<SearchResult> searchVideos(const QString& keyword, const QString& platformId = "", int page = 1);
+	//QFuture<SearchResult> searchVideos(const QString& keyword, const QString& platformId = "", int page = 1);
 
 	// 系统状态
 	bool isInitialized() const { return m_initialized; }

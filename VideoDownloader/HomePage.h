@@ -44,6 +44,7 @@ private:
 	SearchResultsWidget* m_searchResultsWidget = nullptr;
 
 	QSharedPointer<PlatformAggregatorService> m_platformService;
+	QSharedPointer<ConfigVideoPlatform> m_selectedPlatform;
 	QSharedPointer<ConfigModManager> m_configModManager;
 	QStringList m_availablePlatforms;
 

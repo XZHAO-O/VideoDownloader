@@ -1,6 +1,5 @@
 #pragma once
 
-#include "VideoDownloadRequest.h"
 #include "ModInfo.h"
 #include "VideoInfo.h"
 #include "DownloadContext.h"
@@ -19,14 +18,21 @@ class DownloadTaskInfo
 public:
 	QString taskId;
 	VideoInfo videoInfo;
-	VideoDownloadRequest request;
-	StreamRequest streamRequest;
+	QHash<QString, QUrl> videoDownloadUrls;
+	QHash<QString, QUrl> audioDownloadUrls;
+	QHash<QString, qint64> videoSizes;
+	QHash<QString, qint64> audioSizes;
+	QString selectedVideoQuality;
+	QString selectedAudioQuality;
+	bool partialDownloadSupport;
 	DownloadContext* context;
+	DownloadContext* audioContext;
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
+	QString downloadFilePath;
 	QDateTime endTime;
 	qint64 fileSize;
-	bool partialDownloadSupport;
+	StreamRequest streamRequest;
 
 	DownloadTaskInfo()
 		: context(nullptr)
@@ -42,7 +48,7 @@ public:
 
 	void createContext()
 	{
-		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), request.videoPlayUrl);
+		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), videoDownloadUrls["0"]);
 		context->fileSize = fileSize;
 		context->partialDownloadSupport = partialDownloadSupport;
 	}

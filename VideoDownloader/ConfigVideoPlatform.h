@@ -5,7 +5,7 @@
 
 #include "ModInfo.h"
 #include "LoginManager.h"
-#include "SearchResult.h"
+#include "VideoInfo.h"
 
 class NetworkManager;
 class ConfigManager;
@@ -24,7 +24,7 @@ public:
 	void getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken = QString());
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
-	QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
+	//QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
 	QUrl parseVideoPlayUrl(const QJsonObject& data);
 
 	// 登录相关功能（委托给 LoginManager）
@@ -43,7 +43,7 @@ public:
 signals:
 	void videoInfoReceived(const VideoInfo& videoInfo);
 	void streamsReceived(const QList<StreamInfo>& streams);
-	void searchResultsReceived(const SearchResult& results);
+	//void searchResultsReceived(const SearchResult& results);
 	void errorOccurred(const QString& error);
 
 	// 登录相关信号（转发 LoginManager 的信号）
@@ -54,9 +54,9 @@ signals:
 
 private:
 	// 内部方法
-	QList<StreamInfo> parseStreams(const QJsonObject& data, StreamType type);
+	QList<StreamInfo> parseStreams(const QJsonObject& data);
 	QString extractVideoId(const QString& url);
-	QVariantMap getQualityParams(const QString& qualityName, StreamType type) const;
+	QVariantMap getQualityParams(const QString& qualityName) const;
 	QVariantMap buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QVariant extractJsonValue(const QJsonObject& data, const QString& path);
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);

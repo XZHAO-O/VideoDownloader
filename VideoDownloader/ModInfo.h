@@ -2,24 +2,19 @@
 
 #include <QJsonObject>
 
-// 流类型枚举
-enum class StreamType {
-	Video,
-	Audio
-};
-
 // 流请求结构
 struct StreamRequest {
 	QString quality;
-	StreamType type;
+	//StreamType type;
 	QVariantMap extraParams;
 
-	StreamRequest() : type(StreamType::Video) {}
-	StreamRequest(const QString& qual, StreamType t) : quality(qual), type(t) {}
+	StreamRequest() {}
+	StreamRequest(const QString& qual) : quality(qual) {}
 };
 
 // Mod信息结构
-struct ModInfo {
+struct ModInfo
+{
 	QString modId;
 	QString name;
 	QString version;
@@ -51,7 +46,9 @@ struct ModInfo {
 	QVariantMap getRequestHeaders() const;
 
 	// 获取质量映射
-	QVariantMap getQualityMapping(StreamType type) const;
+	QVariantMap getVideoQualityMapping() const;
+
+	QVariantMap getAudioQualityMapping() const;
 
 	// 获取URL模式列表
 	QStringList getUrlPatterns() const;
@@ -60,9 +57,10 @@ struct ModInfo {
 	QVariantMap getVideoInfoParser() const;
 
 	// 获取流解析器配置
-	QVariantMap getStreamParser(StreamType type) const;
+	QVariantMap getVideoStreamParser() const;
+
+	QVariantMap getAudioStreamParser() const;
 };
 
 Q_DECLARE_METATYPE(ModInfo)
-Q_DECLARE_METATYPE(StreamType)
 Q_DECLARE_METATYPE(StreamRequest)

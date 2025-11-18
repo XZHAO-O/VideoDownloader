@@ -394,12 +394,10 @@
     <QtMoc Include="QRCodeLoginWidget.h" />
     <QtMoc Include="AppInstanceManager.h" />
     <QtMoc Include="OpenGLWidget.h" />
-    <ClInclude Include="SearchResult.h" />
     <QtMoc Include="SearchResultsWidget.h" />
     <QtMoc Include="SingleLevelComboBox.h" />
     <QtMoc Include="TrayManager.h" />
     <ClInclude Include="StringUtil.h" />
-    <ClInclude Include="VideoDownloadRequest.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />
     <QtMoc Include="DownloadPage.h" />

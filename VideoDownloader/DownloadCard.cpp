@@ -758,8 +758,8 @@ void DownloadCard::updatePendingUI()
 {
 	BENCHMARKING_FUNCTION();
 	m_timeLabel->setText(QString("%1 · %2")
-		.arg(StringUtil::formatDateTime(m_model->publishTime()))
-		.arg(StringUtil::formatDuration(m_model->duration())));
+		.arg(m_model->publishTime())
+		.arg(m_model->duration()));
 	m_publisherLabel->setText(m_model->publisher());
 
 	// 更新质量选择

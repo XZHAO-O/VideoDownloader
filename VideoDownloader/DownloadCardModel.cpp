@@ -40,7 +40,7 @@ void DownloadCardModel::setDuration(const QString& duration)
 	m_duration = duration;
 }
 
-void DownloadCardModel::setPublishTime(const QDateTime& publishTime)
+void DownloadCardModel::setPublishTime(const QString& publishTime)
 {
 	m_publishTime = publishTime;
 }
@@ -107,10 +107,10 @@ void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> ta
 {
 	m_taskId = taskInfo->taskId;
 	m_title = taskInfo->videoInfo.title;
-	m_coverUrl = taskInfo->videoInfo.thumbnailUrl;
+	m_coverUrl = taskInfo->videoInfo.coverUrl;
 	m_cover = taskInfo->videoInfo.cover;
 	m_duration = taskInfo->videoInfo.duration;
-	m_publishTime = taskInfo->videoInfo.uploadDate;
+	m_publishTime = StringUtil::formatDateTime(QDateTime::fromSecsSinceEpoch(taskInfo->videoInfo.publishTime.toLongLong()));
 	m_publisher = taskInfo->videoInfo.author;
 	m_progress = 0;
 	m_downloadSpeed = 0;

@@ -4,7 +4,7 @@
 #include <QUrl>
 #include <QDateTime>
 
-#include "SearchResult.h"
+#include "VideoInfo.h"
 #include "ApplicationState.h"
 
 class ConfigModManager;
@@ -31,10 +31,10 @@ public:
 		const AudioQuality& quality);
 
 	// 搜索功能
-	QFuture<SearchResult> searchVideos(const QString& query, const QString& platformId = "",
-		int page = 1, int resultsPerPage = 20);
-	QFuture<SearchResult> searchVideosByChannel(const QString& channelId, const QString& platformId,
-		int page = 1, int resultsPerPage = 20);
+	//QFuture<SearchResult> searchVideos(const QString& query, const QString& platformId = "",
+	//int page = 1, int resultsPerPage = 20);
+	//QFuture<SearchResult> searchVideosByChannel(const QString& channelId, const QString& platformId,
+	//int page = 1, int resultsPerPage = 20);
 
 	// 批量操作
 	QFuture<QList<VideoInfo>> getBatchVideoInfo(const QList<QUrl>& videoUrls);

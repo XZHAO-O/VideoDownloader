@@ -17,7 +17,7 @@ class DownloadCardModel : public QObject
 		Q_PROPERTY(QUrl coverUrl READ coverUrl WRITE setCoverUrl NOTIFY coverUrlChanged)
 		Q_PROPERTY(QByteArray cover READ cover WRITE setCover NOTIFY coverChanged)
 		Q_PROPERTY(QString duration READ duration WRITE setDuration NOTIFY durationChanged)
-		Q_PROPERTY(QDateTime publishTime READ publishTime WRITE setPublishTime NOTIFY publishTimeChanged)
+		Q_PROPERTY(QString publishTime READ publishTime WRITE setPublishTime NOTIFY publishTimeChanged)
 		Q_PROPERTY(QString publisher READ publisher WRITE setPublisher NOTIFY publisherChanged)
 		Q_PROPERTY(qint64 videoSize READ videoSize WRITE setVideoSize NOTIFY videoSizeChanged)
 		Q_PROPERTY(qint64 audioSize READ audioSize WRITE setAudioSize NOTIFY audioSizeChanged)
@@ -39,7 +39,7 @@ public:
 	const QUrl& coverUrl() const { return m_coverUrl; }
 	const QByteArray& cover() const { return m_cover; }
 	const QString& duration() const { return m_duration; }
-	const QDateTime& publishTime() const { return m_publishTime; }
+	const QString& publishTime() const { return m_publishTime; }
 	const QString& publisher() const { return m_publisher; }
 	const qint64& videoSize() const { return m_videoSize; }
 	const qint64& audioSize() const { return m_audioSize; }
@@ -57,7 +57,7 @@ public:
 	void setCoverUrl(const QUrl& coverUrl);
 	void setCover(const QByteArray& cover);
 	void setDuration(const QString& duration);
-	void setPublishTime(const QDateTime& publishTime);
+	void setPublishTime(const QString& publishTime);
 	void setPublisher(const QString& publisher);
 	void setVideoSize(qint64 videoSize);
 	void setAudioSize(qint64 audioSize);
@@ -96,7 +96,7 @@ private:
 	QUrl m_coverUrl;
 	QByteArray m_cover;
 	QString m_duration;
-	QDateTime m_publishTime;
+	QString m_publishTime;
 	QString m_publisher;
 	qint64 m_videoSize = 0;
 	qint64 m_audioSize = 0;

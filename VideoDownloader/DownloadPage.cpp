@@ -75,7 +75,7 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	auto cardModel = QSharedPointer<DownloadCardModel>::create();
 	cardModel->setTitle("示例视频标题");
 	cardModel->setDuration("12:34");
-	cardModel->setPublishTime(QDateTime::currentDateTime().addDays(-2));
+	cardModel->setPublishTime("2016-01-01 12:00:00");
 	cardModel->setPublisher("视频发布者");
 	cardModel->setVideoSize(1024 * 1024 * 150); // 150MB
 	cardModel->setAudioSize(1024 * 1024 * 20);  // 20MB
@@ -103,18 +103,14 @@ DownloadPage::~DownloadPage()
 void DownloadPage::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	BENCHMARKING_FUNCTION();
-	auto platformService = m_applicationController->getPlatformService();
-	auto videoPlatfrom = platformService->getPlatform(taskInfo->request.platformId);
-	videoPlatfrom->getVideoUrlInfo(taskInfo);
+	taskInfo->videoInfo.videoPlatform->getVideoUrlInfo(taskInfo);
 }
 
 void DownloadPage::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	//网络错误情况和videoPlatfrom为空的情况处理待增加
 	BENCHMARKING_FUNCTION();
-	auto platformService = m_applicationController->getPlatformService();
-	auto videoPlatfrom = platformService->getPlatform(taskInfo->request.platformId);
-	videoPlatfrom->getVideoCover(taskInfo);
+	taskInfo->videoInfo.videoPlatform->getVideoCover(taskInfo);
 }
 
 void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
@@ -137,9 +133,6 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 
 	// 保存移动后的列表到局部变量
 	QList<VideoInfo> localVideoList = std::move(videoInfoList);
-
-	auto platformService = m_applicationController->getPlatformService();
-	auto videoPlatfrom = platformService->getPlatform(localVideoList[0].platformId);
 
 	m_currentWatcher = new QFutureWatcher<QSharedPointer<DownloadTaskInfo>>(this);
 
@@ -178,15 +171,14 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 
 	// 使用局部变量（左值）而不是右值引用
 	QFuture<QSharedPointer<DownloadTaskInfo>> future = QtConcurrent::mapped(localVideoList,
-		[this, videoPlatfrom, cancelToken = m_currentOperationToken](const VideoInfo& videoInfo) {
+		[this, cancelToken = m_currentOperationToken](const VideoInfo& videoInfo) {
 			QSharedPointer<DownloadTaskInfo> taskInfo = QSharedPointer<DownloadTaskInfo>::create();
 			// 在任务开始前检查取消状态
 			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
 			{
 				return taskInfo;
 			}
-			taskInfo->taskId = taskInfo->request.generateTaskId();
-			taskInfo->request.platformId = videoInfo.platformId;
+			taskInfo->taskId = StringUtil::generateId("task");
 			taskInfo->streamRequest.extraParams.insert(videoInfo.extraParams);
 			taskInfo->videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
 
@@ -195,7 +187,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 				return taskInfo;
 			}
 			// 传递取消令牌给网络操作
-			videoPlatfrom->getVideoUrlInfo(taskInfo, cancelToken);
+			videoInfo.videoPlatform->getVideoUrlInfo(taskInfo, cancelToken);
 
 			// 在操作之间检查取消状态
 			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
@@ -203,8 +195,8 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 				return taskInfo;
 			}
 
-			videoPlatfrom->getVideoCover(taskInfo, cancelToken);
-			taskInfo->request.outputPath = "E:/CProject/" + videoInfo.title + ".mp4";
+			videoInfo.videoPlatform->getVideoCover(taskInfo, cancelToken);
+			taskInfo->downloadFilePath = "E:/CProject/" + videoInfo.title + ".mp4";
 
 			return taskInfo;
 		});
@@ -306,7 +298,7 @@ void DownloadPage::onDownloadManagerCompleted(const QString& taskId, const QStri
 	// 更新任务信息中的文件路径
 	QSharedPointer<DownloadTaskInfo> taskInfo = downloadingWidget->getTaskInfo(taskId);
 	if (!taskInfo->taskId.isEmpty()) {
-		taskInfo->request.outputPath = filePath;
+		taskInfo->downloadFilePath = filePath;
 		taskInfo->status = DownloadStatus::Completed;
 		// 转移到已下载容器
 		onTaskStateChanged(taskId, ContainerState::Downloaded);

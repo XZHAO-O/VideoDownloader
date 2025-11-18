@@ -282,7 +282,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		connect(card, &DownloadCard::openFolderClicked, this, [this, taskInfo]() {
 			// 打开临时文件夹
-			QFileInfo fileInfo(taskInfo->request.outputPath);
+			QFileInfo fileInfo(taskInfo->downloadFilePath);
 			QDir dir = fileInfo.absoluteDir();
 			if (!dir.exists()) {
 				dir.mkpath(".");
@@ -295,7 +295,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 		card->disconnect();
 		connect(card, &DownloadCard::openFolderClicked, this, [this, taskInfo]() {
 			// 打开文件所在文件夹
-			QFileInfo fileInfo(taskInfo->request.outputPath);
+			QFileInfo fileInfo(taskInfo->downloadFilePath);
 			QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
 			});
 
@@ -324,8 +324,9 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			m_paginationWidget->setTotalPages(totalPages);
 
 			// 可选：删除本地文件
-			if (QFile::exists(taskInfo->request.outputPath)) {
-				QFile::remove(taskInfo->request.outputPath);
+			if (QFile::exists(taskInfo->downloadFilePath))
+			{
+				QFile::remove(taskInfo->downloadFilePath);
 			}
 			});
 		break;

@@ -109,10 +109,14 @@ QVariantMap ModInfo::getRequestHeaders() const
 	return getConfigValue("requestHeaders").toMap();
 }
 
-QVariantMap ModInfo::getQualityMapping(StreamType type) const
+QVariantMap ModInfo::getVideoQualityMapping() const
 {
-	QString typeKey = (type == StreamType::Video) ? "video" : "audio";
-	return getConfigValue(QString("qualityMapping.%1").arg(typeKey)).toMap();
+	return getConfigValue("qualityMapping.video").toMap();
+}
+
+QVariantMap ModInfo::getAudioQualityMapping() const
+{
+	return getConfigValue("qualityMapping.audio").toMap();
 }
 
 QStringList ModInfo::getUrlPatterns() const
@@ -125,9 +129,16 @@ QVariantMap ModInfo::getVideoInfoParser() const
 	return getConfigValue("videoInfoParser").toMap();
 }
 
-QVariantMap ModInfo::getStreamParser(StreamType type) const
+QVariantMap ModInfo::getVideoStreamParser() const
 {
-	QString typeKey = (type == StreamType::Video) ? "video" : "audio";
+	QString typeKey = "video";
+	QVariantMap streamParser = getConfigValue("streamParser").toMap();
+	return streamParser.value(typeKey).toMap();
+}
+
+QVariantMap ModInfo::getAudioStreamParser() const
+{
+	QString typeKey = "audio";
 	QVariantMap streamParser = getConfigValue("streamParser").toMap();
 	return streamParser.value(typeKey).toMap();
 }

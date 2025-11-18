@@ -752,12 +752,6 @@
     <ClInclude Include="DownloadRecord.h">
       <Filter>Storage</Filter>
     </ClInclude>
-    <ClInclude Include="VideoDownloadRequest.h">
-      <Filter>Core\models</Filter>
-    </ClInclude>
-    <ClInclude Include="SearchResult.h">
-      <Filter>Core\models</Filter>
-    </ClInclude>
     <ClInclude Include="MediaInfo.h">
       <Filter>Core\models</Filter>
     </ClInclude>

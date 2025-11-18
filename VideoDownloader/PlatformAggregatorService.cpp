@@ -60,12 +60,12 @@ QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QStr
 			// 创建StreamRequest - 使用正确的结构
 			StreamRequest request;
 			request.quality = quality.id;
-			request.type = StreamType::Video;
+			//request.type = StreamType::Video;
 
 			// 需要先获取VideoInfo
 			VideoInfo videoInfo;
 			videoInfo.videoId = videoId;
-			videoInfo.platformId = platformId;
+			//videoInfo.platformId = platformId;
 
 			auto future = platform->getVideoStreams(videoInfo, request);
 			future.waitForFinished();
@@ -97,12 +97,12 @@ QFuture<QList<StreamInfo>> PlatformAggregatorService::getAudioStreams(const QStr
 			// 创建StreamRequest - 使用正确的结构
 			StreamRequest request;
 			request.quality = quality.id;
-			request.type = StreamType::Audio;
+			//request.type = StreamType::Audio;
 
 			// 需要先获取VideoInfo
 			VideoInfo videoInfo;
 			videoInfo.videoId = videoId;
-			videoInfo.platformId = platformId;
+			//videoInfo.platformId = platformId;
 
 			auto future = platform->getAudioStreams(videoInfo, request);
 			future.waitForFinished();
@@ -117,63 +117,63 @@ QFuture<QList<StreamInfo>> PlatformAggregatorService::getAudioStreams(const QStr
 		});
 }
 
-QFuture<SearchResult> PlatformAggregatorService::searchVideos(const QString& query,
-	const QString& platformId,
-	int page, int resultsPerPage)
-{
-	return QtConcurrent::run([this, query, platformId, page, resultsPerPage]() -> SearchResult {
-		if (platformId.isEmpty()) {
-			// 在所有平台上搜索
-			auto platforms = getAvailablePlatforms();
-			if (platforms.isEmpty()) {
-				return SearchResult();
-			}
+//QFuture<SearchResult> PlatformAggregatorService::searchVideos(const QString& query,
+//	const QString& platformId,
+//	int page, int resultsPerPage)
+//{
+//	return QtConcurrent::run([this, query, platformId, page, resultsPerPage]() -> SearchResult {
+//		if (platformId.isEmpty()) {
+//			// 在所有平台上搜索
+//			auto platforms = getAvailablePlatforms();
+//			if (platforms.isEmpty()) {
+//				return SearchResult();
+//			}
+//
+//			// 尝试使用第一个平台进行搜索
+//			auto platform = getPlatform(platforms.first());
+//			if (platform) {
+//				auto future = platform->searchVideos(query, page);
+//				future.waitForFinished();
+//				return future.result();
+//			}
+//		}
+//		else {
+//			auto platform = getPlatform(platformId);
+//			if (platform) {
+//				auto future = platform->searchVideos(query, page);
+//				future.waitForFinished();
+//				return future.result();
+//			}
+//		}
+//		return SearchResult();
+//		});
+//}
 
-			// 尝试使用第一个平台进行搜索
-			auto platform = getPlatform(platforms.first());
-			if (platform) {
-				auto future = platform->searchVideos(query, page);
-				future.waitForFinished();
-				return future.result();
-			}
-		}
-		else {
-			auto platform = getPlatform(platformId);
-			if (platform) {
-				auto future = platform->searchVideos(query, page);
-				future.waitForFinished();
-				return future.result();
-			}
-		}
-		return SearchResult();
-		});
-}
-
-QFuture<SearchResult> PlatformAggregatorService::searchVideosByChannel(const QString& channelId,
-	const QString& platformId,
-	int page, int resultsPerPage)
-{
-	return QtConcurrent::run([this, channelId, platformId, page, resultsPerPage]() -> SearchResult {
-		auto platform = getPlatform(platformId);
-		if (!platform) {
-			return SearchResult();
-		}
-
-		try {
-			// 注意：ConfigVideoPlatform目前没有searchVideosByChannel方法
-			// 暂时使用普通搜索
-			auto future = platform->searchVideos(channelId, page);
-			future.waitForFinished();
-			return future.result();
-		}
-		catch (const std::exception& e) {
-			LogSystem::instance().error(
-				QString("Failed to search channel videos: %1").arg(e.what()),
-				"PlatformAggregator");
-			return SearchResult();
-		}
-		});
-}
+//QFuture<SearchResult> PlatformAggregatorService::searchVideosByChannel(const QString& channelId,
+//	const QString& platformId,
+//	int page, int resultsPerPage)
+//{
+//	return QtConcurrent::run([this, channelId, platformId, page, resultsPerPage]() -> SearchResult {
+//		auto platform = getPlatform(platformId);
+//		if (!platform) {
+//			return SearchResult();
+//		}
+//
+//		try {
+//			// 注意：ConfigVideoPlatform目前没有searchVideosByChannel方法
+//			// 暂时使用普通搜索
+//			auto future = platform->searchVideos(channelId, page);
+//			future.waitForFinished();
+//			return future.result();
+//		}
+//		catch (const std::exception& e) {
+//			LogSystem::instance().error(
+//				QString("Failed to search channel videos: %1").arg(e.what()),
+//				"PlatformAggregator");
+//			return SearchResult();
+//		}
+//		});
+//}
 
 QFuture<QList<VideoInfo>> PlatformAggregatorService::getBatchVideoInfo(const QList<QUrl>& videoUrls)
 {

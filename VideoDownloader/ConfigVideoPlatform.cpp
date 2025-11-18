@@ -100,7 +100,7 @@ void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInf
 {
 	QVariantMap headers = m_modInfo.getRequestHeaders();
 
-	auto response = m_networkManager->getWithLoop(taskInfo->videoInfo.thumbnailUrl.toString(), headers, cancelToken);
+	auto response = m_networkManager->getWithLoop(taskInfo->videoInfo.coverUrl, headers, cancelToken);
 	if (response.success)
 	{
 		taskInfo->videoInfo.cover = response.data;
@@ -182,7 +182,7 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
 	LOG_INFO("ConfigVideoPlatform", QString("Video Play Url retrieved: %1").arg(videoPlayUrl.toString().toUtf8().constData()));
 
-	taskInfo->request.videoPlayUrl = videoPlayUrl;
+	taskInfo->videoDownloadUrls["0"] = videoPlayUrl;
 
 	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers, cancelToken);
 	if (!replyHeader.success)
@@ -224,7 +224,7 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo&
 				throw std::runtime_error("Invalid JSON response");
 			}
 
-			QList<StreamInfo> streams = parseStreams(doc.object(), StreamType::Video);
+			QList<StreamInfo> streams = parseStreams(doc.object());
 
 			//LOG_INFO("ConfigVideoPlatform", QString("Retrieved %1 video streams").arg(streams.size()));
 			emit streamsReceived(streams);
@@ -284,65 +284,65 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getAudioStreams(const VideoInfo&
 	return {};
 }
 
-QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, int page)
-{
-	//return QtConcurrent::run([this, keyword, page]() -> SearchResult {
-	//	try {
-	//		LOG_INFO("ConfigVideoPlatform", "Searching videos: %s", keyword.toUtf8().constData());
-
-	//		QString apiUrl = m_modInfo.getApiEndpoint("search");
-	//		if (apiUrl.isEmpty()) {
-	//			throw std::runtime_error("Search API endpoint not configured");
-	//		}
-
-	//		// 构建请求参数
-	//		QVariantMap params;
-	//		QVariantMap headers = m_modInfo.getRequestHeaders();
-
-	//		// 根据平台构建搜索参数
-	//		if (m_modInfo.modId == "bilibili") {
-	//			params["keyword"] = keyword;
-	//			params["page"] = page;
-	//			params["search_type"] = "video";
-	//		}
-	//		else if (m_modInfo.modId == "youtube") {
-	//			params["q"] = keyword;
-	//			params["page"] = page;
-	//		}
-
-	//		// 发送请求
-	//		NetworkResponse response = m_networkManager->get(apiUrl, headers);
-	//		if (!response.success) {
-	//			throw std::runtime_error(response.errorString.toStdString());
-	//		}
-
-	//		QJsonDocument doc = QJsonDocument::fromJson(response.data);
-	//		if (doc.isNull()) {
-	//			throw std::runtime_error("Invalid JSON response");
-	//		}
-
-	//		// 解析搜索结果（简化实现）
-	//		SearchResult result;
-	//		result.searchQuery = keyword;
-	//		result.platformId = m_modInfo.modId;
-
-	//		// 这里需要根据具体平台的响应格式进行解析
-	//		// 暂时返回空结果，实际实现时需要根据平台API文档实现
-
-	//		LOG_INFO("ConfigVideoPlatform", "Search completed, found %d results", result.items.size());
-	//		emit searchResultsReceived(result);
-
-	//		return result;
-
-	//	}
-	//	catch (const std::exception& e) {
-	//		LOG_ERROR("ConfigVideoPlatform", "Failed to search videos: %s", e.what());
-	//		emit errorOccurred(QString("Failed to search videos: %1").arg(e.what()));
-	//		throw;
-	//	}
-	//	});
-	return {};
-}
+//QFuture<SearchResult> ConfigVideoPlatform::searchVideos(const QString& keyword, int page)
+//{
+//	//return QtConcurrent::run([this, keyword, page]() -> SearchResult {
+//	//	try {
+//	//		LOG_INFO("ConfigVideoPlatform", "Searching videos: %s", keyword.toUtf8().constData());
+//
+//	//		QString apiUrl = m_modInfo.getApiEndpoint("search");
+//	//		if (apiUrl.isEmpty()) {
+//	//			throw std::runtime_error("Search API endpoint not configured");
+//	//		}
+//
+//	//		// 构建请求参数
+//	//		QVariantMap params;
+//	//		QVariantMap headers = m_modInfo.getRequestHeaders();
+//
+//	//		// 根据平台构建搜索参数
+//	//		if (m_modInfo.modId == "bilibili") {
+//	//			params["keyword"] = keyword;
+//	//			params["page"] = page;
+//	//			params["search_type"] = "video";
+//	//		}
+//	//		else if (m_modInfo.modId == "youtube") {
+//	//			params["q"] = keyword;
+//	//			params["page"] = page;
+//	//		}
+//
+//	//		// 发送请求
+//	//		NetworkResponse response = m_networkManager->get(apiUrl, headers);
+//	//		if (!response.success) {
+//	//			throw std::runtime_error(response.errorString.toStdString());
+//	//		}
+//
+//	//		QJsonDocument doc = QJsonDocument::fromJson(response.data);
+//	//		if (doc.isNull()) {
+//	//			throw std::runtime_error("Invalid JSON response");
+//	//		}
+//
+//	//		// 解析搜索结果（简化实现）
+//	//		SearchResult result;
+//	//		result.searchQuery = keyword;
+//	//		result.platformId = m_modInfo.modId;
+//
+//	//		// 这里需要根据具体平台的响应格式进行解析
+//	//		// 暂时返回空结果，实际实现时需要根据平台API文档实现
+//
+//	//		LOG_INFO("ConfigVideoPlatform", "Search completed, found %d results", result.items.size());
+//	//		emit searchResultsReceived(result);
+//
+//	//		return result;
+//
+//	//	}
+//	//	catch (const std::exception& e) {
+//	//		LOG_ERROR("ConfigVideoPlatform", "Failed to search videos: %s", e.what());
+//	//		emit errorOccurred(QString("Failed to search videos: %1").arg(e.what()));
+//	//		throw;
+//	//	}
+//	//	});
+//	return {};
+//}
 
 QUrl ConfigVideoPlatform::parseVideoPlayUrl(const QJsonObject& data)
 {
@@ -366,16 +366,15 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 		VideoInfo mainInfo;
 		mainInfo.title = extractJsonValue(data, parserConfig.value("title").toString()).toString();
 		mainInfo.author = extractJsonValue(data, parserConfig.value("author").toString()).toString();
-		mainInfo.description = extractJsonValue(data, parserConfig.value("description").toString()).toString();
 
 		QVariant durationValue = extractJsonValue(data, parserConfig.value("duration").toString());
 		if (durationValue.canConvert<int>()) {
-			mainInfo.duration = mainInfo.formattedDuration(durationValue.toInt());
+			mainInfo.duration = StringUtil::formatDuration(durationValue.toInt());
 		}
 
-		QString thumbnailUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
-		if (!thumbnailUrl.isEmpty()) {
-			mainInfo.thumbnailUrl = QUrl(thumbnailUrl);
+		QString coverUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
+		if (!coverUrl.isEmpty()) {
+			mainInfo.coverUrl = QUrl(coverUrl);
 		}
 
 		mainInfo.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
@@ -384,20 +383,13 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 		mainInfo.extraParams["avid"] = extractJsonValue(data, "data.aid").toString();
 		mainInfo.extraParams["cid"] = extractJsonValue(data, "data.cid").toString();
 
-		// 解析统计数据
-		QJsonObject statData = extractJsonValue(data, "data.stat").toJsonObject();
-		if (!statData.isEmpty()) {
-			mainInfo.viewCount = extractJsonValue(statData, "view").toLongLong();
-			mainInfo.likeCount = extractJsonValue(statData, "like").toLongLong();
-		}
-
 		// 解析上传时间
 		QVariant pubdateValue = extractJsonValue(data, "data.pubdate");
-		if (pubdateValue.canConvert<qint64>()) {
-			qint64 timestamp = pubdateValue.toLongLong();
-			mainInfo.uploadDate = QDateTime::fromSecsSinceEpoch(timestamp);
+		if (pubdateValue.canConvert<QString>())
+		{
+			//根据mod规则来处理，类型是日期则直接赋值，类型是时间戳则转换成日期等
+			mainInfo.publishTime = pubdateValue.toString();
 		}
-		mainInfo.platformId = m_modInfo.modId;
 		videoList.append(mainInfo);
 
 		// 解析分P信息
@@ -409,22 +401,15 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 				VideoInfo pageInfo;
 				pageInfo.title = pageObj["part"].toString();
 				pageInfo.author = mainInfo.author;
-				pageInfo.description = mainInfo.description;
-
-
-				pageInfo.thumbnailUrl = pageObj["first_frame"].toString().isEmpty() ? mainInfo.thumbnailUrl : pageObj["first_frame"].toString();
 
 				pageInfo.videoId = mainInfo.videoId;
-				pageInfo.duration = pageInfo.formattedDuration(pageObj["duration"].toInt());
-				pageInfo.viewCount = mainInfo.viewCount;
-				pageInfo.likeCount = mainInfo.likeCount;
-				pageInfo.uploadDate = pageObj["ctime"].toInteger() ? QDateTime::fromSecsSinceEpoch(pageObj["ctime"].toInteger()) : mainInfo.uploadDate;
+				pageInfo.duration = StringUtil::formatDuration(pageObj["duration"].toInt());
+				pageInfo.publishTime = pageObj["ctime"].toString().isEmpty() ? pageObj["ctime"].toString() : mainInfo.publishTime;
 
 				// 添加分P特定参数
 				pageInfo.extraParams["avid"] = mainInfo.extraParams["aid"];
 				pageInfo.extraParams["cid"] = QString::number(pageObj["cid"].toVariant().toLongLong());
 
-				pageInfo.platformId = m_modInfo.modId;
 				videoList.append(pageInfo);
 			}
 		}
@@ -449,26 +434,21 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 						continue;
 					}
 					episodeInfo.author = arcObj["author"].toObject()["name"].toString();
-					episodeInfo.description = arcObj["desc"].toString();
-					episodeInfo.uploadDate = QDateTime::fromSecsSinceEpoch(arcObj["pubdate"].toInteger());
+					episodeInfo.publishTime = arcObj["pubdate"].toString();
 
 					QString episodeThumbnail = arcObj["pic"].toString();
-					if (!episodeThumbnail.isEmpty()) {
-						episodeInfo.thumbnailUrl = QUrl(episodeThumbnail);
+					if (!episodeThumbnail.isEmpty())
+					{
+						episodeInfo.coverUrl = QUrl(episodeThumbnail);
 					}
 
 					episodeInfo.videoId = episodeObj["bvid"].toString();
-					episodeInfo.duration = episodeInfo.formattedDuration(arcObj["duration"].toInt());
+					episodeInfo.duration = StringUtil::formatDuration(arcObj["duration"].toInt());
 
-					QJsonObject episodeStat = arcObj["stat"].toObject();
-					episodeInfo.viewCount = episodeStat["view"].toVariant().toLongLong();
-					episodeInfo.likeCount = episodeStat["like"].toVariant().toLongLong();
-					episodeInfo.platformId = m_modInfo.modId;
 					// 添加合集视频参数
 					episodeInfo.extraParams["avid"] = QString::number(episodeObj["aid"].toVariant().toLongLong());
 					episodeInfo.extraParams["cid"] = QString::number(episodeObj["cid"].toVariant().toLongLong());
 
-					episodeInfo.platformId = m_modInfo.modId;
 					videoList.append(episodeInfo);
 				}
 			}
@@ -479,16 +459,15 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 		VideoInfo info;
 		info.title = extractJsonValue(data, parserConfig.value("title").toString()).toString();
 		info.author = extractJsonValue(data, parserConfig.value("author").toString()).toString();
-		info.description = extractJsonValue(data, parserConfig.value("description").toString()).toString();
 
 		QVariant durationValue = extractJsonValue(data, parserConfig.value("duration").toString());
 		if (durationValue.canConvert<int>()) {
-			info.duration = info.formattedDuration(durationValue.toInt());
+			info.duration = StringUtil::formatDuration(durationValue.toInt());
 		}
 
 		QString thumbnailUrl = extractJsonValue(data, parserConfig.value("thumbnail").toString()).toString();
 		if (!thumbnailUrl.isEmpty()) {
-			info.thumbnailUrl = QUrl(thumbnailUrl);
+			info.coverUrl = QUrl(thumbnailUrl);
 		}
 
 		info.videoId = extractJsonValue(data, parserConfig.value("videoId").toString()).toString();
@@ -498,10 +477,10 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QJsonObject& data)
 	return videoList;
 }
 
-QList<StreamInfo> ConfigVideoPlatform::parseStreams(const QJsonObject& data, StreamType type)
+QList<StreamInfo> ConfigVideoPlatform::parseStreams(const QJsonObject& data)
 {
 	QList<StreamInfo> streams;
-	QVariantMap parserConfig = m_modInfo.getStreamParser(type);
+	QVariantMap parserConfig = m_modInfo.getVideoStreamParser();
 
 	if (parserConfig.isEmpty()) {
 		return streams;
@@ -532,14 +511,14 @@ QList<StreamInfo> ConfigVideoPlatform::parseStreams(const QJsonObject& data, Str
 			stream.bitrate = bitrateValue.toLongLong();
 		}
 
-		if (type == StreamType::Video) {
-			QVariant widthValue = extractJsonValue(streamObj, parserConfig.value("widthPath").toString());
-			QVariant heightValue = extractJsonValue(streamObj, parserConfig.value("heightPath").toString());
-			if (widthValue.canConvert<int>() && heightValue.canConvert<int>()) {
-				stream.width = widthValue.toInt();
-				stream.height = heightValue.toInt();
-			}
-		}
+		//if (type == StreamType::Video) {
+		//	QVariant widthValue = extractJsonValue(streamObj, parserConfig.value("widthPath").toString());
+		//	QVariant heightValue = extractJsonValue(streamObj, parserConfig.value("heightPath").toString());
+		//	if (widthValue.canConvert<int>() && heightValue.canConvert<int>()) {
+		//		stream.width = widthValue.toInt();
+		//		stream.height = heightValue.toInt();
+		//	}
+		//}
 
 		if (stream.isValid()) {
 			streams.append(stream);
@@ -568,12 +547,12 @@ QString ConfigVideoPlatform::extractVideoId(const QString& url)
 	return QString();
 }
 
-QVariantMap ConfigVideoPlatform::getQualityParams(const QString& qualityName, StreamType type) const
+QVariantMap ConfigVideoPlatform::getQualityParams(const QString& qualityName) const
 {
 	QVariantMap params;
 
 	// 从 mod.json 获取质量映射
-	QVariantMap qualityMapping = m_modInfo.getQualityMapping(type);
+	QVariantMap qualityMapping = m_modInfo.getVideoQualityMapping();
 
 	// 获取指定画质的参数配置
 	QVariant qualityConfig = qualityMapping.value(qualityName);
@@ -594,7 +573,7 @@ QVariantMap ConfigVideoPlatform::buildRequestParams(const VideoInfo& videoInfo, 
 
 	if (m_modInfo.modId == "bilibili") {
 		params["bvid"] = videoInfo.videoId;
-		QVariantMap qualityMapping = m_modInfo.getQualityMapping(request.type);
+		QVariantMap qualityMapping = m_modInfo.getVideoQualityMapping();
 		params["qn"] = qualityMapping.value(request.quality);
 	}
 	else if (m_modInfo.modId == "youtube") {
@@ -603,7 +582,7 @@ QVariantMap ConfigVideoPlatform::buildRequestParams(const VideoInfo& videoInfo, 
 	}
 
 	// 从配置文件获取画质参数
-	QVariantMap qualityParams = getQualityParams(request.quality, request.type);
+	QVariantMap qualityParams = getQualityParams(request.quality);
 	params.insert(qualityParams);
 
 	// 如果请求中有额外参数，覆盖配置文件的参数

@@ -1,13 +1,34 @@
 #pragma once
 
-//#include <QString>
 #include <QRegularExpression>
+#include <QUuid>
+#include <QRandomGenerator>
 
 class StringUtil
 {
 public:
 	StringUtil();
 	~StringUtil();
+
+	static QString generateId(const QString& headName)
+	{
+		using namespace std::chrono;
+
+		// 微秒级时间戳（性能与精度的平衡）
+		auto now = high_resolution_clock::now();
+		auto micros = duration_cast<microseconds>(now.time_since_epoch()).count();
+
+		// 紧凑型UUID（移除分隔符和连字符）
+		QString uuid = QUuid::createUuid().toString(QUuid::Id128);
+
+		// 额外随机数
+		uint32_t randomNum = QRandomGenerator::global()->generate();
+
+		return headName + QString("_%1_%2_%3")
+			.arg(micros)
+			.arg(uuid)
+			.arg(randomNum, 8, 16, QChar('0'));
+	}
 
 	static QString formatFileName(const QString& fileName)
 	{
@@ -77,28 +98,21 @@ public:
 		return formatDuration(duration.toLongLong());
 	}
 
-	static QString formatDuration(qint64 seconds)
+	static QString formatDuration(qint64 totalSeconds)
 	{
-		if (seconds < 0) return "  未知  ";
+		int hours = totalSeconds / 3600;
+		int minutes = (totalSeconds % 3600) / 60;
+		int seconds = totalSeconds % 60;
 
-		if (seconds < 60)
-		{
-			return QString("%1s").arg(seconds, 2, 10, QChar(' ')).leftJustified(8, ' ');
-		}
-		else if (seconds < 3600)
-		{
-			return QString("%1:%2")
-				.arg(seconds / 60, 2, 10, QChar(' '))
-				.arg(seconds % 60, 2, 10, QChar('0'))
-				.leftJustified(8, ' ');
-		}
-		else
-		{
+		if (hours > 0)
 			return QString("%1:%2:%3")
-				.arg(seconds / 3600, 2, 10, QChar('0'))
-				.arg((seconds % 3600) / 60, 2, 10, QChar('0'))
-				.arg(seconds % 60, 2, 10, QChar('0'));
-		}
+			.arg(hours, 2, 10, QLatin1Char('0'))
+			.arg(minutes, 2, 10, QLatin1Char('0'))
+			.arg(seconds, 2, 10, QLatin1Char('0'));
+		else
+			return QString("%1:%2")
+			.arg(minutes, 2, 10, QLatin1Char('0'))
+			.arg(seconds, 2, 10, QLatin1Char('0'));
 	}
 
 	static QString formatDateTime(const QString& dutation)
@@ -117,19 +131,38 @@ public:
 		if (!dateTime.isValid()) return "";
 
 		QDateTime now = QDateTime::currentDateTime();
+
+		// 本地时间
+		// 计算时间差
+		qint64 secs = dateTime.secsTo(now);
+		if (secs < 0) return dateTime.toString("yyyy-MM-dd"); // 未来时间
+
+		if (secs < 60)
+		{
+			return "刚刚";
+		}
+		else if (secs < 3600)
+		{
+			return QString("%1分钟前").arg(secs / 60);
+		}
+		else if (secs < 86400)
+		{
+			return QString("%1小时前").arg(secs / 3600);
+		}
+
 		qint64 days = dateTime.daysTo(now);
 
-		if (days == 0)
+		if (days == 1)
 		{
-			return dateTime.toString("今天 hh:mm");
-		}
-		else if (days == 1)
-		{
-			return dateTime.toString("昨天 hh:mm");
+			return dateTime.toString("昨天 HH:mm");
 		}
 		else if (days < 7)
 		{
 			return QString("%1天前").arg(days);
+		}
+		else if (days < 30)
+		{
+			return QString("%1周前").arg(days / 7);
 		}
 		else
 		{

@@ -344,53 +344,54 @@ QFuture<QList<StreamInfo>> ConfigModManager::getVideoStreams(const VideoInfo& vi
 QFuture<QList<StreamInfo>> ConfigModManager::getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request)
 {
 	return QtConcurrent::run([this, videoInfo, request]() -> QList<StreamInfo> {
-		auto platform = getPlatformForMod(videoInfo.platformId);
-		if (!platform) {
-			throw std::runtime_error("Platform not available: " + videoInfo.platformId.toStdString());
-		}
+		//auto platform = getPlatformForMod(videoInfo.platformId);
+		//if (!platform) {
+		//	throw std::runtime_error("Platform not available: " + videoInfo.platformId.toStdString());
+		//}
 
-		return platform->getAudioStreams(videoInfo, request).result();
+		//return platform->getAudioStreams(videoInfo, request).result();
+		return {};
 		});
 }
 
-QFuture<SearchResult> ConfigModManager::searchVideos(const QString& keyword, const QString& platformId, int page)
-{
-	return QtConcurrent::run([this, keyword, platformId, page]() -> SearchResult {
-		SearchResult combinedResult;
-		combinedResult.searchQuery = keyword;
-
-		QList<QFuture<SearchResult>> futures;
-
-		// 如果指定了平台，只搜索该平台
-		if (!platformId.isEmpty()) {
-			auto platform = getPlatformForMod(platformId);
-			if (platform) {
-				futures.append(platform->searchVideos(keyword, page));
-			}
-		}
-		else {
-			// 搜索所有启用的平台
-			for (const auto& platform : m_platforms) {
-				futures.append(platform->searchVideos(keyword, page));
-			}
-		}
-
-		// 等待所有搜索完成
-		for (auto& future : futures) {
-			try {
-				SearchResult result = future.result();
-				combinedResult.items.append(result.items);
-				combinedResult.totalResults += result.totalResults;
-			}
-			catch (const std::exception& e) {
-				LOG_WARN("ModManager", QString("Search failed for one platform: %1").arg(e.what()));
-				// 忽略单个平台的搜索失败，继续处理其他平台
-			}
-		}
-
-		return combinedResult;
-		});
-}
+//QFuture<SearchResult> ConfigModManager::searchVideos(const QString& keyword, const QString& platformId, int page)
+//{
+//	return QtConcurrent::run([this, keyword, platformId, page]() -> SearchResult {
+//		SearchResult combinedResult;
+//		combinedResult.searchQuery = keyword;
+//
+//		QList<QFuture<SearchResult>> futures;
+//
+//		// 如果指定了平台，只搜索该平台
+//		if (!platformId.isEmpty()) {
+//			auto platform = getPlatformForMod(platformId);
+//			if (platform) {
+//				futures.append(platform->searchVideos(keyword, page));
+//			}
+//		}
+//		else {
+//			// 搜索所有启用的平台
+//			for (const auto& platform : m_platforms) {
+//				futures.append(platform->searchVideos(keyword, page));
+//			}
+//		}
+//
+//		// 等待所有搜索完成
+//		for (auto& future : futures) {
+//			try {
+//				SearchResult result = future.result();
+//				combinedResult.items.append(result.items);
+//				combinedResult.totalResults += result.totalResults;
+//			}
+//			catch (const std::exception& e) {
+//				LOG_WARN("ModManager", QString("Search failed for one platform: %1").arg(e.what()));
+//				// 忽略单个平台的搜索失败，继续处理其他平台
+//			}
+//		}
+//
+//		return combinedResult;
+//		});
+//}
 
 // 添加缺失的方法实现
 QList<QString> ConfigModManager::getLoadedMods() const
