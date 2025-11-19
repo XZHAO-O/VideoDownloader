@@ -4,9 +4,15 @@
 #include <QDateTime>
 #include <QByteArray>
 
-#include "DownloadCardState.h"
-
 class DownloadTaskInfo;
+
+enum class DownloadCardState
+{
+	Pending,        // 待下载
+	Downloading,    // 下载中
+	Downloaded,     // 已下载
+	Error           // 错误
+};
 
 class DownloadCardModel : public QObject
 {
@@ -26,8 +32,8 @@ class DownloadCardModel : public QObject
 		Q_PROPERTY(int progress READ progress WRITE setProgress NOTIFY progressChanged)
 		Q_PROPERTY(QString downloadSpeed READ downloadSpeed WRITE setDownloadSpeed NOTIFY downloadSpeedChanged)
 		Q_PROPERTY(QString filePath READ filePath WRITE setFilePath NOTIFY filePathChanged)
-		Q_PROPERTY(VideoQualityLevel videoQuality READ videoQuality WRITE setVideoQuality NOTIFY videoQualityChanged)
-		Q_PROPERTY(AudioQualityLevel audioQuality READ audioQuality WRITE setAudioQuality NOTIFY audioQualityChanged)
+		Q_PROPERTY(QString videoQuality READ videoQuality WRITE setVideoQuality NOTIFY videoQualityChanged)
+		Q_PROPERTY(QString audioQuality READ audioQuality WRITE setAudioQuality NOTIFY audioQualityChanged)
 
 public:
 	explicit DownloadCardModel(QObject* parent = nullptr);
@@ -48,8 +54,8 @@ public:
 	const int& progress() const { return m_progress; }
 	const QString& downloadSpeed() const { return m_downloadSpeed; }
 	const QString& filePath() const { return m_filePath; }
-	const VideoQualityLevel& videoQuality() const { return m_videoQuality; }
-	const AudioQualityLevel& audioQuality() const { return m_audioQuality; }
+	const QString& videoQuality() const { return m_videoQuality; }
+	const QString& audioQuality() const { return m_audioQuality; }
 
 	// Setters
 	void setTaskId(const QString& taskId);
@@ -66,8 +72,8 @@ public:
 	void setProgress(int progress);
 	void setDownloadSpeed(const QString& downloadSpeed);
 	void setFilePath(const QString& filePath);
-	void setVideoQuality(VideoQualityLevel quality);
-	void setAudioQuality(AudioQualityLevel quality);
+	void setVideoQuality(const QString& quality);
+	void setAudioQuality(const QString& quality);
 
 	// 从DownloadTaskInfo转换
 	void fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo);
@@ -105,6 +111,6 @@ private:
 	int m_progress = 0;
 	QString m_downloadSpeed = 0;
 	QString m_filePath;
-	VideoQualityLevel m_videoQuality = VideoQualityLevel::High;
-	AudioQualityLevel m_audioQuality = AudioQualityLevel::High;
+	QString m_videoQuality;
+	QString m_audioQuality;
 };

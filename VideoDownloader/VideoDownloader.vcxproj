@@ -374,7 +374,6 @@
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
-    <ClInclude Include="DownloadCardState.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadContext.h" />
     <ClInclude Include="DownloadRecord.h" />

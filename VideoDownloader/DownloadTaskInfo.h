@@ -10,7 +10,15 @@ enum class DownloadPeriod
 	Prepare = 0,
 	Video,
 	Audio,
-	Merge,
+	Merging,
+};
+
+// 下载格式
+enum class DownloadFormat
+{
+	VideoOnly = 0,
+	AudioOnly,
+	Merged
 };
 
 class DownloadTaskInfo
@@ -24,18 +32,19 @@ public:
 	QHash<QString, qint64> audioSizes;
 	QString selectedVideoQuality;
 	QString selectedAudioQuality;
-	bool partialDownloadSupport;
 	DownloadContext* context;
 	DownloadContext* audioContext;
+	DownloadFormat downloadFormat;
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
+	bool partialDownloadSupport;
 	QString downloadFilePath;
 	QDateTime endTime;
-	qint64 fileSize;
-	StreamRequest streamRequest;
 
 	DownloadTaskInfo()
 		: context(nullptr)
+		, audioContext(nullptr)
+		, downloadFormat(DownloadFormat::Merged)
 		, status(DownloadStatus::Queued)
 		, downloadPeriod(DownloadPeriod::Prepare)
 	{
@@ -48,14 +57,43 @@ public:
 
 	void createContext()
 	{
-		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), videoDownloadUrls["0"]);
-		context->fileSize = fileSize;
+		switch (videoInfo.streamType)
+		{
+		case StreamType::AVSeparate:
+		{
+			switch (downloadFormat)
+			{
+			case DownloadFormat::VideoOnly:
+			{
+				createVideoContext();
+				return;
+			}
+			case DownloadFormat::AudioOnly:
+				createAudioContext();
+				return;
+			}
+		}
+		case StreamType::AVMerged:
+		{
+			createVideoContext();
+			createAudioContext();
+			break;
+		}
+		}
+	}
+
+private:
+	void createVideoContext()
+	{
+		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), audioDownloadUrls["0"]);
+		context->fileSize = videoSizes["0"];
 		context->partialDownloadSupport = partialDownloadSupport;
 	}
 
-	// 估计剩余时间
-	QString estimatedTimeRemaining() const
+	void createAudioContext()
 	{
-
+		audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), audioDownloadUrls["0"]);
+		audioContext->fileSize = audioSizes["0"];
+		audioContext->partialDownloadSupport = partialDownloadSupport;
 	}
 };

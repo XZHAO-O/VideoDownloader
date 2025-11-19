@@ -117,86 +117,92 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 {
 	BENCHMARKING_FUNCTION();
 
-	// 取消之前的操作（如果存在）
+	// 1. 取消之前的操作
 	if (m_currentWatcher && m_currentWatcher->isRunning())
 	{
 		cancelCurrentOperation();
 	}
 
-	// 创建新的取消令牌
 	m_currentOperationToken = CancelManager::instance().createCancelToken("video_download_cards");
-
 	downloadReadyWidget->showLoading();
-	// 创建任务列表
-	auto sharedTaskList = QSharedPointer<QList<QSharedPointer<DownloadTaskInfo>>>::create();
-	sharedTaskList->reserve(videoInfoList.size());
 
-	// 保存移动后的列表到局部变量
-	QList<VideoInfo> localVideoList = std::move(videoInfoList);
+	// 2. 预处理：在主线程将 VideoInfo 移动到 TaskInfo 中 (避免在多线程中修改源列表导致的深拷贝)
+	QList<QSharedPointer<DownloadTaskInfo>> inputTaskList;
+	inputTaskList.reserve(videoInfoList.size());
+
+	for (auto& info : videoInfoList)
+	{
+		auto taskInfo = QSharedPointer<DownloadTaskInfo>::create();
+		taskInfo->taskId = StringUtil::generateId("task");
+		// 核心优化：在主线程完成 Move，耗时极低
+		taskInfo->videoInfo = std::move(info);
+		inputTaskList.append(taskInfo);
+	}
+
+	// 3. 准备结果列表 (用于最终展示)
+	// 注意：Watcher 的 resultReadyAt 返回的将是 mapped 处理后的结果
+	auto validResultList = QSharedPointer<QList<QSharedPointer<DownloadTaskInfo>>>::create();
+	validResultList->reserve(inputTaskList.size());
 
 	m_currentWatcher = new QFutureWatcher<QSharedPointer<DownloadTaskInfo>>(this);
 
-	connect(m_currentWatcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::resultReadyAt, this, [this, sharedTaskList](int index) {
+	// 4. 信号连接
+	connect(m_currentWatcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::resultReadyAt, this, [this, validResultList](int index) {
+		// 获取处理完的任务
 		QSharedPointer<DownloadTaskInfo> taskInfo = m_currentWatcher->resultAt(index);
-		// 检查是否被取消
-		if (!m_currentOperationToken.isEmpty() &&
+
+		// 二次检查：如果任务本身有效且未取消，加入最终显示列表
+		if (taskInfo && !m_currentOperationToken.isEmpty() &&
 			!CancelManager::instance().isCancelled(m_currentOperationToken))
 		{
-			sharedTaskList->append(taskInfo);
+			validResultList->append(taskInfo);
 		}
 		});
 
-	connect(m_currentWatcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::finished, this, [this, sharedTaskList]() {
-		if (!m_currentOperationToken.isEmpty() &&
-			!CancelManager::instance().isCancelled(m_currentOperationToken))
-		{
-			downloadReadyWidget->addDownloadCards(*sharedTaskList);
-			AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, "数据解析成功");
-		}
-		else
-		{
-			AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, "操作已取消");
-		}
+	connect(m_currentWatcher, &QFutureWatcher<QSharedPointer<DownloadTaskInfo>>::finished,
+		this, [this, validResultList]() {
+			if (!m_currentOperationToken.isEmpty() &&
+				!CancelManager::instance().isCancelled(m_currentOperationToken))
+			{
+				downloadReadyWidget->addDownloadCards(*validResultList);
+				AntMessageManager::instance()->showMessage(AntMessage::Success, AntMessage::Singleton, "数据解析成功");
+			}
+			else
+			{
+				AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, "操作已取消");
+			}
 
-		// 清理取消令牌
-		if (!m_currentOperationToken.isEmpty())
-		{
-			CancelManager::instance().cleanupToken(m_currentOperationToken);
-			m_currentOperationToken.clear();
-		}
+			if (!m_currentOperationToken.isEmpty())
+			{
+				CancelManager::instance().cleanupToken(m_currentOperationToken);
+				m_currentOperationToken.clear();
+			}
 
-		m_currentWatcher->deleteLater();
-		m_currentWatcher = nullptr;
+			m_currentWatcher->deleteLater();
+			m_currentWatcher = nullptr;
 		});
 
-	// 使用局部变量（左值）而不是右值引用
-	QFuture<QSharedPointer<DownloadTaskInfo>> future = QtConcurrent::mapped(localVideoList,
-		[this, cancelToken = m_currentOperationToken](const VideoInfo& videoInfo) {
-			QSharedPointer<DownloadTaskInfo> taskInfo = QSharedPointer<DownloadTaskInfo>::create();
-			// 在任务开始前检查取消状态
+	// 5. 并发处理
+	// mapped 直接处理 QSharedPointer 列表，复制成本仅为指针复制（引用计数增加），非常廉价
+	QFuture<QSharedPointer<DownloadTaskInfo>> future = QtConcurrent::mapped(inputTaskList,
+		[cancelToken = m_currentOperationToken](QSharedPointer<DownloadTaskInfo> taskInfo) {
+
+			// 检查取消
 			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
 			{
-				return taskInfo;
+				return taskInfo; // 或者返回 nullptr 并在外部过滤
 			}
-			taskInfo->taskId = StringUtil::generateId("task");
-			taskInfo->streamRequest.extraParams.insert(videoInfo.extraParams);
-			taskInfo->videoInfo = videoInfo;  // 这里不能移动，因为 videoInfo 是 const 引用
+
+			// 执行耗时网络操作 (数据已经在 taskInfo 里面了，无需再 copy/move)
+			taskInfo->videoInfo.videoPlatform->getVideoUrlInfo(taskInfo, cancelToken);
 
 			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
 			{
 				return taskInfo;
 			}
-			// 传递取消令牌给网络操作
-			videoInfo.videoPlatform->getVideoUrlInfo(taskInfo, cancelToken);
 
-			// 在操作之间检查取消状态
-			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
-			{
-				return taskInfo;
-			}
-
-			videoInfo.videoPlatform->getVideoCover(taskInfo, cancelToken);
-			taskInfo->downloadFilePath = "E:/CProject/" + videoInfo.title + ".mp4";
+			taskInfo->videoInfo.videoPlatform->getVideoCover(taskInfo, cancelToken);
+			taskInfo->downloadFilePath = "E:/CProject/" + taskInfo->videoInfo.title + ".mp4";
 
 			return taskInfo;
 		});

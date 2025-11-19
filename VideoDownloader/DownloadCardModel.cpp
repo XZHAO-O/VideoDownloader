@@ -90,7 +90,7 @@ void DownloadCardModel::setFilePath(const QString& filePath)
 	emit filePathChanged();
 }
 
-void DownloadCardModel::setVideoQuality(VideoQualityLevel quality)
+void DownloadCardModel::setVideoQuality(const QString& quality)
 {
 	if (m_videoQuality != quality) {
 		m_videoQuality = quality;
@@ -98,7 +98,7 @@ void DownloadCardModel::setVideoQuality(VideoQualityLevel quality)
 	}
 }
 
-void DownloadCardModel::setAudioQuality(AudioQualityLevel quality)
+void DownloadCardModel::setAudioQuality(const QString& quality)
 {
 	m_audioQuality = quality;
 }

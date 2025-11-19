@@ -149,27 +149,12 @@ void DownloadCard::onTitleClicked()
 
 void DownloadCard::onVideoQualityChanged(const QString& quality)
 {
-	// 转换质量等级
-	VideoQualityLevel level = VideoQualityLevel::High;
-	if (quality == "480p") level = VideoQualityLevel::Low;
-	else if (quality == "720p") level = VideoQualityLevel::Medium;
-	else if (quality == "1080p") level = VideoQualityLevel::High;
-	else if (quality == "4K") level = VideoQualityLevel::Ultra;
-	else if (quality == "原画") level = VideoQualityLevel::Original;
-
-	m_model->setVideoQuality(level);
+	m_model->setVideoQuality(quality);
 }
 
 void DownloadCard::onAudioQualityChanged(const QString& quality)
 {
-	// 转换质量等级
-	AudioQualityLevel level = AudioQualityLevel::High;
-	if (quality == "低音质") level = AudioQualityLevel::Low;
-	else if (quality == "中音质") level = AudioQualityLevel::Medium;
-	else if (quality == "高音质") level = AudioQualityLevel::High;
-	else if (quality == "无损") level = AudioQualityLevel::Ultra;
-
-	m_model->setAudioQuality(level);
+	m_model->setAudioQuality(quality);
 }
 
 void DownloadCard::initUI()
@@ -645,10 +630,8 @@ void DownloadCard::initConnections()
 	{
 	case DownloadCardState::Pending:
 
-		connect(m_videoQualityCombo, SIGNAL(currentTextChanged(QString)),
-			this, SLOT(onVideoQualityChanged(QString)));
-		connect(m_audioQualityCombo, SIGNAL(currentTextChanged(QString)),
-			this, SLOT(onAudioQualityChanged(QString)));
+		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onVideoQualityChanged);
+		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onAudioQualityChanged);
 
 		connect(m_downloadBtn, &AntButton::clicked, this, &DownloadCard::downloadClicked);
 

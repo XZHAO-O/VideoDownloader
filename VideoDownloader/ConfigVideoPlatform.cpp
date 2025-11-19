@@ -111,7 +111,6 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 {
 	BENCHMARKING_FUNCTION();
 
-	StreamRequest request = taskInfo->streamRequest;
 	QString apiUrl = m_modInfo.getApiEndpoint("playUrl");
 
 	// 构建请求参数
@@ -136,7 +135,7 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	//QVariantMap qualityMapping = m_modInfo.getQualityMapping(request.type);
 	//params["qn"] = qualityMapping.value(request.quality, 64); // 默认 720p
 
-	params.insert(request.extraParams);
+	params.insert(taskInfo->videoInfo.extraParams);
 	QVariantMap requestParams = m_modInfo.getConfigValue("qualityMapping.video").toMap();
 
 	//判断清晰度
@@ -191,8 +190,8 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, reply.errorString);
 		return;
 	}
-	taskInfo->fileSize = replyHeader.getContentLength();
-	if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->fileSize > 0)
+	taskInfo->videoSizes["0"] = replyHeader.getContentLength();
+	if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->videoSizes["0"] > 0)
 		taskInfo->partialDownloadSupport = true;
 	else
 		taskInfo->partialDownloadSupport = false;

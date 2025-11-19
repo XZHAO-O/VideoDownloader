@@ -38,15 +38,6 @@ struct AudioQuality {
 	}
 };
 
-// 下载格式
-enum DownloadFormat {
-	VideoOnly = 0,
-	AudioOnly,
-	VideoAudio,
-	Merged
-};
-
 Q_DECLARE_METATYPE(ApplicationState)
 Q_DECLARE_METATYPE(VideoQuality)
 Q_DECLARE_METATYPE(AudioQuality)
-Q_DECLARE_METATYPE(DownloadFormat)

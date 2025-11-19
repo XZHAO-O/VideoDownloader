@@ -212,7 +212,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 				//}
 				//else
 				//{
-				ui.titleBar->setFixedHeight(m_titleBarHeight);
+				//ui.titleBar->setFixedHeight(m_titleBarHeight);
 				//}
 
 				// 禁用所有按钮，防止视觉反馈+误点
