@@ -168,9 +168,7 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 
 	if (!response.success)
 	{
-		//平台请求头待包含，访问会被拒绝
-		//在主线程显示，会触发断言
-		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, response.errorString);
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, response.errorString);
 		return;
 	}
 
@@ -186,8 +184,7 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers, cancelToken);
 	if (!replyHeader.success)
 	{
-		//在主线程显示，会触发断言
-		//AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, reply.errorString);
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
 		return;
 	}
 	taskInfo->videoSizes["0"] = replyHeader.getContentLength();
