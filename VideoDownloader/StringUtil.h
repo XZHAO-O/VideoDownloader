@@ -10,7 +10,7 @@ public:
 	StringUtil();
 	~StringUtil();
 
-	static QString generateId(const QString& headName)
+	static QString generateId(const QString& headName = "")
 	{
 		using namespace std::chrono;
 

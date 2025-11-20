@@ -40,6 +40,8 @@ public:
 	bool isEnabled() const { return m_modInfo.enabled; }
 	bool matchesUrl(const QString& url) const;
 
+	QJsonObject fetchVideoInfoApiResponse(const QUrl& url, const QVariantMap& params);
+
 signals:
 	void videoInfoReceived(const VideoInfo& videoInfo);
 	void streamsReceived(const QList<StreamInfo>& streams);
@@ -60,7 +62,7 @@ private:
 	QVariantMap buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QVariant extractJsonValue(const QJsonObject& data, const QString& path);
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);
-	QList<VideoInfo> parseVideoInfo(const QJsonObject& data);
+	QList<VideoInfo> parseVideoInfo(const QMap<int, QJsonObject>& responseMap, const QVariantMap& parser);
 
 private:
 	ModInfo m_modInfo;
