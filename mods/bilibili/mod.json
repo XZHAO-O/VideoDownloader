@@ -2,8 +2,8 @@
   "modId": "bilibili",
   "name": "哔哩哔哩视频下载",
   "version": "1.0.0",
-  "author": "VideoDownloader Team",
-  "description": "支持哔哩哔哩视频下载的Mod",
+  "author": "XZHAO_O",
+  "description": "支持哔哩哔哩视频和音频下载",
   "supportedPlatforms": [ "windows", "linux", "macos" ],
 
   "urlPatterns": [
@@ -11,8 +11,12 @@
   ],
 
   "apiEndpoints": {
-    "videoInfo": "https://api.bilibili.com/x/web-interface/view",
-    "playUrl": "https://api.bilibili.com/x/player/wbi/playurl"
+    "videoInfo": [
+      "https://api.bilibili.com/x/web-interface/view"
+    ],
+    "downloadInfo": [
+      "https://api.bilibili.com/x/player/wbi/playurl"
+    ]
   },
 
   "requestHeaders": {
@@ -42,20 +46,135 @@
     }
   },
   "videoInfoParser": {
-    "title": "data.title",
-    "author": "data.owner.name",
-    "authorId": "data.owner.mid",
-    "duration": "data.duration",
-    "thumbnail": "data.pic",
-    "description": "data.desc",
-    "videoId": "data.bvid",
-    "viewCount": "data.stat.view",
-    "likeCount": "data.stat.like",
-    "coinCount": "data.stat.coin",
-    "favoriteCount": "data.stat.favorite",
-    "shareCount": "data.stat.share",
-    "replyCount": "data.stat.reply",
-    "uploadTime": "data.pubdate"
+    "SingleVideo": {
+      "method": "default",
+      "videoId": {
+        "index": 0,
+        "path": "data.bvid"
+      },
+      "title": {
+        "index": 0,
+        "path": "data.title"
+      },
+      "author": {
+        "index": 0,
+        "path": "data.owner.name"
+      },
+      "duration": {
+        "index": 0,
+        "path": "data.duration"
+      },
+      "cover": {
+        "index": 0,
+        "path": "data.pic"
+      },
+      "publishTime": {
+        "index": 0,
+        "path": "data.pubdate"
+      },
+      "extraParams": [
+        {
+          "index": 0,
+          "name": "avid",
+          "path": "data.aid"
+        },
+        {
+          "index": 0,
+          "name": "cid",
+          "path": "data.cid"
+        }
+      ]
+    },
+    "VideoCollection": {
+      "method": "exist",
+      "index": 0,
+      "path": "data.ugc_season",
+      "sectionName": {
+        "index": 0,
+        "path": "data.ugc_season.title"
+      },
+      "videoId": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.bvid"
+      },
+      "title": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.title"
+      },
+      "author": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.arc.author.name"
+      },
+      "duration": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.arc.duration"
+      },
+      "cover": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.arc.pic"
+      },
+      "publishTime": {
+        "index": 0,
+        "path": "data.ugc_season.sections.#0.episodes.#.arc.pubdate"
+      },
+      "extraParams": [
+        {
+          "index": 0,
+          "name": "avid",
+          "path": "data.ugc_season.sections.#0.episodes.#.aid"
+        },
+        {
+          "index": 0,
+          "name": "cid",
+          "path": "data.ugc_season.sections.#0.episodes.#.cid"
+        }
+      ]
+    },
+    "MultiPartVideo": {
+      "method": "exist",
+      "index": 0,
+      "path": "data.pages.#2",
+      "sectionName": {
+        "index": 0,
+        "path": "data.title"
+      },
+      "videoId": {
+        "index": 0,
+        "path": "data.bvid"
+      },
+      "title": {
+        "index": 0,
+        "path": "data.pages.#.part"
+      },
+      "author": {
+        "index": 0,
+        "path": "data.owner.name"
+      },
+      "duration": {
+        "index": 0,
+        "path": "data.pages.#.part.duration"
+      },
+      "cover": {
+        "index": 0,
+        "path": "data.pic"
+      },
+      "publishTime": {
+        "index": 0,
+        "path": "data.pubdate"
+      },
+      "extraParams": [
+        {
+          "index": 0,
+          "name": "avid",
+          "path": "data.aid"
+        },
+        {
+          "index": 0,
+          "name": "cid",
+          "path": "data.pages.#.cid"
+        }
+      ]
+    }
   },
   "streamParser": {
     "url": "data.durl.0.url",
