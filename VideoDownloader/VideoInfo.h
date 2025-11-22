@@ -12,7 +12,8 @@ enum class StreamType
 };
 
 // 视频流信息
-struct StreamInfo {
+struct StreamInfo
+{
 	QString id;
 	QUrl url;
 	QString quality;

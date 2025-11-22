@@ -26,10 +26,8 @@ class DownloadTaskInfo
 public:
 	QString taskId;
 	VideoInfo videoInfo;
-	QHash<QString, QUrl> videoDownloadUrls;
-	QHash<QString, QUrl> audioDownloadUrls;
-	QHash<QString, qint64> videoSizes;
-	QHash<QString, qint64> audioSizes;
+	QHash<QString, StreamInfo> videoStreamInfo;
+	QHash<QString, StreamInfo> audioStreamInfo;
 	QString selectedVideoQuality;
 	QString selectedAudioQuality;
 	DownloadContext* context;
@@ -85,15 +83,17 @@ public:
 private:
 	void createVideoContext()
 	{
-		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), audioDownloadUrls["0"]);
-		context->fileSize = videoSizes["0"];
-		context->partialDownloadSupport = partialDownloadSupport;
+		selectedVideoQuality = videoStreamInfo.keys()[0];
+		context = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), videoStreamInfo[selectedVideoQuality].url);
+		context->fileSize = videoStreamInfo[selectedVideoQuality].fileSize;
+		context->partialDownloadSupport = true;
 	}
 
 	void createAudioContext()
 	{
-		audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), audioDownloadUrls["0"]);
-		audioContext->fileSize = audioSizes["0"];
-		audioContext->partialDownloadSupport = partialDownloadSupport;
+		selectedAudioQuality = audioStreamInfo.keys()[0];
+		audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), videoStreamInfo[selectedAudioQuality].url);
+		audioContext->fileSize = videoStreamInfo[selectedAudioQuality].fileSize;
+		audioContext->partialDownloadSupport = true;
 	}
 };

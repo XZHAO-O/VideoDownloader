@@ -103,7 +103,7 @@ DownloadPage::~DownloadPage()
 void DownloadPage::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 {
 	BENCHMARKING_FUNCTION();
-	taskInfo->videoInfo.videoPlatform->getVideoUrlInfo(taskInfo);
+	taskInfo->videoInfo.videoPlatform->getDownloadInfo(taskInfo);
 }
 
 void DownloadPage::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo)
@@ -194,7 +194,7 @@ void DownloadPage::createDownloadCards(QList<VideoInfo>&& videoInfoList)
 			}
 
 			// 执行耗时网络操作 (数据已经在 taskInfo 里面了，无需再 copy/move)
-			taskInfo->videoInfo.videoPlatform->getVideoUrlInfo(taskInfo, cancelToken);
+			taskInfo->videoInfo.videoPlatform->getDownloadInfo(taskInfo, cancelToken);
 
 			if (!cancelToken.isEmpty() && CancelManager::instance().isCancelled(cancelToken))
 			{

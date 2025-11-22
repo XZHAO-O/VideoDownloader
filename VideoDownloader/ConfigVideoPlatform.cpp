@@ -218,7 +218,7 @@ void ConfigVideoPlatform::getVideoCover(QSharedPointer<DownloadTaskInfo> taskInf
 	}
 }
 
-void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
+void ConfigVideoPlatform::getDownloadInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken)
 {
 	BENCHMARKING_FUNCTION();
 
@@ -288,22 +288,25 @@ void ConfigVideoPlatform::getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskI
 	qDebug() << doc.toJson();
 	// 获取对象
 	QJsonObject obj = doc.object();
-	QUrl videoPlayUrl = parseVideoPlayUrl(doc.object());
-	LOG_INFO("ConfigVideoPlatform", QString("Video Play Url retrieved: %1").arg(videoPlayUrl.toString().toUtf8().constData()));
+	parseVideoPlayUrl(taskInfo, doc.object());
 
-	taskInfo->videoDownloadUrls["0"] = videoPlayUrl;
+	//taskInfo->videoDownloadUrls["0"] = videoPlayUrl;
 
-	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(videoPlayUrl, headers, cancelToken);
+	auto keys = taskInfo->videoStreamInfo.keys();
+
+	auto& streamInfo = taskInfo->videoStreamInfo[keys[0]];
+
+	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(streamInfo.url, headers, cancelToken);
 	if (!replyHeader.success)
 	{
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
 		return;
 	}
-	taskInfo->videoSizes["0"] = replyHeader.getContentLength();
-	if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->videoSizes["0"] > 0)
-		taskInfo->partialDownloadSupport = true;
-	else
-		taskInfo->partialDownloadSupport = false;
+	streamInfo.fileSize = replyHeader.getContentLength();
+	//if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->videoSizes["0"] > 0)
+	//	taskInfo->partialDownloadSupport = true;
+	//else
+	//	taskInfo->partialDownloadSupport = false;
 }
 
 QFuture<QList<StreamInfo>> ConfigVideoPlatform::getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request)
@@ -452,15 +455,39 @@ QFuture<QList<StreamInfo>> ConfigVideoPlatform::getAudioStreams(const VideoInfo&
 //	return {};
 //}
 
-QUrl ConfigVideoPlatform::parseVideoPlayUrl(const QJsonObject& data)
+void ConfigVideoPlatform::parseVideoPlayUrl(QSharedPointer<DownloadTaskInfo> task, const QJsonObject& data)
 {
-	QString urlPath = m_modInfo.getConfigValue("streamParser.video.urlPath").toString();
-	//选择正确的清晰度
-	urlPath.replace("#", "0");
-	QUrl videoUrl(extractJsonValue(data, urlPath).toString());
+	QVariantMap path = m_modInfo.getConfigValue("streamParser.video").toMap();
 
-	LOG_INFO("ConfigVideoPlatform", QString("Successfully parsed video URL: %1").arg(videoUrl.toString().toUtf8().constData()));
-	return videoUrl;
+	QStringList urls = extractJsonValue(data, path.value("urlPath").toString()).toStringList();
+	QStringList codecs = extractJsonValue(data, path.value("codecPath").toString()).toStringList();
+	QStringList qualities = extractJsonValue(data, path.value("qualityPath").toString()).toStringList();
+
+	for (int i = 0; i < urls.size(); i++)
+	{
+		StreamInfo streamInfo;
+		streamInfo.url = urls[i];
+		streamInfo.codec = codecs[i];
+		streamInfo.quality = qualities[i];
+		task->videoStreamInfo.insert(qualities[i] + codecs[i], streamInfo);
+	}
+
+	path = m_modInfo.getConfigValue("streamParser.video").toMap();
+
+	urls = extractJsonValue(data, path.value("urlPath").toString()).toStringList();
+	codecs = extractJsonValue(data, path.value("codecPath").toString()).toStringList();
+	qualities = extractJsonValue(data, path.value("qualityPath").toString()).toStringList();
+
+	for (int i = 0; i < urls.size(); i++)
+	{
+		StreamInfo streamInfo;
+		streamInfo.url = urls[i];
+		streamInfo.codec = codecs[i];
+		streamInfo.quality = qualities[i];
+		task->audioStreamInfo.insert(qualities[i] + codecs[i], streamInfo);
+	}
+
+	LOG_INFO("ConfigVideoPlatform", QString("Successfully parsed video URL: %1"));
 }
 
 QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject>& responseMap, const QVariantMap& parser)
@@ -471,27 +498,13 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 	QVariantMap config = parser.value("title").toMap();
 	QJsonObject data = responseMap.value(config.value("index").toInt());
 	QVariant titleValue = extractJsonValue(data, config.value("path").toString());
-	QStringList titleList;
-
-	if (titleValue.canConvert<QStringList>()) {
-		titleList = titleValue.toStringList();
-	}
-	else if (titleValue.typeId() == QMetaType::QString) {
-		titleList << titleValue.toString();
-	}
-	else if (titleValue.canConvert<QVariantList>()) {
-		QVariantList list = titleValue.toList();
-		for (const QVariant& item : list) {
-			titleList << item.toString();
-		}
-	}
-	else {
-		// 如果无法转换，创建一个包含单个title的列表
-		titleList << titleValue.toString();
-	}
+	QStringList titleList = titleValue.canConvert<QStringList>()
+		? titleValue.toStringList()
+		: (QStringList() << titleValue.toString());
 
 	int itemCount = titleList.size();
-	if (itemCount == 0) {
+	if (itemCount == 0)
+	{
 		return videoInfoList; // 如果没有title，返回空列表
 	}
 
@@ -499,27 +512,34 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 	auto toVariantList = [itemCount](const QVariant& value) -> QVariantList {
 		QVariantList result;
 
-		if (value.canConvert<QVariantList>()) {
+		if (value.typeId() == QMetaType::QVariantList)
+		{
 			QVariantList list = value.toList();
-			if (list.size() == itemCount) {
+			if (list.size() == itemCount)
+			{
 				return list;
 			}
-			else if (list.size() > itemCount) {
+			else if (list.size() > itemCount)
+			{
 				// 如果列表比title多，截取前itemCount个
 				return list.mid(0, itemCount);
 			}
-			else {
+			else
+			{
 				// 如果列表比title少，用最后一个元素填充
 				result = list;
-				while (result.size() < itemCount) {
+				while (result.size() < itemCount)
+				{
 					result.append(list.isEmpty() ? QVariant() : list.last());
 				}
 				return result;
 			}
 		}
-		else {
+		else
+		{
 			// 不是列表，创建填充列表
-			for (int i = 0; i < itemCount; ++i) {
+			for (int i = 0; i < itemCount; ++i)
+			{
 				result.append(value);
 			}
 			return result;
@@ -575,12 +595,14 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 	QList<QVariantMap> extraParamsList;
 
 	// 初始化extraParams列表
-	for (int i = 0; i < itemCount; ++i) {
+	for (int i = 0; i < itemCount; ++i)
+	{
 		extraParamsList.append(QVariantMap());
 	}
 
 	// 为每个extraParam提取数据
-	for (const QVariant& extraParamsConfig : extraParamsConfigs) {
+	for (const QVariant& extraParamsConfig : extraParamsConfigs)
+	{
 		QVariantMap paramsConfig = extraParamsConfig.toMap();
 		data = responseMap.value(paramsConfig.value("index").toInt());
 		QVariant paramsValue = extractJsonValue(data, paramsConfig.value("path").toString());
@@ -589,7 +611,8 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 		QVariantList paramList = toVariantList(paramsValue);
 
 		// 将参数值设置到对应的extraParams中
-		for (int i = 0; i < itemCount && i < paramList.size(); ++i) {
+		for (int i = 0; i < itemCount && i < paramList.size(); ++i)
+		{
 			QVariantMap& currentParams = extraParamsList[i];
 			currentParams.insert(paramName, paramList[i]);
 		}
@@ -604,8 +627,8 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 		info.videoId = videoIdList.value(i).toString();
 		info.title = titleList.value(i);
 		info.author = authorList.value(i).toString();
-		info.duration = durationList.value(i).toString();
-		info.publishTime = publishTimeList.value(i).toString();
+		info.duration = StringUtil::formatDuration(durationList.value(i).toString());
+		info.publishTime = StringUtil::formatDateTime(publishTimeList.value(i).toString());
 		info.coverUrl = coverUrlList.value(i).toString();
 		info.extraParams = extraParamsList.value(i);
 

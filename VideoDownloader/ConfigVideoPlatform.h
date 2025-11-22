@@ -21,11 +21,11 @@ public:
 	// 平台接口
 	QList<VideoInfo> getVideoInfo(const QString& url);
 	void getVideoCover(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken = QString());
-	void getVideoUrlInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken = QString());
+	void getDownloadInfo(QSharedPointer<DownloadTaskInfo> taskInfo, const QString& cancelToken = QString());
 	QFuture<QList<StreamInfo>> getVideoStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QFuture<QList<StreamInfo>> getAudioStreams(const VideoInfo& videoInfo, const StreamRequest& request);
 	//QFuture<SearchResult> searchVideos(const QString& keyword, int page = 1);
-	QUrl parseVideoPlayUrl(const QJsonObject& data);
+	void parseVideoPlayUrl(QSharedPointer<DownloadTaskInfo> task, const QJsonObject& data);
 
 	// 登录相关功能（委托给 LoginManager）
 	QUrl startQRCodeLogin() { return m_loginManager->startQRCodeLogin(); }

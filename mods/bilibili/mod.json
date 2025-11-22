@@ -152,7 +152,7 @@
       },
       "duration": {
         "index": 0,
-        "path": "data.pages.#.part.duration"
+        "path": "data.pages.#.duration"
       },
       "cover": {
         "index": 0,
@@ -177,7 +177,6 @@
     }
   },
   "streamParser": {
-    "url": "data.durl.0.url",
     "video": {
       "urlPath": "data.dash.video.#.baseUrl",
       "qualityPath": "data.dash.video.#.id",

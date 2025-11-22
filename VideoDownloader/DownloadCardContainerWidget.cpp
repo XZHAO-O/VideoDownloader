@@ -463,10 +463,7 @@ void DownloadCardContainerWidget::addDownloadCards(QList<QSharedPointer<Download
 
 	// 批量添加任务
 	m_downloadTasks.reserve(m_downloadTasks.size() + tasks.size());
-	for (const auto& task : tasks)
-	{
-		m_downloadTasks.append(task);
-	}
+	m_downloadTasks.append(tasks);
 
 	// 计算新的总页数
 	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
