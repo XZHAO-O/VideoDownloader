@@ -25,7 +25,10 @@ DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSha
 
 DownloadEngine::~DownloadEngine()
 {
-
+	for (auto task : m_downloadingTasks)
+	{
+		task->pauseDownload(Qt::BlockingQueuedConnection);
+	}
 }
 
 void DownloadEngine::addDownloadTask(QSharedPointer<DownloadTaskInfo> task)
@@ -45,9 +48,7 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		auto task = *downloadingTask;
 		task->status = DownloadStatus::Paused;
 
-		QMetaObject::invokeMethod(task->context, [this, task]() {
-			task->context->pauseDownload();
-			}, Qt::QueuedConnection);
+		task->pauseDownload();
 
 		m_downloadingTasks.erase(downloadingTask);
 		m_queuedTasks.push_back(task);
@@ -79,9 +80,7 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	if (downloadingTask != m_downloadingTasks.end())
 	{
 		auto task = *downloadingTask;
-		QMetaObject::invokeMethod(task->context, [this, task]() {
-			task->context->cancelDownload();
-			}, Qt::QueuedConnection);
+		task->cancelDownload(Qt::BlockingQueuedConnection);
 
 		m_downloadingTasks.erase(downloadingTask);
 		endDownloadContext(task);
@@ -122,13 +121,29 @@ void DownloadEngine::startDownload()
 		m_tasks.remove(task->taskId);
 		m_downloadingTasks.insert(task->taskId, task);
 
-		//创建downloadcontext
-		if (!task->context)
+		// 创建 download context
+		if (!task->videoContext && !task->audioContext)
 			task->createContext();
-		m_downloadThreadPool.allocateThread(task->context);
-		QMetaObject::invokeMethod(task->context, [this, task]() {
-			task->context->startDownload(m_networkManager);
-			}, Qt::QueuedConnection);
+
+		// 根据下载格式分配线程
+		switch (task->downloadFormat)
+		{
+		case DownloadFormat::Merged:
+		case DownloadFormat::VideoOnly:
+			if (task->videoContext)
+				m_downloadThreadPool.allocateThread(task->videoContext);
+			break;
+		case DownloadFormat::AudioOnly:
+			if (task->audioContext)
+				m_downloadThreadPool.allocateThread(task->audioContext);
+			break;
+		case DownloadFormat::Separated:
+			if (task->videoContext)
+				m_downloadThreadPool.allocateThread(task->videoContext);
+			break;
+		}
+
+		task->startDownload(m_networkManager);
 	}
 }
 
@@ -142,7 +157,7 @@ void DownloadEngine::processDownloadingTasks()
 
 		if (task->status == DownloadStatus::Downloading)
 		{
-			if (task->context->downloadStatus == DownloadStatus::Completed)
+			if (task->isCompleted())
 			{
 				completedTasks.append(task->taskId);
 				endDownloadContext(task);
@@ -150,18 +165,34 @@ void DownloadEngine::processDownloadingTasks()
 				continue;
 			}
 
-			if (task->context->downloadStatus == DownloadStatus::Failed)
+			// 处理 Separated 格式的音频下载切换
+			if (task->downloadFormat == DownloadFormat::Separated &&
+				task->videoContext &&
+				task->videoContext->downloadStatus == DownloadStatus::Completed &&
+				task->downloadPeriod != DownloadPeriod::Audio)
+			{
+				task->downloadPeriod = DownloadPeriod::Audio;
+
+				// 为音频下载分配线程
+				if (task->audioContext)
+					m_downloadThreadPool.allocateThread(task->audioContext);
+
+				QMetaObject::invokeMethod(task->audioContext, [this, task]() {
+					task->audioContext->startDownload(m_networkManager);
+					}, Qt::QueuedConnection);
+			}
+
+			if (task->isFailed())
 			{
 				completedTasks.append(task->taskId);
 				processFailedTasks(task);
 				continue;
 			}
 
-			qint64 downloadedBytes = task->context->downloadedTotalSize;
-			QString progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, task->context->fileSize);
-			int progress = downloadedBytes * 100 / task->context->fileSize;
-			QString downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - task->context->progressedSize);
-			task->context->progressedSize = downloadedBytes;
+			QString progressInfo;
+			int progress;
+			QString downloadSpeed;
+			task->formatDownloadInfo(progress, progressInfo, downloadSpeed);
 			emit downloadProgress(task->taskId, progressInfo, progress, downloadSpeed);
 		}
 	}
@@ -185,7 +216,34 @@ void DownloadEngine::processFailedTasks(QSharedPointer<DownloadTaskInfo> task)
 
 void DownloadEngine::endDownloadContext(QSharedPointer<DownloadTaskInfo> task)
 {
-	m_downloadThreadPool.releaseThread(task->context);
-	//task->context->moveToThread(QThread::currentThread());
-	disconnect(task->context, nullptr, this, nullptr);
+	// 根据下载格式释放相应的线程
+	switch (task->downloadFormat)
+	{
+	case DownloadFormat::Merged:
+	case DownloadFormat::VideoOnly:
+		if (task->videoContext)
+		{
+			m_downloadThreadPool.releaseThread(task->videoContext);
+			task->disconnectContext(this);
+		}
+		break;
+	case DownloadFormat::AudioOnly:
+		if (task->audioContext)
+		{
+			m_downloadThreadPool.releaseThread(task->audioContext);
+			task->disconnectContext(this);
+		}
+		break;
+	case DownloadFormat::Separated:
+		if (task->videoContext)
+		{
+			m_downloadThreadPool.releaseThread(task->videoContext);
+		}
+		if (task->audioContext)
+		{
+			m_downloadThreadPool.releaseThread(task->audioContext);
+		}
+		task->disconnectContext(this);
+		break;
+	}
 }

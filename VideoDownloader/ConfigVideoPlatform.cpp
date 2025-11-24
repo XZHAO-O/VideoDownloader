@@ -632,7 +632,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 		info.coverUrl = coverUrlList.value(i).toString();
 		info.extraParams = extraParamsList.value(i);
 
-		info.streamType = StreamType::AVMerged; // 默认值，可根据需要调整
+		info.streamType = StreamType::AVSeparate;
 
 		if (info.isValid())
 		{

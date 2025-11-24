@@ -90,44 +90,60 @@ public:
 
 	void pauseDownload()
 	{
+		if (downloadStatus == DownloadStatus::Completed) return;
+
 		active = false;
+
+		// 先断开所有信号连接
+		for (auto it = replys.begin(); it != replys.end(); ++it)
+		{
+			auto reply = it.value();
+			if (reply)
+			{
+				reply->disconnect();  // 断开所有连接
+				if (reply->isRunning())
+				{
+					reply->abort();
+				}
+				reply->deleteLater();  // 使用 deleteLater 更安全
+			}
+		}
+		replys.clear();  // 立即清空容器
+
 		if (accessManager)
 		{
 			accessManager->disconnect();
 			accessManager->deleteLater();
+			accessManager = nullptr;
 		}
-		for (auto reply : replys)
-		{
-			if (reply)
-			{
-				reply->disconnect();
-				if (reply->isRunning())
-				{
-					reply->abort();
-				}
-				reply->deleteLater();
-			}
-		}
-		replys.clear();
 	}
 
 	void cancelDownload()
 	{
+		if (downloadStatus == DownloadStatus::Completed) return;
+
 		active = false;
-		for (auto reply : replys)
+
+		// 使用迭代器安全删除 replys
+		auto itReply = replys.begin();
+		while (itReply != replys.end())
 		{
+			auto reply = itReply.value();
 			if (reply)
 			{
 				reply->disconnect();
 				if (reply->isRunning())
-				{
 					reply->abort();
-				}
 				reply->deleteLater();
 			}
+			itReply = replys.erase(itReply);  // 从容器中移除
 		}
-		for (auto file : files)
+
+		// 使用迭代器安全删除 files
+		auto itFile = files.begin();
+		while (itFile != files.end())
 		{
+			auto file = itFile.value();
 			if (file)
 			{
 				if (file->isOpen())
@@ -135,8 +151,16 @@ public:
 					file->close();
 					file->remove();
 				}
-				file->deleteLater();
+				delete file;
 			}
+			itFile = files.erase(itFile);  // 从容器中移除
+		}
+
+		if (accessManager)
+		{
+			accessManager->disconnect();
+			accessManager->deleteLater();
+			accessManager = nullptr;
 		}
 	}
 
@@ -202,20 +226,18 @@ private:
 	void initNetworkResources()
 	{
 		clearNetworkResources();
-		accessManager = new QNetworkAccessManager(this);
+		accessManager = new QNetworkAccessManager();
 	}
 
 	void clearNetworkResources()
 	{
-		if (accessManager)
-		{
-			accessManager->disconnect();
-			delete accessManager;
-			accessManager = nullptr;
-		}
+		active = false;
 
-		for (auto reply : replys)
+		// 使用迭代器安全删除 replys
+		auto itReply = replys.begin();
+		while (itReply != replys.end())
 		{
+			auto reply = itReply.value();
 			if (reply)
 			{
 				reply->disconnect();
@@ -223,20 +245,31 @@ private:
 					reply->abort();
 				reply->deleteLater();
 			}
+			itReply = replys.erase(itReply);  // 从容器中移除
 		}
-		replys.clear();
 
-		for (auto file : files)
+		// 使用迭代器安全删除 files
+		auto itFile = files.begin();
+		while (itFile != files.end())
 		{
+			auto file = itFile.value();
 			if (file)
 			{
 				if (file->isOpen())
+				{
 					file->close();
+				}
 				delete file;
-				file = nullptr;
 			}
+			itFile = files.erase(itFile);  // 从容器中移除
 		}
-		files.clear();
+
+		if (accessManager)
+		{
+			accessManager->disconnect();
+			accessManager->deleteLater();
+			accessManager = nullptr;
+		}
 	}
 
 	void setTotalPart()

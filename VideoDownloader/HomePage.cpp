@@ -112,7 +112,6 @@ void HomePage::onNextButtonClicked()
 	for (const auto& i : selectedIndexes)
 	{
 		//待修改
-		videoInfoList[i].streamType = StreamType::AVSeparate;
 		videoInfoList[i].videoPlatform = m_selectedPlatform;
 		selectedVideoInfoList.append(std::move(videoInfoList[i]));
 	}

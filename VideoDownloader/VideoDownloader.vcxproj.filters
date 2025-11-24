@@ -767,14 +767,14 @@
     <ClInclude Include="Instrumentor.h">
       <Filter>Core\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="DownloadTaskInfo.h">
-      <Filter>Core\Download</Filter>
-    </ClInclude>
     <ClInclude Include="StringUtil.h">
       <Filter>Core\Utils</Filter>
     </ClInclude>
     <ClInclude Include="DownloadThreadPool.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadTaskInfo.h">
+      <Filter>Core\Download</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
