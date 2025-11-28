@@ -95,38 +95,38 @@
       },
       "videoId": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.bvid"
+        "path": "data.ugc_season.sections.#.episodes.#.bvid"
       },
       "title": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.title"
+        "path": "data.ugc_season.sections.#.episodes.#.title"
       },
       "author": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.arc.author.name"
+        "path": "data.ugc_season.sections.#.episodes.#.arc.author.name"
       },
       "duration": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.arc.duration"
+        "path": "data.ugc_season.sections.#.episodes.#.arc.duration"
       },
       "cover": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.arc.pic"
+        "path": "data.ugc_season.sections.#.episodes.#.arc.pic"
       },
       "publishTime": {
         "index": 0,
-        "path": "data.ugc_season.sections.#0.episodes.#.arc.pubdate"
+        "path": "data.ugc_season.sections.#.episodes.#.arc.pubdate"
       },
       "extraParams": [
         {
           "index": 0,
           "name": "avid",
-          "path": "data.ugc_season.sections.#0.episodes.#.aid"
+          "path": "data.ugc_season.sections.#.episodes.#.aid"
         },
         {
           "index": 0,
           "name": "cid",
-          "path": "data.ugc_season.sections.#0.episodes.#.cid"
+          "path": "data.ugc_season.sections.#.episodes.#.cid"
         }
       ]
     },
@@ -180,7 +180,7 @@
     "video": {
       "urlPath": "data.dash.video.#.baseUrl",
       "qualityPath": "data.dash.video.#.id",
-      "codecPath": "data.dash.video.#.codecs",
+      "codecPath": "data.dash.video.#.codecid",
       "widthPath": "data.dash.video.#.width",
       "heightPath": "data.dash.video.#.height",
       "bitratePath": "data.dash.video.#.bandwidth",
@@ -189,7 +189,7 @@
     "audio": {
       "urlPath": "data.dash.audio.#.baseUrl",
       "qualityPath": "data.dash.audio.#.id",
-      "codecPath": "data.dash.audio.#.codecs",
+      "codecPath": "data.dash.audio.#.codecid",
       "bitratePath": "data.dash.audio.#.bandwidth",
       "formatPath": "data.dash.audio.#.mimeType"
     }

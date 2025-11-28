@@ -26,6 +26,18 @@ public:
 	QSharedPointer<DownloadCardModel> model() const { return m_model; }
 	void setModel(QSharedPointer<DownloadCardModel> model);
 
+	// 设置质量选项
+	void setVideoQualityOptions(const QStringList& qualities);
+	void setAudioQualityOptions(const QStringList& qualities);
+
+	// 设置当前选中的质量
+	void setCurrentVideoQuality(const QString& quality);
+	void setCurrentAudioQuality(const QString& quality);
+
+	// 获取当前选中的质量
+	QString currentVideoQuality() const;
+	QString currentAudioQuality() const;
+
 	// 尺寸控制
 	QSize sizeHint() const override;
 	QSize minimumSizeHint() const override;
@@ -46,7 +58,6 @@ signals:
 	void previewClicked();
 
 public slots:
-
 	void onDownloadProgress(const QString& progressInfo, int progress);
 
 protected:

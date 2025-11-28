@@ -78,6 +78,9 @@
     <Filter Include="Translations">
       <UniqueIdentifier>{562b7ab5-8f99-4237-b388-bb1dffaa511d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ZO_OTL">
+      <UniqueIdentifier>{e3fdd069-656b-4ff4-bc40-ebedf71282c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -775,6 +778,9 @@
     </ClInclude>
     <ClInclude Include="DownloadTaskInfo.h">
       <Filter>Core\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="OrderedQHash.h">
+      <Filter>ZO_OTL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,8 @@
 #include "DownloadCard.h"
 #include "DownloadTaskInfo.h"
 
+#include <list>
+
 class QVBoxLayout;
 class NoDataWidget;
 class AntScrollArea;
@@ -87,7 +89,7 @@ private:
 	QWidget* m_scrollWidget;
 	QVBoxLayout* m_scrollLayout;
 	QHash<QString, DownloadCard*> m_downloadCards;        // 当前显示的卡片，使用taskId作为键
-	QList<QSharedPointer<DownloadTaskInfo>> m_downloadTasks;     // 所有任务信息
+	OrderedQHash<QString, QSharedPointer<DownloadTaskInfo>> m_downloadTasks;
 	NoDataWidget* m_noDataWidget;
 	PaginationWidget* m_paginationWidget;        // 分页器
 	MaterialSpinner* m_spinner;

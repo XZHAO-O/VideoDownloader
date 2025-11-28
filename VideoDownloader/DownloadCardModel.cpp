@@ -92,15 +92,16 @@ void DownloadCardModel::setFilePath(const QString& filePath)
 
 void DownloadCardModel::setVideoQuality(const QString& quality)
 {
-	if (m_videoQuality != quality) {
+	if (m_videoQuality != quality)
+	{
 		m_videoQuality = quality;
-		emit videoQualityChanged();
 	}
 }
 
 void DownloadCardModel::setAudioQuality(const QString& quality)
 {
-	m_audioQuality = quality;
+	if (m_audioQuality != quality)
+		m_audioQuality = quality;
 }
 
 void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)

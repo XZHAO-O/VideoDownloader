@@ -138,19 +138,25 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 	BENCHMARKING_FUNCTION();
 	// 计算当前页的任务范围
 	int startIndex = (m_currentPage - 1) * m_pageSize;
-	int endIndex = qMin(startIndex + m_pageSize, m_downloadTasks.size());
+	int endIndex = qMin(startIndex + m_pageSize, static_cast<int>(m_downloadTasks.size()));
 	int currentPageTaskCount = endIndex - startIndex;
 
 	// 清空当前显示的卡片映射
 	m_downloadCards.clear();
 
 	// 更新预先创建卡片的显示和数据
-	for (int i = 0; i < m_precreatedCards.size(); ++i) {
+	int cardIndex = 0;
+	auto it = m_downloadTasks.begin();
+	std::advance(it, startIndex); // 移动到当前页起始位置
+
+	for (int i = 0; i < m_precreatedCards.size(); ++i)
+	{
 		DownloadCard* card = m_precreatedCards[i];
 
-		if (i < currentPageTaskCount) {
+		if (i < currentPageTaskCount && it != m_downloadTasks.end())
+		{
 			// 显示卡片并设置数据
-			auto taskInfo = m_downloadTasks[startIndex + i];
+			auto taskInfo = *it;
 			auto model = QSharedPointer<DownloadCardModel>::create(taskInfo);
 			card->setModel(model);
 			card->setVisible(true);
@@ -158,10 +164,49 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 			// 重新设置连接
 			setupCardConnections(card, taskInfo);
 
+			// 更新质量下拉框选项 - 新增代码
+			if (card->model()->state() == DownloadCardState::Pending)
+			{
+				// 获取视频和音频质量选项
+				QStringList videoQualities = taskInfo->videoStreamInfo.keys();
+				QStringList audioQualities = taskInfo->audioStreamInfo.keys();
+
+				// 设置质量下拉框选项
+				card->setVideoQualityOptions(videoQualities);
+				card->setAudioQualityOptions(audioQualities);
+
+				// 设置当前选中的质量
+				if (!taskInfo->selectedVideoQuality.isEmpty())
+				{
+					card->setCurrentVideoQuality(taskInfo->selectedVideoQuality);
+				}
+				else if (!videoQualities.isEmpty())
+				{
+					// 如果没有选中的质量，默认选择第一个
+					card->setCurrentVideoQuality(videoQualities.first());
+					taskInfo->selectedVideoQuality = videoQualities.first();
+				}
+
+				if (!taskInfo->selectedAudioQuality.isEmpty())
+				{
+					card->setCurrentAudioQuality(taskInfo->selectedAudioQuality);
+				}
+				else if (!audioQualities.isEmpty())
+				{
+					// 如果没有选中的音质，默认选择第一个
+					card->setCurrentAudioQuality(audioQualities.first());
+					taskInfo->selectedAudioQuality = audioQualities.first();
+				}
+			}
+
 			// 添加到当前显示的映射
 			m_downloadCards.insert(taskInfo->taskId, card);
+
+			++it;
+			++cardIndex;
 		}
-		else {
+		else
+		{
 			// 隐藏多余的卡片
 			card->setVisible(false);
 			card->disconnect(); // 断开连接
@@ -202,24 +247,29 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 	switch (m_containerState)
 	{
 	case ContainerState::DownloadReady:
-		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo]() {
+		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo, card]() {
 			// 发出任务转移信号，让DownloadPage处理容器间的转移和开始下载
+			taskInfo->selectedVideoQuality = card->currentVideoQuality();
+			taskInfo->selectedAudioQuality = card->currentAudioQuality();
+			taskInfo->downloadFormat = DownloadFormat::Separated;
 			emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
 			});
 
-		connect(card, &DownloadCard::videoDownloadClicked, this, [this, taskInfo]() {
+		connect(card, &DownloadCard::videoDownloadClicked, this, [this, taskInfo, card]() {
+			taskInfo->selectedVideoQuality = card->currentVideoQuality();
+			taskInfo->downloadFormat = DownloadFormat::VideoOnly;
 			emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
 			});
 
-		connect(card, &DownloadCard::audioDownloadClicked, this, [this, taskInfo]() {
+		connect(card, &DownloadCard::audioDownloadClicked, this, [this, taskInfo, card]() {
+			taskInfo->selectedAudioQuality = card->currentAudioQuality();
+			taskInfo->downloadFormat = DownloadFormat::AudioOnly;
 			emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
-			// 从任务列表中移除
-			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片映射中移除
+			m_downloadTasks.remove(taskInfo->taskId);
 			m_downloadCards.remove(taskInfo->taskId);
 
 			// 隐藏卡片
@@ -227,7 +277,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			card->disconnect();
 
 			// 更新分页器总页数
-			int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+			int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 			m_paginationWidget->setTotalPages(totalPages);
 
 			// 如果删除后当前页没有内容且不是第一页，则回到前一页
@@ -263,10 +313,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			QMetaObject::invokeMethod(downloadEngine, [this, downloadEngine, taskInfo]() {
 				downloadEngine->cancelDownload(taskInfo->taskId);
 				}, Qt::QueuedConnection);
-			// 从任务列表中移除
-			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片映射中移除
+			m_downloadTasks.remove(taskInfo->taskId);
 			m_downloadCards.remove(taskInfo->taskId);
 
 			// 隐藏卡片
@@ -276,7 +324,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			// 更新分页和显示
 			updateCurrentPageCards();
 			// 更新分页器总页数
-			int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+			int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 			m_paginationWidget->setTotalPages(totalPages);
 			});
 
@@ -307,10 +355,8 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
-			// 从任务列表中移除
-			m_downloadTasks.removeOne(taskInfo);
 
-			// 从当前显示的卡片映射中移除
+			m_downloadTasks.remove(taskInfo->taskId);
 			m_downloadCards.remove(taskInfo->taskId);
 
 			// 隐藏卡片
@@ -320,7 +366,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			// 更新分页和显示
 			updateCurrentPageCards();
 			// 更新分页器总页数
-			int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+			int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 			m_paginationWidget->setTotalPages(totalPages);
 
 			// 可选：删除本地文件
@@ -416,11 +462,12 @@ void DownloadCardContainerWidget::downloadVideo(const QUrl& url)
 void DownloadCardContainerWidget::addDownloadCard(QSharedPointer<DownloadTaskInfo> downloadTaskInfo)
 {
 	BENCHMARKING_FUNCTION();
-	m_downloadTasks.append(downloadTaskInfo);
+
+	m_downloadTasks.insert(downloadTaskInfo->taskId, downloadTaskInfo);
 
 	int beforeTotalPages = m_paginationWidget->totalPages();
 	// 更新分页器总页数
-	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+	int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 
 	// 只有当总页数确实发生变化时才更新分页器
 	if (totalPages != beforeTotalPages)
@@ -431,7 +478,7 @@ void DownloadCardContainerWidget::addDownloadCard(QSharedPointer<DownloadTaskInf
 	// 如果当前页有空间，更新当前页显示
 	int currentPageStart = (m_currentPage - 1) * m_pageSize;
 	int currentPageEnd = currentPageStart + m_pageSize;
-	int newTaskIndex = m_downloadTasks.size() - 1;
+	int newTaskIndex = static_cast<int>(m_downloadTasks.size()) - 1;
 
 	if (newTaskIndex >= currentPageStart && newTaskIndex < currentPageEnd)
 	{
@@ -462,11 +509,13 @@ void DownloadCardContainerWidget::addDownloadCards(QList<QSharedPointer<Download
 	int beforeTotalPages = m_paginationWidget->totalPages();
 
 	// 批量添加任务
-	m_downloadTasks.reserve(m_downloadTasks.size() + tasks.size());
-	m_downloadTasks.append(tasks);
+	for (auto& task : tasks)
+	{
+		m_downloadTasks.insert(task->taskId, task);
+	}
 
 	// 计算新的总页数
-	int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+	int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 
 	if (totalPages != beforeTotalPages)
 	{
@@ -581,15 +630,15 @@ void DownloadCardContainerWidget::removeTask(const QString& taskId)
 {
 	BENCHMARKING_FUNCTION();
 	// 查找任务
-	auto it = std::find_if(m_downloadTasks.begin(), m_downloadTasks.end(),
-		[taskId](QSharedPointer<DownloadTaskInfo> task) { return task->taskId == taskId; });
+	auto it = m_downloadTasks.find(taskId);
 
-	if (it != m_downloadTasks.end()) {
-		// 从任务列表中移除
+	if (it != m_downloadTasks.end())
+	{
+
 		m_downloadTasks.erase(it);
 
 		// 更新分页器总页数
-		int totalPages = qMax(1, (m_downloadTasks.size() + m_pageSize - 1) / m_pageSize);
+		int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 		m_paginationWidget->setTotalPages(totalPages);
 
 		// 更新显示
@@ -600,11 +649,12 @@ void DownloadCardContainerWidget::removeTask(const QString& taskId)
 QSharedPointer<DownloadTaskInfo> DownloadCardContainerWidget::getTaskInfo(const QString& taskId) const
 {
 	BENCHMARKING_FUNCTION();
-	auto it = std::find_if(m_downloadTasks.begin(), m_downloadTasks.end(),
-		[taskId](QSharedPointer<DownloadTaskInfo> task) { return task->taskId == taskId; });
 
-	if (it != m_downloadTasks.end()) {
-		return *it;
+	auto it = m_downloadTasks.find(taskId);
+
+	if (it != m_downloadTasks.end())
+	{
+		return it.value();
 	}
 
 	return QSharedPointer<DownloadTaskInfo>::create();

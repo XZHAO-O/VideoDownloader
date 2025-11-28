@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ModInfo.h"
 #include "VideoInfo.h"
 #include "DownloadContext.h"
+#include "OrderedQHash.h"
 
 // 下载任务状态
 enum class DownloadPeriod
@@ -27,8 +27,8 @@ class DownloadTaskInfo
 public:
 	QString taskId;
 	VideoInfo videoInfo;
-	QHash<QString, StreamInfo> videoStreamInfo;
-	QHash<QString, StreamInfo> audioStreamInfo;
+	OrderedQHash<QString, StreamInfo> videoStreamInfo;
+	OrderedQHash<QString, StreamInfo> audioStreamInfo;
 	QString selectedVideoQuality;
 	QString selectedAudioQuality;
 	DownloadContext* videoContext;
@@ -270,10 +270,8 @@ private:
 	{
 		if (!videoStreamInfo.isEmpty())
 		{
-			selectedVideoQuality = videoStreamInfo.keys()[0];
-			videoContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), videoStreamInfo[selectedVideoQuality].url);
+			videoContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + ".mp4", videoStreamInfo[selectedVideoQuality].url);
 			videoContext->fileSize = videoStreamInfo[selectedVideoQuality].fileSize;
-			videoContext->partialDownloadSupport = true;
 		}
 	}
 
@@ -281,10 +279,8 @@ private:
 	{
 		if (!audioStreamInfo.isEmpty())
 		{
-			selectedAudioQuality = audioStreamInfo.keys()[0];
-			audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title), audioStreamInfo[selectedAudioQuality].url);
+			audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + "_audio" + ".aac", audioStreamInfo[selectedAudioQuality].url);
 			audioContext->fileSize = audioStreamInfo[selectedAudioQuality].fileSize;
-			audioContext->partialDownloadSupport = true;
 		}
 	}
 

@@ -58,6 +58,82 @@ void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
 	onModelChanged();
 }
 
+void DownloadCard::setVideoQualityOptions(const QStringList& qualities)
+{
+	if (m_videoQualityCombo)
+	{
+		// 先断开连接，避免触发信号
+		m_videoQualityCombo->disconnect(this);
+
+		// 更新选项列表
+		m_videoQualityCombo->setItemTextList(qualities);
+
+		// 重新连接信号
+		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged,
+			this, &DownloadCard::onVideoQualityChanged);
+	}
+}
+
+void DownloadCard::setAudioQualityOptions(const QStringList& qualities)
+{
+	if (m_audioQualityCombo)
+	{
+		// 先断开连接，避免触发信号
+		m_audioQualityCombo->disconnect(this);
+
+		// 更新选项列表
+		m_audioQualityCombo->setItemTextList(qualities);
+
+		// 重新连接信号
+		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged,
+			this, &DownloadCard::onAudioQualityChanged);
+	}
+}
+
+void DownloadCard::setCurrentVideoQuality(const QString& quality)
+{
+	if (m_videoQualityCombo && m_videoQualityCombo->itemTextList().contains(quality))
+	{
+		// 先断开连接，避免触发信号
+		m_videoQualityCombo->disconnect(this);
+
+		// 设置当前选中的质量
+		m_videoQualityCombo->setCurrentText(quality);
+		m_model->setVideoQuality(quality);
+
+		// 重新连接信号
+		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged,
+			this, &DownloadCard::onVideoQualityChanged);
+	}
+}
+
+void DownloadCard::setCurrentAudioQuality(const QString& quality)
+{
+	if (m_audioQualityCombo && m_audioQualityCombo->itemTextList().contains(quality))
+	{
+		// 先断开连接，避免触发信号
+		m_audioQualityCombo->disconnect(this);
+
+		// 设置当前选中的质量
+		m_audioQualityCombo->setCurrentText(quality);
+		m_model->setAudioQuality(quality);
+
+		// 重新连接信号
+		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged,
+			this, &DownloadCard::onAudioQualityChanged);
+	}
+}
+
+QString DownloadCard::currentVideoQuality() const
+{
+	return model()->videoQuality();
+}
+
+QString DownloadCard::currentAudioQuality() const
+{
+	return model()->audioQuality();
+}
+
 QSize DownloadCard::sizeHint() const
 {
 	return QSize(680, 160);
@@ -149,12 +225,18 @@ void DownloadCard::onTitleClicked()
 
 void DownloadCard::onVideoQualityChanged(const QString& quality)
 {
-	m_model->setVideoQuality(quality);
+	if (m_model)
+	{
+		m_model->setVideoQuality(quality);
+	}
 }
 
 void DownloadCard::onAudioQualityChanged(const QString& quality)
 {
-	m_model->setAudioQuality(quality);
+	if (m_model)
+	{
+		m_model->setAudioQuality(quality);
+	}
 }
 
 void DownloadCard::initUI()
@@ -292,11 +374,11 @@ void DownloadCard::initPendingUI()
 
 	QStringList qualityList = { "480p", "720p", "1080p", "4K", "原画", "8K" };
 	m_videoQualityCombo = new SingleLevelComboBox(tr("画质"), qualityList, this);
-	m_videoQualityCombo->setFixedSize(90, 28);
+	m_videoQualityCombo->setFixedSize(150, 30);
 
 	QStringList audioQualityList = { "低音质", "中音质", "高音质", "无损" };
 	m_audioQualityCombo = new SingleLevelComboBox(tr("音质"), audioQualityList, this);
-	m_audioQualityCombo->setFixedSize(90, 28);
+	m_audioQualityCombo->setFixedSize(150, 30);
 
 	qualityLayout->addWidget(m_videoQualityCombo);
 	qualityLayout->addWidget(m_audioQualityCombo);

@@ -7,6 +7,7 @@
 
 #include "DownloadTaskInfo.h"
 #include "DownloadThreadPool.h"
+#include "OrderedQHash.h"
 
 class QTimer;
 class ConfigManager;
@@ -45,8 +46,7 @@ private:
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<NetworkManager> m_networkManager;
 	DownloadThreadPool<DownloadContext*> m_downloadThreadPool;
-	QHash<const QString, std::list<QSharedPointer<DownloadTaskInfo>>::iterator> m_tasks;
-	std::list<QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
+	OrderedQHash<const QString, QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
 	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;
 
 	int m_maxCurrentDownloads = 5;

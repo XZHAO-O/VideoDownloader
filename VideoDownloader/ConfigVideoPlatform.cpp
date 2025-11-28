@@ -19,6 +19,34 @@ ConfigVideoPlatform::ConfigVideoPlatform(const ModInfo& modInfo, QString modPath
 	// 初始化登录管理器
 	m_loginManager.reset(new LoginManager(modInfo, modPath, networkManager, this));
 
+	codecNameMap.insert(7, "AVC");
+	codecNameMap.insert(12, "HEVC");
+	codecNameMap.insert(13, "AV1");
+	codecNameMap.insert(0, "AAC");
+	codecNameMap.insert(30280, "AAC");
+	codecNameMap.insert(30216, "HE-AAC");
+
+	videoQualityMap = {
+		{127, "8K超高清"},
+		{126, "杜比视界"},
+		{125, "HDR真彩色"},
+		{120, "4K超清"},
+		{116, "1080P60 高帧率"},
+		{112, "1080P+ 高码率"},
+		{100, "人工智能增强画质"},
+		{80, "1080P 高清"},
+		{74, "720P60 高帧率"},
+		{64, "720P 高清"},
+		{32, "480P 清晰"},
+		{16, "360P 流畅"} };
+
+	audioQualityMap = {
+		{30251, "Hi-Res无损"},
+		{30250, "杜比全景声"},
+		{30280, "192K 高音质"},
+		{30232, "132K 中等音质"},
+		{30216, "64K 低音质"} };
+
 	// 连接登录管理器的信号
 	connect(m_loginManager.get(), &LoginManager::loginStatusChanged,
 		this, &ConfigVideoPlatform::qrCodeLoginStatusChanged);
@@ -303,6 +331,21 @@ void ConfigVideoPlatform::getDownloadInfo(QSharedPointer<DownloadTaskInfo> taskI
 		return;
 	}
 	streamInfo.fileSize = replyHeader.getContentLength();
+
+	auto audioKeys = taskInfo->audioStreamInfo.keys();
+
+	auto& audioStreamInfo = taskInfo->audioStreamInfo[audioKeys[0]];
+
+	replyHeader = m_networkManager->getReplyHeaderWithLoop(audioStreamInfo.url, headers, cancelToken);
+	if (!replyHeader.success)
+	{
+		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
+		return;
+	}
+	audioStreamInfo.fileSize = replyHeader.getContentLength();
+
+	taskInfo->selectedVideoQuality = keys[0];
+	taskInfo->selectedAudioQuality = audioKeys[0];
 	//if (replyHeader.getAcceptRanges() == "bytes" && taskInfo->videoSizes["0"] > 0)
 	//	taskInfo->partialDownloadSupport = true;
 	//else
@@ -469,10 +512,11 @@ void ConfigVideoPlatform::parseVideoPlayUrl(QSharedPointer<DownloadTaskInfo> tas
 		streamInfo.url = urls[i];
 		streamInfo.codec = codecs[i];
 		streamInfo.quality = qualities[i];
-		task->videoStreamInfo.insert(qualities[i] + codecs[i], streamInfo);
+		QString key = videoQualityMap.value(streamInfo.quality.toInt(), "未知") + codecNameMap.value(streamInfo.codec.toInt(), "未知");
+		task->videoStreamInfo.insert(key, streamInfo);
 	}
 
-	path = m_modInfo.getConfigValue("streamParser.video").toMap();
+	path = m_modInfo.getConfigValue("streamParser.audio").toMap();
 
 	urls = extractJsonValue(data, path.value("urlPath").toString()).toStringList();
 	codecs = extractJsonValue(data, path.value("codecPath").toString()).toStringList();
@@ -484,7 +528,8 @@ void ConfigVideoPlatform::parseVideoPlayUrl(QSharedPointer<DownloadTaskInfo> tas
 		streamInfo.url = urls[i];
 		streamInfo.codec = codecs[i];
 		streamInfo.quality = qualities[i];
-		task->audioStreamInfo.insert(qualities[i] + codecs[i], streamInfo);
+		QString key = audioQualityMap.value(streamInfo.quality.toInt(), "未知");
+		task->audioStreamInfo.insert(key, std::move(streamInfo));
 	}
 
 	LOG_INFO("ConfigVideoPlatform", QString("Successfully parsed video URL: %1"));
@@ -766,72 +811,75 @@ QVariant ConfigVideoPlatform::extractJsonValue(const QJsonObject& data, const QS
 	}
 
 	QStringList keys = path.split('.');
-	QJsonValue current = data;
+	return extractJsonValueRecursive(data, keys, 0);
+}
 
-	for (int i = 0; i < keys.size(); ++i) {
-		const QString& key = keys[i];
-
-		if (current.isObject()) {
-			current = current.toObject().value(key);
-		}
-		else if (current.isArray()) {
-			QJsonArray array = current.toArray();
-
-			// 处理 # 的情况 - 返回数组中所有元素的后续路径
-			if (key == "#") {
-				// 如果是最后一个键，直接返回整个数组
-				if (i == keys.size() - 1) {
-					return array.toVariantList();
-				}
-
-				// 否则，对数组中每个元素应用剩余的路径
-				QVariantList results;
-				QStringList remainingKeys = keys.mid(i + 1);
-
-				for (const QJsonValue& item : array) {
-					if (item.isObject() || item.isArray()) {
-						QVariant result = extractJsonValue(item.toObject(), remainingKeys.join('.'));
-						if (!result.isNull()) {
-							results.append(result);
-						}
-					}
-				}
-				return results;
-			}
-			// 处理 #数字 的情况 - 返回数组中指定索引元素的后续路径
-			else if (key.startsWith("#")) {
-				bool ok;
-				int index = key.mid(1).toInt(&ok); // 去掉 # 后解析数字
-
-				if (ok && index >= 0 && index < array.size()) {
-					current = array.at(index);
-				}
-				else {
-					return QVariant();
-				}
-			}
-			// 普通数字索引
-			else {
-				bool ok;
-				int index = key.toInt(&ok);
-				if (ok && index >= 0 && index < array.size()) {
-					current = array.at(index);
-				}
-				else {
-					return QVariant();
-				}
-			}
-		}
-		else {
-			return QVariant();
-		}
-
-		if (current.isUndefined()) {
-			return QVariant();
-		}
+QVariant ConfigVideoPlatform::extractJsonValueRecursive(const QJsonValue& currentValue, const QStringList& keys, int currentIndex)
+{
+	if (currentIndex >= keys.size()) {
+		return currentValue.toVariant();
 	}
 
-	return current.toVariant();
+	const QString& key = keys[currentIndex];
+
+	if (currentValue.isObject()) {
+		QJsonObject obj = currentValue.toObject();
+		if (!obj.contains(key)) {
+			return QVariant();
+		}
+		return extractJsonValueRecursive(obj.value(key), keys, currentIndex + 1);
+	}
+	else if (currentValue.isArray()) {
+		QJsonArray array = currentValue.toArray();
+
+		// 处理 # 的情况 - 返回数组中所有元素的后续路径
+		if (key == "#") {
+			QVariantList results;
+
+			for (const QJsonValue& item : array) {
+				QVariant result = extractJsonValueRecursive(item, keys, currentIndex + 1);
+				if (!result.isNull()) {
+					// 如果结果是列表，需要展开（避免嵌套列表）
+					if (result.userType() == QMetaType::QVariantList) {
+						QVariantList subList = result.toList();
+						for (const QVariant& subItem : subList) {
+							results.append(subItem);
+						}
+					}
+					else {
+						results.append(result);
+					}
+				}
+			}
+			return results;
+		}
+		// 处理 #数字 的情况 - 返回数组中指定索引元素的后续路径
+		else if (key.startsWith("#")) {
+			bool ok;
+			int index = key.mid(1).toInt(&ok); // 去掉 # 后解析数字
+
+			if (ok && index >= 0 && index < array.size()) {
+				return extractJsonValueRecursive(array.at(index), keys, currentIndex + 1);
+			}
+			else {
+				return QVariant();
+			}
+		}
+		// 普通数字索引
+		else {
+			bool ok;
+			int index = key.toInt(&ok);
+			if (ok && index >= 0 && index < array.size()) {
+				return extractJsonValueRecursive(array.at(index), keys, currentIndex + 1);
+			}
+			else {
+				return QVariant();
+			}
+		}
+	}
+	else {
+		return QVariant();
+	}
 }
 
 QJsonArray ConfigVideoPlatform::extractJsonArray(const QJsonObject& data, const QString& path)

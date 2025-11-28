@@ -54,7 +54,7 @@ public:
 		, downloadedTotalSize(0)
 		, fileSize(0)
 		, downloadStatus(DownloadStatus::Queued)
-		, partialDownloadSupport(false)
+		, partialDownloadSupport(true)
 		, active(false)
 	{
 	}
@@ -124,20 +124,21 @@ public:
 
 		active = false;
 
-		// 使用迭代器安全删除 replys
-		auto itReply = replys.begin();
-		while (itReply != replys.end())
+		// 先断开所有信号连接
+		for (auto it = replys.begin(); it != replys.end(); ++it)
 		{
-			auto reply = itReply.value();
+			auto reply = it.value();
 			if (reply)
 			{
-				reply->disconnect();
+				reply->disconnect();  // 断开所有连接
 				if (reply->isRunning())
+				{
 					reply->abort();
-				reply->deleteLater();
+				}
+				reply->deleteLater();  // 使用 deleteLater 更安全
 			}
-			itReply = replys.erase(itReply);  // 从容器中移除
 		}
+		replys.clear();  // 立即清空容器
 
 		// 使用迭代器安全删除 files
 		auto itFile = files.begin();
@@ -155,6 +156,7 @@ public:
 			}
 			itFile = files.erase(itFile);  // 从容器中移除
 		}
+		files.clear();
 
 		if (accessManager)
 		{
@@ -201,16 +203,15 @@ private:
 		// 获取原文件名（不含后缀）
 		QFileInfo fileInfo(fileName);
 		QString baseName = fileInfo.completeBaseName(); // 获取不含后缀的文件名
+		QString suffix = fileInfo.suffix();//获取后缀名
 		QString dirPath = fileInfo.absolutePath();
 
-		// 构造新的.mp4文件路径
-		QString newFilePath = dirPath + "/" + baseName + ".mp4";
-
+		QString newFilePath = fileName;
 		// 重命名文件 逻辑待修改
 		if (QFile::exists(newFilePath))
 		{
 			QString timestamp = QDateTime::currentDateTime().toString("_yyyyMMdd_hhmmss");
-			newFilePath = dirPath + "/" + baseName + timestamp + ".mp4";
+			newFilePath = dirPath + "/" + baseName + timestamp + suffix;
 		}
 
 		if (!file->rename(newFilePath))
@@ -233,20 +234,21 @@ private:
 	{
 		active = false;
 
-		// 使用迭代器安全删除 replys
-		auto itReply = replys.begin();
-		while (itReply != replys.end())
+		// 先断开所有信号连接
+		for (auto it = replys.begin(); it != replys.end(); ++it)
 		{
-			auto reply = itReply.value();
+			auto reply = it.value();
 			if (reply)
 			{
-				reply->disconnect();
+				reply->disconnect();  // 断开所有连接
 				if (reply->isRunning())
+				{
 					reply->abort();
-				reply->deleteLater();
+				}
+				reply->deleteLater();  // 使用 deleteLater 更安全
 			}
-			itReply = replys.erase(itReply);  // 从容器中移除
 		}
+		replys.clear();  // 立即清空容器
 
 		// 使用迭代器安全删除 files
 		auto itFile = files.begin();
@@ -263,6 +265,7 @@ private:
 			}
 			itFile = files.erase(itFile);  // 从容器中移除
 		}
+		files.clear();
 
 		if (accessManager)
 		{

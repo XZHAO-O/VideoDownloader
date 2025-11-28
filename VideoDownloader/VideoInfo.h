@@ -2,6 +2,7 @@
 
 #include <QVariantMap>
 #include <QByteArray>
+#include <QUrl>
 
 class ConfigVideoPlatform;
 

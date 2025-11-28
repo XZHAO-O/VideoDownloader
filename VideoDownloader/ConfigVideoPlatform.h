@@ -61,6 +61,7 @@ private:
 	QVariantMap getQualityParams(const QString& qualityName) const;
 	QVariantMap buildRequestParams(const VideoInfo& videoInfo, const StreamRequest& request);
 	QVariant extractJsonValue(const QJsonObject& data, const QString& path);
+	QVariant extractJsonValueRecursive(const QJsonValue& currentValue, const QStringList& keys, int currentIndex);
 	QJsonArray extractJsonArray(const QJsonObject& data, const QString& path);
 	QList<VideoInfo> parseVideoInfo(const QMap<int, QJsonObject>& responseMap, const QVariantMap& parser);
 
@@ -68,4 +69,8 @@ private:
 	ModInfo m_modInfo;
 	QSharedPointer<NetworkManager> m_networkManager;
 	QScopedPointer<LoginManager> m_loginManager;
+
+	QHash<int, QString> codecNameMap; // codecid -> 编码器名称
+	QHash<int, QString> videoQualityMap; // qn -> description
+	QHash<int, QString> audioQualityMap; // qn -> description
 };

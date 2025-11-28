@@ -48,7 +48,7 @@ public:
 		QRegularExpression invalidChars("[<>:\"/\\\\|?*\\x00-\\x1F\\x7F]");
 		#endif
 
-		// 移除首尾空格和点
+		// 移除首尾空格
 		return cleanName.replace(invalidChars, "_").trimmed();
 	}
 

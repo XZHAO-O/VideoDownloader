@@ -33,8 +33,7 @@ DownloadEngine::~DownloadEngine()
 
 void DownloadEngine::addDownloadTask(QSharedPointer<DownloadTaskInfo> task)
 {
-	m_queuedTasks.push_back(task);
-	m_tasks.insert(task->taskId, --m_queuedTasks.end());
+	m_queuedTasks.insert(task->taskId, task);
 	if (!m_downloadTimer->isActive())
 		m_downloadTimer->start();
 	startDownload();
@@ -51,21 +50,19 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		task->pauseDownload();
 
 		m_downloadingTasks.erase(downloadingTask);
-		m_queuedTasks.push_back(task);
-		m_tasks.insert(task->taskId, --m_queuedTasks.end());
+		m_queuedTasks.insert(task->taskId, task);
 
 		endDownloadContext(task);
 		startDownload();
 	}
 	else
 	{
-		if (m_tasks.contains(taskId))
+		if (m_queuedTasks.contains(taskId))
 		{
-			auto task = m_tasks[taskId];
-			(*task)->status = DownloadStatus::Paused;
-			m_queuedTasks.erase(task);
-			m_queuedTasks.push_back(*task);
-			m_tasks[taskId] = --m_queuedTasks.end();
+			auto task = m_queuedTasks.take(taskId);
+			task->status = DownloadStatus::Paused;
+			m_queuedTasks.remove(task->taskId);
+			m_queuedTasks.insert(task->taskId, task);
 		}
 	}
 }
@@ -80,7 +77,7 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	if (downloadingTask != m_downloadingTasks.end())
 	{
 		auto task = *downloadingTask;
-		task->cancelDownload(Qt::BlockingQueuedConnection);
+		task->cancelDownload();
 
 		m_downloadingTasks.erase(downloadingTask);
 		endDownloadContext(task);
@@ -88,13 +85,7 @@ void DownloadEngine::cancelDownload(const QString& taskId)
 	}
 	else
 	{
-		auto it = m_tasks.find(taskId);
-		if (it != m_tasks.end())
-		{
-			auto task = *it;
-			m_tasks.erase(it);
-			m_queuedTasks.erase(task);
-		}
+		m_queuedTasks.remove(taskId);
 	}
 }
 
@@ -114,11 +105,13 @@ void DownloadEngine::startDownload()
 {
 	while (m_queuedTasks.size() > 0 && m_downloadingTasks.size() < m_maxCurrentDownloads)
 	{
-		auto task = m_queuedTasks.front();
+		auto it = m_queuedTasks.begin();
+		auto task = it.value();
+
 		if (task->status == DownloadStatus::Paused)
 			break;
-		m_queuedTasks.pop_front();
-		m_tasks.remove(task->taskId);
+
+		m_queuedTasks.erase(it);
 		m_downloadingTasks.insert(task->taskId, task);
 
 		// 创建 download context
