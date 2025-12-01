@@ -22,58 +22,114 @@ class DownloadContext : public QObject
 {
 	Q_OBJECT
 
-public:
+private:
+	// 分片信息结构体
+	struct PartInfo
+	{
+		QFile* file = nullptr;     // 分片文件对象
+		qint64 downloadedSize = 0; // 该分片已下载大小
+		QNetworkReply* reply = nullptr; // 对应的网络回复
 
+		PartInfo()
+		{
+		}
+
+		~PartInfo()
+		{
+			clear();
+		}
+
+		// 清理资源
+		void clear(bool deleteFile = false)
+		{
+			if (reply)
+			{
+				reply->disconnect();
+				if (reply->isRunning())
+				{
+					reply->abort();
+				}
+				reply->deleteLater();
+				reply = nullptr;
+			}
+
+			if (file)
+			{
+				if (file->isOpen())
+				{
+					file->close();
+				}
+				if (deleteFile)
+				{
+					file->remove();
+				}
+				delete file;
+				file = nullptr;
+			}
+		}
+
+		// 判断是否有效
+		bool isValid() const
+		{
+			return file != nullptr || reply != nullptr;
+		}
+	};
+
+public:
 	QSharedPointer<NetworkManager> networkManager;
 	QNetworkAccessManager* accessManager;
-	QHash<int, QNetworkReply*> replys;
-	QHash<int, QFile*> files;
 	QString fileName;
 	QUrl url;
 	std::atomic<int> downloadedPart;
 	int totalPart;
 	qint64 progressedSize;
-	QList<qint64> downloadedSize;
 	std::atomic<qint64> downloadedTotalSize;
 	qint64 fileSize;
 	std::atomic<DownloadStatus> downloadStatus;
 	bool partialDownloadSupport;
 	bool active;
+	QList<PartInfo> partInfoList;
 
-	DownloadContext(QString fileName = "", QUrl url = QUrl(""), int totalPart = 3)
+	DownloadContext(QString fileName = "", QUrl url = QUrl(), int totalPart = 3)
 		: QObject(nullptr)
 		, accessManager(nullptr)
-		, replys(QHash<int, QNetworkReply*>())
-		, files(QHash<int, QFile*>())
 		, fileName(fileName)
 		, url(url)
 		, progressedSize(0)
 		, downloadedPart(0)
 		, totalPart(totalPart)
-		, downloadedSize(QList<qint64>(totalPart, 0))
 		, downloadedTotalSize(0)
 		, fileSize(0)
 		, downloadStatus(DownloadStatus::Queued)
 		, partialDownloadSupport(true)
 		, active(false)
+		, partInfoList(totalPart)
 	{
 	}
 
 	~DownloadContext()
 	{
-		clearNetworkResources();
+		clearResource();
 	}
 
 	void startDownload(QSharedPointer<NetworkManager> networkManager)
 	{
+		if (downloadStatus == DownloadStatus::Downloading || downloadStatus == DownloadStatus::Completed) return;
+
+		downloadStatus = DownloadStatus::Downloading;
 		this->networkManager = networkManager;
 		active = true;
-		initNetworkResources();
+
 		setTotalPart();
+		// 重新调整列表大小
+		partInfoList.resize(totalPart);
+
+		accessManager = new QNetworkAccessManager();
 		qint64 partSize = fileSize / totalPart;
 		for (int i = 0; i < totalPart; i++)
 		{
-			addFile(new QFile(fileName + QString(".part%1").arg(i)), i);
+			// 创建文件对象
+			partInfoList[i].file = new QFile(fileName + QString(".part%1").arg(i));
 
 			qint64 rangeStart = i * partSize;
 			qint64 rangeEnd = (i == totalPart - 1) ? fileSize - 1 : (i + 1) * partSize - 1;
@@ -84,108 +140,66 @@ public:
 			request.setRawHeader("Referer", "https://www.bilibili.com");
 			request.setRawHeader("Origin", "https://www.bilibili.com");
 			QNetworkReply* reply = accessManager->get(request);
-			addNetworkReply(reply, i);
+
+			// 设置回复对象并连接信号
+			partInfoList[i].reply = reply;
+			setupReplyConnections(reply, i);
 		}
 	}
 
 	void pauseDownload()
 	{
-		if (downloadStatus == DownloadStatus::Completed) return;
+		if (downloadStatus == DownloadStatus::Paused || downloadStatus == DownloadStatus::Completed) return;
 
+		downloadStatus = DownloadStatus::Paused;
 		active = false;
 
-		// 先断开所有信号连接
-		for (auto it = replys.begin(); it != replys.end(); ++it)
-		{
-			auto reply = it.value();
-			if (reply)
-			{
-				reply->disconnect();  // 断开所有连接
-				if (reply->isRunning())
-				{
-					reply->abort();
-				}
-				reply->deleteLater();  // 使用 deleteLater 更安全
-			}
-		}
-		replys.clear();  // 立即清空容器
-
-		if (accessManager)
-		{
-			accessManager->disconnect();
-			accessManager->deleteLater();
-			accessManager = nullptr;
-		}
+		clearResource();
 	}
 
 	void cancelDownload()
 	{
-		if (downloadStatus == DownloadStatus::Completed) return;
+		if (downloadStatus == DownloadStatus::Failed || downloadStatus == DownloadStatus::Completed) return;
 
+		downloadStatus = DownloadStatus::Failed;
 		active = false;
 
-		// 先断开所有信号连接
-		for (auto it = replys.begin(); it != replys.end(); ++it)
-		{
-			auto reply = it.value();
-			if (reply)
-			{
-				reply->disconnect();  // 断开所有连接
-				if (reply->isRunning())
-				{
-					reply->abort();
-				}
-				reply->deleteLater();  // 使用 deleteLater 更安全
-			}
-		}
-		replys.clear();  // 立即清空容器
+		clearResource(true);
+	}
 
-		// 使用迭代器安全删除 files
-		auto itFile = files.begin();
-		while (itFile != files.end())
-		{
-			auto file = itFile.value();
-			if (file)
-			{
-				if (file->isOpen())
-				{
-					file->close();
-					file->remove();
-				}
-				delete file;
-			}
-			itFile = files.erase(itFile);  // 从容器中移除
-		}
-		files.clear();
+	void resumeDownload()
+	{
+		if (downloadStatus == DownloadStatus::Downloading || downloadStatus == DownloadStatus::Completed) return;
 
-		if (accessManager)
-		{
-			accessManager->disconnect();
-			accessManager->deleteLater();
-			accessManager = nullptr;
-		}
+		downloadStatus = DownloadStatus::Downloading;
+		active = true;
 	}
 
 private:
 
 	void mergeFiles()
 	{
-		QFile* file = files[0];
-		if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
+		if (partInfoList.isEmpty() || !partInfoList[0].file)
+			return;
+
+		QFile* mainFile = partInfoList[0].file;
+		if (!mainFile->open(QIODevice::WriteOnly | QIODevice::Append))
 		{
 			qDebug() << "无法打开文件:" << fileName;
 			return;
 		}
+
 		for (int i = 1; i < totalPart; i++)
 		{
-			QFile* partFile = files[i];
-			if (!partFile->open(QIODevice::ReadOnly))
+			QFile* partFile = partInfoList[i].file;
+			if (!partFile || !partFile->open(QIODevice::ReadOnly))
 			{
-				qDebug() << "无法打开文件:" << fileName + QString(".part%1").arg(i);
+				qDebug() << "无法打开文件:" << partInfoList[i].file->fileName();
 				return;
 			}
+
 			QByteArray data = partFile->readAll();
-			qint64 bytesWritten = file->write(data);
+			qint64 bytesWritten = mainFile->write(data);
 
 			if (bytesWritten != data.size())
 			{
@@ -194,11 +208,10 @@ private:
 			}
 			partFile->close();
 			partFile->remove();
-			delete partFile; // 清理内存
-			files[i] = nullptr;
-			files.remove(i);
+			delete partFile;
+			partInfoList[i].file = nullptr;
 		}
-		file->close();
+		mainFile->close();
 
 		// 获取原文件名（不含后缀）
 		QFileInfo fileInfo(fileName);
@@ -214,64 +227,27 @@ private:
 			newFilePath = dirPath + "/" + baseName + timestamp + suffix;
 		}
 
-		if (!file->rename(newFilePath))
+		if (!mainFile->rename(newFilePath))
 		{
 			qDebug() << "重命名失败";
 		}
 
-		delete file;
-		files[0] = nullptr;
-		files.remove(0);
+		delete mainFile;
+		partInfoList[0].file = nullptr;
 	}
 
-	void initNetworkResources()
+	void clearResource(bool deleteFile = false)
 	{
-		clearNetworkResources();
-		accessManager = new QNetworkAccessManager();
-	}
-
-	void clearNetworkResources()
-	{
-		active = false;
-
-		// 先断开所有信号连接
-		for (auto it = replys.begin(); it != replys.end(); ++it)
-		{
-			auto reply = it.value();
-			if (reply)
-			{
-				reply->disconnect();  // 断开所有连接
-				if (reply->isRunning())
-				{
-					reply->abort();
-				}
-				reply->deleteLater();  // 使用 deleteLater 更安全
-			}
-		}
-		replys.clear();  // 立即清空容器
-
-		// 使用迭代器安全删除 files
-		auto itFile = files.begin();
-		while (itFile != files.end())
-		{
-			auto file = itFile.value();
-			if (file)
-			{
-				if (file->isOpen())
-				{
-					file->close();
-				}
-				delete file;
-			}
-			itFile = files.erase(itFile);  // 从容器中移除
-		}
-		files.clear();
-
 		if (accessManager)
 		{
 			accessManager->disconnect();
 			accessManager->deleteLater();
 			accessManager = nullptr;
+		}
+
+		for (auto& partInfo : partInfoList)
+		{
+			partInfo.clear(deleteFile);
 		}
 	}
 
@@ -299,22 +275,6 @@ private:
 				}
 			}
 		}
-		downloadedSize.resize(totalPart);
-		for (int i = 0; i < totalPart; i++)
-		{
-			downloadedSize[i] = 0;
-		}
-	}
-
-	void addNetworkReply(QNetworkReply* reply, int partNumber = 0)
-	{
-		replys.insert(partNumber, reply);
-		setupReplyConnections(reply, partNumber);
-	}
-
-	void addFile(QFile* file, int partNumber = 0)
-	{
-		files.insert(partNumber, file);
 	}
 
 	// 设置单个下载任务的信号连接
@@ -342,33 +302,24 @@ private:
 			});
 	}
 
-	// 设置单文件下载的信号连接
-	void setupSingleFileConnections(QNetworkReply* reply, QFile* file, int partNumber = 1)
-	{
-		files.insert(partNumber, file);
-		replys.insert(partNumber, reply);
-		setupReplyConnections(reply, partNumber);
-	}
-
-	// 设置分片下载的信号连接
-	void setupPartialFileConnections(QNetworkReply* reply, QFile* file, int partNumber = 1)
-	{
-		files.insert(partNumber, file);
-		replys.insert(partNumber, reply);
-		setupReplyConnections(reply, partNumber);
-	}
-
 private slots:
 	void onReadyRead(int partNumber)
 	{
-		QNetworkReply* reply = replys[partNumber];
-		QFile* file = files[partNumber];
+		if (partNumber < 0 || partNumber >= partInfoList.size())
+			return;
+
+		PartInfo& partInfo = partInfoList[partNumber];
+		QNetworkReply* reply = partInfo.reply;
+		QFile* file = partInfo.file;
+
+		if (!reply || !file)
+			return;
 
 		if (!file->isOpen())
 		{
 			if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
 			{
-				qDebug() << "无法打开文件:" << fileName + QString(".part%1").arg(partNumber);
+				qDebug() << "无法打开文件:" << partInfo.file->fileName();
 				return;
 			}
 		}
@@ -384,16 +335,27 @@ private slots:
 
 	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int partNumber)
 	{
+		if (partNumber < 0 || partNumber >= partInfoList.size())
+			return;
+
+		PartInfo& partInfo = partInfoList[partNumber];
 		// 更新下载大小统计
-		int downloaded = bytesReceived - downloadedSize[partNumber];
+		int downloaded = bytesReceived - partInfo.downloadedSize;
 		downloadedTotalSize += downloaded;
-		downloadedSize[partNumber] = bytesReceived;
+		partInfo.downloadedSize = bytesReceived;
 	}
 
 	void onFinished(int partNumber)
 	{
-		QNetworkReply* reply = replys[partNumber];
-		QFile* file = files[partNumber];
+		if (partNumber < 0 || partNumber >= partInfoList.size())
+			return;
+
+		PartInfo& partInfo = partInfoList[partNumber];
+		QNetworkReply* reply = partInfo.reply;
+		QFile* file = partInfo.file;
+
+		if (!reply || !file)
+			return;
 
 		if (reply->error() == QNetworkReply::NoError)
 		{
@@ -413,23 +375,30 @@ private slots:
 		}
 
 		QObject::disconnect(reply, nullptr, this, nullptr);
-		delete reply;
-		replys[partNumber] = nullptr;
-		replys.remove(partNumber);
+		reply->deleteLater();
+		partInfo.reply = nullptr;
 
 		if (downloadedPart == totalPart)
 		{
 			// 所有分片下载完成，合并文件
 			mergeFiles();
-			clearNetworkResources();
+			clearResource();
 			downloadStatus = DownloadStatus::Completed;
 		}
 	}
 
 	void onErrorOccurred(int partNumber)
 	{
-		QNetworkReply* reply = replys[partNumber];
-		QFile* file = files[partNumber];
+		if (partNumber < 0 || partNumber >= partInfoList.size())
+			return;
+
+		PartInfo& partInfo = partInfoList[partNumber];
+		QNetworkReply* reply = partInfo.reply;
+		QFile* file = partInfo.file;
+
+		if (!reply || !file)
+			return;
+
 		networkManager->getErrorString(reply);
 		qDebug() << "Part" << partNumber << "download error:" << reply->error() << "for file" << fileName;
 

@@ -19,7 +19,7 @@ DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSha
 	, m_maxDownloadSpeed(10)
 	, m_downloadTimer(new QTimer(this))
 {
-	m_downloadTimer->setInterval(1000);
+	m_downloadTimer->setInterval(500);
 	connect(m_downloadTimer, &QTimer::timeout, this, &DownloadEngine::processDownloadingTasks);
 }
 

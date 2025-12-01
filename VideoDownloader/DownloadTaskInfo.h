@@ -261,7 +261,7 @@ public:
 		qint64 downloadedBytes = downloadContext->downloadedTotalSize;
 		progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, downloadContext->fileSize);
 		progress = downloadedBytes * 100 / downloadContext->fileSize;
-		downloadSpeed = StringUtil::formatDownloadSpeed(downloadedBytes - downloadContext->progressedSize);
+		downloadSpeed = StringUtil::formatDownloadSpeed(2 * (downloadedBytes - downloadContext->progressedSize));
 		downloadContext->progressedSize = downloadedBytes;
 	}
 
