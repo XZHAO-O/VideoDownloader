@@ -10,7 +10,6 @@
 #include "EventBus.h"
 #include "NetworkManager.h"
 #include "PlatformAggregatorService.h"
-#include "MediaProcessingService.h"
 #include "DownloadRecordRepository.h"
 
 ApplicationController::ApplicationController(QObject* parent)
@@ -101,9 +100,6 @@ void ApplicationController::initializeServices()
 	// 初始化网络管理器
 	m_networkManager = QSharedPointer<NetworkManager>::create(m_configManager);
 
-	// 初始化媒体处理服务
-	m_mediaService = QSharedPointer<MediaProcessingService>::create(m_configManager);
-
 	// 初始化Mod管理器 - 使用新的ConfigModManager
 	m_modManager = QSharedPointer<ConfigModManager>::create(m_configManager, m_networkManager);
 
@@ -138,7 +134,6 @@ void ApplicationController::cleanup()
 	m_platformService.clear();
 	m_recordRepository.clear();
 	m_modManager.clear();
-	m_mediaService.clear();
 	m_networkManager.clear();
 
 	m_configManager.clear();

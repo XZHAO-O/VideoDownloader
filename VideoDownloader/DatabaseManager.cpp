@@ -15,7 +15,7 @@
 
 // 常量定义
 const QString DatabaseManager::DEFAULT_DATABASE_NAME = "VideoDownloader.db";
-const int DatabaseManager::DEFAULT_QUERY_TIMEOUT = 30000; // 30秒
+const int DatabaseManager::DEFAULT_QUERY_TIMEOUT = 3000; // 3秒
 const int DatabaseManager::DEFAULT_RETRY_COUNT = 3;
 const int DatabaseManager::DEFAULT_POOL_SIZE = 5;
 const int DatabaseManager::MAX_POOL_SIZE = 20;

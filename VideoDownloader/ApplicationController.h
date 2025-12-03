@@ -31,7 +31,6 @@ public:
 	QSharedPointer<NetworkManager> getNetworkManager() const { return m_networkManager; }
 	QSharedPointer<DownloadEngine> getDownloadEngine() const { return m_downloadEngine; }
 	QSharedPointer<PlatformAggregatorService> getPlatformService() const { return m_platformService; }
-	QSharedPointer<MediaProcessingService> getMediaService() const { return m_mediaService; }
 
 	// 应用状态
 	ApplicationState getState() const { return m_state; }
@@ -58,7 +57,6 @@ private:
 	// 服务
 	QSharedPointer<ConfigModManager> m_modManager;
 	QSharedPointer<NetworkManager> m_networkManager;
-	QSharedPointer<MediaProcessingService> m_mediaService;
 	QSharedPointer<PlatformAggregatorService> m_platformService;
 	QSharedPointer<DownloadEngine> m_downloadEngine;
 	QSharedPointer<DownloadRecordRepository> m_recordRepository;

@@ -39,15 +39,22 @@ private:
 	void startDownload();
 
 	void processDownloadingTasks();
+
+	void allocateAndStartForVideo(QSharedPointer<DownloadTaskInfo> task);
+	void allocateAndStartForAudio(QSharedPointer<DownloadTaskInfo> task);
+
 	void processFailedTasks(QSharedPointer<DownloadTaskInfo> task);
 
+	void endVideoContext(QSharedPointer<DownloadTaskInfo> task);
+	void endAudioContext(QSharedPointer<DownloadTaskInfo> task);
 	void endDownloadContext(QSharedPointer<DownloadTaskInfo> task);
 
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<NetworkManager> m_networkManager;
 	DownloadThreadPool<DownloadContext*> m_downloadThreadPool;
-	OrderedQHash<const QString, QSharedPointer<DownloadTaskInfo>> m_queuedTasks;
-	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;
+	OrderedQHash<const QString, QSharedPointer<DownloadTaskInfo>> m_queuedTasks;    // 等待队列
+	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_pausedTasks;          // 暂停队列
+	QHash<const QString, QSharedPointer<DownloadTaskInfo>> m_downloadingTasks;     // 正在下载的队列
 
 	int m_maxCurrentDownloads = 5;
 	int m_maxThreadsPerDownload = 5;

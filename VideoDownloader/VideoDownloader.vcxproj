@@ -130,7 +130,6 @@
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
-    <ClCompile Include="MediaProcessingService.cpp" />
     <ClCompile Include="ModCardModel.cpp" />
     <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModInfo.cpp" />
@@ -385,7 +384,6 @@
     <ClInclude Include="Instrumentor.h" />
     <QtMoc Include="LanguageManager.h" />
     <ClInclude Include="MediaInfo.h" />
-    <QtMoc Include="MediaProcessingService.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
     <QtMoc Include="ModCardModel.h" />
     <QtMoc Include="ModCardWidget.h" />

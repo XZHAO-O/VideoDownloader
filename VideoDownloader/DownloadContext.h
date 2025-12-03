@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QObject>
+#include <QCryptographicHash>
 
 #include "NetworkManager.h"
 #include "StringUtil.h"
@@ -29,6 +30,8 @@ private:
 		QFile* file = nullptr;     // 分片文件对象
 		qint64 downloadedSize = 0; // 该分片已下载大小
 		QNetworkReply* reply = nullptr; // 对应的网络回复
+		QCryptographicHash* hash = nullptr; // 对应的md5校验对象
+		QString md5;
 
 		PartInfo()
 		{
@@ -65,6 +68,13 @@ private:
 				}
 				delete file;
 				file = nullptr;
+			}
+			if (hash)
+			{
+				if (!deleteFile)
+					md5 = hash->result().toHex();
+				delete hash;
+				hash = nullptr;
 			}
 		}
 
@@ -128,11 +138,40 @@ public:
 		qint64 partSize = fileSize / totalPart;
 		for (int i = 0; i < totalPart; i++)
 		{
+			auto& partInfo = partInfoList[i];
 			// 创建文件对象
-			partInfoList[i].file = new QFile(fileName + QString(".part%1").arg(i));
+			QFile* file = new QFile(fileName + QString(".part%1").arg(i));
+			partInfo.file = file;
+
+			if (partInfo.hash)
+			{
+				delete partInfo.hash;
+			}
+			partInfo.hash = new QCryptographicHash(QCryptographicHash::Md5);
+
+			if (!checkFileInfo(partInfo))
+			{
+				qDebug() << "已下载文件不存在或损坏:" << file->fileName() << "重新下载";
+				file->remove();
+				partInfo.downloadedSize = 0;
+			}
 
 			qint64 rangeStart = i * partSize;
 			qint64 rangeEnd = (i == totalPart - 1) ? fileSize - 1 : (i + 1) * partSize - 1;
+			qint64 size = rangeEnd - rangeStart + 1;
+			if (size == partInfo.downloadedSize)
+			{
+				continue;
+			}
+			rangeStart += partInfo.downloadedSize;
+
+			if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
+			{
+				qDebug() << "无法打开文件:" << file->fileName();
+				downloadStatus = DownloadStatus::Failed;
+				clearResource();
+				return;
+			}
 
 			//平台header待增加
 			QNetworkRequest request = networkManager->setRequest(url);
@@ -142,7 +181,7 @@ public:
 			QNetworkReply* reply = accessManager->get(request);
 
 			// 设置回复对象并连接信号
-			partInfoList[i].reply = reply;
+			partInfo.reply = reply;
 			setupReplyConnections(reply, i);
 		}
 	}
@@ -167,27 +206,19 @@ public:
 		clearResource(true);
 	}
 
-	void resumeDownload()
-	{
-		if (downloadStatus == DownloadStatus::Downloading || downloadStatus == DownloadStatus::Completed) return;
-
-		downloadStatus = DownloadStatus::Downloading;
-		active = true;
-	}
-
 private:
 
 	void mergeFiles()
 	{
-		if (partInfoList.isEmpty() || !partInfoList[0].file)
-			return;
-
 		QFile* mainFile = partInfoList[0].file;
 		if (!mainFile->open(QIODevice::WriteOnly | QIODevice::Append))
 		{
 			qDebug() << "无法打开文件:" << fileName;
 			return;
 		}
+
+		constexpr qint64 bufferSize = 2 * StringUtil::MB;
+		QByteArray buffer(bufferSize, Qt::Uninitialized);
 
 		for (int i = 1; i < totalPart; i++)
 		{
@@ -198,15 +229,18 @@ private:
 				return;
 			}
 
-			QByteArray data = partFile->readAll();
-			qint64 bytesWritten = mainFile->write(data);
-
-			if (bytesWritten != data.size())
+			while (!partFile->atEnd())
 			{
-				qDebug() << "写入数据不完整，分片:" << i;
-				return;
+				qint64 bytesRead = partFile->read(buffer.data(), bufferSize);
+				qint64 bytesWritten = mainFile->write(buffer.constData(), bytesRead);
+				if (bytesWritten != bytesRead)
+				{
+					qDebug() << "写入数据不完整，分片:" << i;
+					return;
+				}
 			}
 			partFile->close();
+			mainFile->flush();
 			partFile->remove();
 			delete partFile;
 			partInfoList[i].file = nullptr;
@@ -277,6 +311,43 @@ private:
 		}
 	}
 
+	bool checkFileInfo(PartInfo& partInfo)
+	{
+		if (partInfo.downloadedSize == 0)
+			return true;
+		// 检查文件是否存在
+		QFile* file = partInfo.file;
+		if (!file->exists())
+		{
+			return false;
+		}
+
+		// 计算整个文件哈希
+		QCryptographicHash* hash = new QCryptographicHash(QCryptographicHash::Md5);
+		if (file->open(QIODevice::ReadOnly))
+		{
+			constexpr qint64 bufferSize = StringUtil::MB;
+			QByteArray buffer(bufferSize, Qt::Uninitialized);  // 一次性分配，不初始化内容
+
+			while (!file->atEnd())
+			{
+				qint64 bytesRead = file->read(buffer.data(), bufferSize);
+				hash->addData(QByteArrayView(buffer.constData(), bytesRead));
+			}
+			file->close();
+
+			if (QString(hash->result().toHex()) == partInfo.md5)
+			{
+				delete partInfo.hash;
+				partInfo.hash = hash;
+				partInfo.downloadedSize = file->size();
+				return true;
+			}
+		}
+		delete hash;
+		return false;
+	}
+
 	// 设置单个下载任务的信号连接
 	void setupReplyConnections(QNetworkReply* reply, int partNumber)
 	{
@@ -296,7 +367,7 @@ private:
 			});
 
 		// 连接 errorOccurred 信号
-		QObject::connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::errorOccurred),
+		QObject::connect(reply, &QNetworkReply::errorOccurred,
 			this, [this, partNumber](QNetworkReply::NetworkError error) {
 				onErrorOccurred(partNumber);
 			});
@@ -305,9 +376,6 @@ private:
 private slots:
 	void onReadyRead(int partNumber)
 	{
-		if (partNumber < 0 || partNumber >= partInfoList.size())
-			return;
-
 		PartInfo& partInfo = partInfoList[partNumber];
 		QNetworkReply* reply = partInfo.reply;
 		QFile* file = partInfo.file;
@@ -315,29 +383,27 @@ private slots:
 		if (!reply || !file)
 			return;
 
-		if (!file->isOpen())
+		// 使用预分配的缓冲区，避免频繁内存分配
+		constexpr qint64 bufferSize = 64 * StringUtil::KB;
+		QByteArray buffer(bufferSize, Qt::Uninitialized);
+
+		qint64 bytesRead = 0;
+		while ((bytesRead = reply->read(buffer.data(), bufferSize)) > 0)
 		{
-			if (!file->open(QIODevice::WriteOnly | QIODevice::Append))
+			qint64 bytesWritten = file->write(buffer.constData(), bytesRead);
+			if (bytesWritten != bytesRead)
 			{
-				qDebug() << "无法打开文件:" << partInfo.file->fileName();
+				qDebug() << "写入数据不完整，分片:" << partNumber;
+				downloadStatus = DownloadStatus::Failed;
+				clearResource();
 				return;
 			}
-		}
-
-		QByteArray data = reply->readAll();
-		qint64 bytesWritten = file->write(data);
-
-		if (bytesWritten != data.size())
-		{
-			qDebug() << "写入数据不完整，分片:" << partNumber << "期望:" << data.size() << "实际:" << bytesWritten;
+			partInfo.hash->addData(QByteArrayView(buffer.constData(), bytesRead));
 		}
 	}
 
 	void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int partNumber)
 	{
-		if (partNumber < 0 || partNumber >= partInfoList.size())
-			return;
-
 		PartInfo& partInfo = partInfoList[partNumber];
 		// 更新下载大小统计
 		int downloaded = bytesReceived - partInfo.downloadedSize;
@@ -347,9 +413,6 @@ private slots:
 
 	void onFinished(int partNumber)
 	{
-		if (partNumber < 0 || partNumber >= partInfoList.size())
-			return;
-
 		PartInfo& partInfo = partInfoList[partNumber];
 		QNetworkReply* reply = partInfo.reply;
 		QFile* file = partInfo.file;

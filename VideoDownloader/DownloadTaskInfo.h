@@ -68,18 +68,23 @@ public:
 		return taskId == other.taskId;
 	}
 
+	bool save()
+	{
+		return true;
+	}
+
 	bool isCompleted() const
 	{
 		switch (downloadFormat)
 		{
 		case DownloadFormat::Separated:
-			return videoContext && videoContext->downloadStatus == DownloadStatus::Completed &&
-				audioContext && audioContext->downloadStatus == DownloadStatus::Completed;
+			return videoContext->downloadStatus == DownloadStatus::Completed &&
+				audioContext->downloadStatus == DownloadStatus::Completed;
 		case DownloadFormat::AudioOnly:
-			return audioContext && audioContext->downloadStatus == DownloadStatus::Completed;
+			return audioContext->downloadStatus == DownloadStatus::Completed;
 		case DownloadFormat::VideoOnly:
 		case DownloadFormat::Merged:
-			return videoContext && videoContext->downloadStatus == DownloadStatus::Completed;
+			return videoContext->downloadStatus == DownloadStatus::Completed;
 		}
 		return false;
 	}
@@ -100,66 +105,21 @@ public:
 		return false;
 	}
 
-	void createContext()
+	void createVideoContext()
 	{
-		switch (videoInfo.streamType)
+		if (!videoStreamInfo.isEmpty())
 		{
-		case StreamType::AVSeparate:
-		{
-			switch (downloadFormat)
-			{
-			case DownloadFormat::Separated:
-				createVideoContext();
-				createAudioContext();
-				return;
-			case DownloadFormat::AudioOnly:
-				createAudioContext();
-				return;
-			case DownloadFormat::VideoOnly:
-			case DownloadFormat::Merged:
-				createVideoContext();
-				return;
-			}
-		}
-		case StreamType::AVMerged:
-		{
-			createVideoContext();
-			break;
-		}
+			videoContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + ".mp4", videoStreamInfo[selectedVideoQuality].url);
+			videoContext->fileSize = videoStreamInfo[selectedVideoQuality].fileSize;
 		}
 	}
 
-	void startDownload(QSharedPointer<NetworkManager> networkManager, Qt::ConnectionType connectionType = Qt::QueuedConnection)
+	void createAudioContext()
 	{
-		switch (downloadFormat)
+		if (!audioStreamInfo.isEmpty())
 		{
-		case DownloadFormat::AudioOnly:
-			if (audioContext)
-			{
-				QMetaObject::invokeMethod(audioContext, [this, networkManager]() {
-					audioContext->startDownload(networkManager);
-					}, connectionType);
-			}
-			return;
-		case DownloadFormat::Separated:
-			downloadPeriod = DownloadPeriod::Video;
-			if (videoContext)
-			{
-				QMetaObject::invokeMethod(videoContext, [this, networkManager]() {
-					videoContext->startDownload(networkManager);
-					}, connectionType);
-			}
-			return;
-		case DownloadFormat::VideoOnly:
-		case DownloadFormat::Merged:
-			downloadPeriod = DownloadPeriod::Video;
-			if (videoContext)
-			{
-				QMetaObject::invokeMethod(videoContext, [this, networkManager]() {
-					videoContext->startDownload(networkManager);
-					}, connectionType);
-			}
-			return;
+			audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + "_audio" + ".aac", audioStreamInfo[selectedAudioQuality].url);
+			audioContext->fileSize = audioStreamInfo[selectedAudioQuality].fileSize;
 		}
 	}
 
@@ -208,27 +168,6 @@ public:
 		}
 	}
 
-	template <typename T>
-	void disconnectContext(T target)
-	{
-		switch (downloadFormat)
-		{
-		case DownloadFormat::Merged:
-		case DownloadFormat::VideoOnly:
-			if (videoContext)
-				QObject::disconnect(videoContext, nullptr, target, nullptr);
-			break;
-
-		case DownloadFormat::Separated:
-			if (videoContext)
-				QObject::disconnect(videoContext, nullptr, target, nullptr);
-		case DownloadFormat::AudioOnly:
-			if (audioContext)
-				QObject::disconnect(audioContext, nullptr, target, nullptr);
-			break;
-		}
-	}
-
 	void formatDownloadInfo(int& progress, QString& progressInfo, QString& downloadSpeed)
 	{
 		DownloadContext* downloadContext = nullptr;
@@ -266,23 +205,6 @@ public:
 	}
 
 private:
-	void createVideoContext()
-	{
-		if (!videoStreamInfo.isEmpty())
-		{
-			videoContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + ".mp4", videoStreamInfo[selectedVideoQuality].url);
-			videoContext->fileSize = videoStreamInfo[selectedVideoQuality].fileSize;
-		}
-	}
-
-	void createAudioContext()
-	{
-		if (!audioStreamInfo.isEmpty())
-		{
-			audioContext = new DownloadContext("E:/CProject/" + StringUtil::formatFileName(videoInfo.title) + "_audio" + ".aac", audioStreamInfo[selectedAudioQuality].url);
-			audioContext->fileSize = audioStreamInfo[selectedAudioQuality].fileSize;
-		}
-	}
 
 	void pauseVideoContext(Qt::ConnectionType connectionType = Qt::QueuedConnection)
 	{

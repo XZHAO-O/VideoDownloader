@@ -349,9 +349,6 @@
     <ClCompile Include="NetworkManager.cpp">
       <Filter>Core\Network</Filter>
     </ClCompile>
-    <ClCompile Include="MediaProcessingService.cpp">
-      <Filter>Services</Filter>
-    </ClCompile>
     <ClCompile Include="PlatformAggregatorService.cpp">
       <Filter>Services</Filter>
     </ClCompile>
@@ -665,9 +662,6 @@
     </QtMoc>
     <QtMoc Include="IMediaProcessor.h">
       <Filter>Core\models</Filter>
-    </QtMoc>
-    <QtMoc Include="MediaProcessingService.h">
-      <Filter>Services</Filter>
     </QtMoc>
     <QtMoc Include="PlatformAggregatorService.h">
       <Filter>Services</Filter>
