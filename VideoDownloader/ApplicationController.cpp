@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QStandardPaths>
+#include <QCoreApplication>
 
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
@@ -10,7 +11,6 @@
 #include "EventBus.h"
 #include "NetworkManager.h"
 #include "PlatformAggregatorService.h"
-#include "DownloadRecordRepository.h"
 
 ApplicationController::ApplicationController(QObject* parent)
 	: QObject(parent)
@@ -78,19 +78,13 @@ void ApplicationController::shutdown()
 
 void ApplicationController::initializeCoreSystems()
 {
-	// 设置应用数据目录
-	QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	QDir dataDir(appDataDir);
-	if (!dataDir.exists()) {
-		dataDir.mkpath(".");
-	}
+	const QString appDataPath = QCoreApplication::applicationDirPath();
 
 	// 初始化日志系统
-	QString logDir = appDataDir + "/logs";
-	LogSystem::instance().initialize(logDir, LogSystem::Info);
+	LogSystem::instance().initialize(appDataPath + "/logs", LogSystem::Info);
 
 	// 初始化配置管理器
-	m_configManager = QSharedPointer<ConfigManager>::create(appDataDir);
+	m_configManager = QSharedPointer<ConfigManager>::create(appDataPath + "/config");
 
 	LogSystem::instance().info("Core systems initialized", "Application");
 }
@@ -102,11 +96,6 @@ void ApplicationController::initializeServices()
 
 	// 初始化Mod管理器 - 使用新的ConfigModManager
 	m_modManager = QSharedPointer<ConfigModManager>::create(m_configManager, m_networkManager);
-
-	// 初始化下载记录仓库
-	m_recordRepository = QSharedPointer<DownloadRecordRepository>::create(
-		m_configManager->getValue("storage/downloadRecordsPath",
-			QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/VideoDownloader/records").toString());
 
 	// 初始化平台聚合服务
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
@@ -132,7 +121,6 @@ void ApplicationController::cleanup()
 	// 逆序清理服务
 	m_downloadEngine.clear();
 	m_platformService.clear();
-	m_recordRepository.clear();
 	m_modManager.clear();
 	m_networkManager.clear();
 

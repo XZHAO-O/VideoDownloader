@@ -56,9 +56,6 @@ private:
 	void resetNetworkSettings();
 	void resetAdvancedSettings();
 
-	// 默认配置常量
-	static const QMap<QString, QVariant> DEFAULT_SETTINGS;
-
 	QSharedPointer<ApplicationController> m_appController;
 	QSharedPointer<ConfigManager> m_configManager;
 

@@ -17,43 +17,6 @@
 #include "ConfigManager.h"
 #include "Instrumentor.h"
 
-// 定义默认配置常量
-const QMap<QString, QVariant> SettingsPage::DEFAULT_SETTINGS = {
-	// 常规设置
-	{"app/autoStart", false},
-	{"app/checkForUpdates", false},
-	{"ui/minimizeToTray", false},
-	{"ui/language", "简体中文"},
-	{"ui/theme", "dark"},
-	{"ui/startupPage", "home"},
-	{"ui/showTrayIcon", true},
-	{"ui/closeToTray", false},
-
-	// 下载设置
-	{"download/defaultVideoQuality", "最高质量"},
-	{"download/defaultAudioQuality", "最高质量"},
-	{"download/defaultFormat", "视频+音频(合并)"},
-	{"download/maxConcurrentDownloads", 3},
-	{"download/autoMerge", true},
-	{"download/autoDeleteTempFiles", true},
-
-	// 网络设置
-	{"network/timeout", 30000},
-	{"network/retryCount", 3},
-	{"network/userAgent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-	{"network/proxy/enabled", false},
-	{"network/proxy/type", "HTTP"},
-	{"network/proxy/host", ""},
-	{"network/proxy/port", ""},
-	{"network/proxy/username", ""},
-	{"network/proxy/password", ""},
-
-	// 高级设置
-	{"log/level", "Info"},
-	{"log/maxSize", 10485760}, // 10MB
-	{"log/maxFiles", 5}
-};
-
 SettingsPage::SettingsPage(QSharedPointer<ApplicationController> appController, QWidget* parent)
 	: QWidget(parent)
 	, m_appController(appController)
@@ -140,7 +103,7 @@ void SettingsPage::setupGeneralSettings()
 	languages << tr("简体中文") << tr("English") << tr("日本語");
 
 	// 使用当前语言作为默认显示文本
-	QString currentLanguage = m_configManager->getValue("ui/language", "简体中文").toString();
+	QString currentLanguage = m_configManager->getValue("ui/language").toString();
 	m_languageCombo = new AntComboBox(currentLanguage, languages, m_generalTab);
 	m_languageCombo->setFixedSize(185, 48);
 
@@ -535,10 +498,10 @@ void SettingsPage::loadCurrentSettings()
 {
 	BENCHMARKING_FUNCTION();
 	// 常规设置
-	m_autoStartToggle->setChecked(m_configManager->getValue("app/autoStart", false).toBool());
-	m_checkUpdatesToggle->setChecked(m_configManager->getValue("app/checkForUpdates", false).toBool());
+	m_autoStartToggle->setChecked(m_configManager->getValue("app/autoStart").toBool());
+	m_checkUpdatesToggle->setChecked(m_configManager->getValue("app/checkForUpdates").toBool());
 
-	bool minimizeToTray = m_configManager->getValue("ui/minimizeToTray", false).toBool();
+	bool minimizeToTray = m_configManager->getValue("ui/minimizeToTray").toBool();
 	if (minimizeToTray) {
 		m_minimizeToTrayRadio->setChecked(true);
 	}
@@ -547,11 +510,11 @@ void SettingsPage::loadCurrentSettings()
 	}
 
 	// 语言设置
-	QString language = m_configManager->getValue("ui/language", "简体中文").toString();
+	QString language = m_configManager->getValue("ui/language").toString();
 	m_languageCombo->setCurrentText(language);
 
 	// 下载设置 - 修复路径问题
-	QString defaultDownloadPath = m_configManager->getValue("download/defaultSavePath", "").toString();
+	QString defaultDownloadPath = m_configManager->getValue("download/defaultSavePath").toString();
 	if (defaultDownloadPath.isEmpty()) {
 		// 如果配置中没有值，使用系统下载目录
 		defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
@@ -566,27 +529,27 @@ void SettingsPage::loadCurrentSettings()
 	}
 	m_downloadPathInput->setText(defaultDownloadPath);
 
-	QString videoQuality = m_configManager->getValue("download/defaultVideoQuality", "最高质量").toString();
+	QString videoQuality = m_configManager->getValue("download/defaultVideoQuality").toString();
 	if (videoQuality == "最高质量") m_videoQualityHighest->setChecked(true);
 	else if (videoQuality == "1080P") m_videoQuality1080P->setChecked(true);
 	else if (videoQuality == "720P") m_videoQuality720P->setChecked(true);
 	else if (videoQuality == "480P") m_videoQuality480P->setChecked(true);
 	else if (videoQuality == "360P") m_videoQuality360P->setChecked(true);
 
-	QString audioQuality = m_configManager->getValue("download/defaultAudioQuality", "最高质量").toString();
+	QString audioQuality = m_configManager->getValue("download/defaultAudioQuality").toString();
 	if (audioQuality == "最高质量") m_audioQualityHighest->setChecked(true);
 	else if (audioQuality == "320kbps") m_audioQuality320k->setChecked(true);
 	else if (audioQuality == "256kbps") m_audioQuality256k->setChecked(true);
 	else if (audioQuality == "192kbps") m_audioQuality192k->setChecked(true);
 	else if (audioQuality == "128kbps") m_audioQuality128k->setChecked(true);
 
-	QString downloadFormat = m_configManager->getValue("download/defaultFormat", "视频+音频(合并)").toString();
+	QString downloadFormat = m_configManager->getValue("download/defaultFormat").toString();
 	if (downloadFormat == "视频+音频(合并)") m_formatMerge->setChecked(true);
 	else if (downloadFormat == "仅视频") m_formatVideoOnly->setChecked(true);
 	else if (downloadFormat == "仅音频") m_formatAudioOnly->setChecked(true);
 	else if (downloadFormat == "视频+音频(分离)") m_formatSeparate->setChecked(true);
 
-	int concurrentDownloads = m_configManager->getValue("download/maxConcurrentDownloads", 3).toInt();
+	int concurrentDownloads = m_configManager->getValue("download/maxConcurrentDownloads").toInt();
 	if (concurrentDownloads == 1) m_concurrent1->setChecked(true);
 	else if (concurrentDownloads == 2) m_concurrent2->setChecked(true);
 	else if (concurrentDownloads == 3) m_concurrent3->setChecked(true);
@@ -595,9 +558,9 @@ void SettingsPage::loadCurrentSettings()
 
 	// 网络设置
 	QVariantMap proxyConfig = m_configManager->getValue("network/proxy").toMap();
-	m_proxyEnabledToggle->setChecked(proxyConfig.value("enabled", false).toBool());
+	m_proxyEnabledToggle->setChecked(proxyConfig.value("enabled").toBool());
 
-	QString proxyType = proxyConfig.value("type", "HTTP").toString();
+	QString proxyType = proxyConfig.value("type").toString();
 	m_proxyTypeCombo->setCurrentText(proxyType);
 
 	m_proxyHostInput->setText(proxyConfig.value("host").toString());
@@ -605,13 +568,12 @@ void SettingsPage::loadCurrentSettings()
 	m_proxyUserInput->setText(proxyConfig.value("username").toString());
 	m_proxyPassInput->setText(proxyConfig.value("password").toString());
 
-	m_timeoutInput->setText(QString::number(m_configManager->getValue("network/timeout", 30000).toInt()));
-	m_retryCountInput->setText(QString::number(m_configManager->getValue("network/retryCount", 3).toInt()));
-	m_userAgentInput->setText(m_configManager->getValue("network/userAgent",
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").toString());
+	m_timeoutInput->setText(QString::number(m_configManager->getValue("network/timeout").toInt()));
+	m_retryCountInput->setText(QString::number(m_configManager->getValue("network/retryCount").toInt()));
+	m_userAgentInput->setText(m_configManager->getValue("network/userAgent").toString());
 
 	// 高级设置 - 修复日志路径问题
-	QString defaultLogPath = m_configManager->getValue("log/path", "").toString();
+	QString defaultLogPath = m_configManager->getValue("log/path").toString();
 	if (defaultLogPath.isEmpty()) {
 		// 如果配置中没有值，使用应用程序数据目录
 		defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -801,11 +763,13 @@ void SettingsPage::clearLog()
 QVariantMap SettingsPage::getDefaultSettings() const
 {
 	BENCHMARKING_FUNCTION();
+	// 直接从ConfigManager获取默认配置
+	QJsonObject defaultJson = ConfigManager::getDefaultConfig();
 	QVariantMap defaultSettings;
 
-	// 将常量映射转换为 QVariantMap
-	for (auto it = DEFAULT_SETTINGS.begin(); it != DEFAULT_SETTINGS.end(); ++it) {
-		defaultSettings[it.key()] = it.value();
+	// 转换为QVariantMap
+	for (auto it = defaultJson.begin(); it != defaultJson.end(); ++it) {
+		defaultSettings[it.key()] = it.value().toVariant();
 	}
 
 	// 动态设置路径（不能硬编码）
@@ -830,9 +794,9 @@ QVariantMap SettingsPage::getDefaultSettings() const
 // 应用默认设置
 void SettingsPage::applyDefaultSettings()
 {
+	// 应用所有默认设置
 	QVariantMap defaultSettings = getDefaultSettings();
 
-	// 应用所有默认设置
 	for (auto it = defaultSettings.begin(); it != defaultSettings.end(); ++it) {
 		m_configManager->setValue(it.key(), it.value());
 	}
@@ -848,11 +812,14 @@ void SettingsPage::applyDefaultSettings()
 void SettingsPage::resetGeneralSettings()
 {
 	BENCHMARKING_FUNCTION();
-	m_configManager->setValue("app/autoStart", DEFAULT_SETTINGS["app/autoStart"]);
-	m_configManager->setValue("app/checkForUpdates", DEFAULT_SETTINGS["app/checkForUpdates"]);
-	m_configManager->setValue("ui/minimizeToTray", DEFAULT_SETTINGS["ui/minimizeToTray"]);
-	m_configManager->setValue("ui/language", DEFAULT_SETTINGS["ui/language"]);
-	m_configManager->setValue("ui/theme", DEFAULT_SETTINGS["ui/theme"]);
+	// 使用ConfigManager的静态方法获取默认配置
+	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
+
+	m_configManager->setValue("app/autoStart", defaultConfig["app/autoStart"].toVariant());
+	m_configManager->setValue("app/checkForUpdates", defaultConfig["app/checkForUpdates"].toVariant());
+	m_configManager->setValue("ui/minimizeToTray", defaultConfig["ui/minimizeToTray"].toVariant());
+	m_configManager->setValue("ui/language", defaultConfig["ui/language"].toVariant());
+	m_configManager->setValue("ui/theme", defaultConfig["ui/theme"].toVariant());
 
 	LOG_INFO("Settings", "General settings have been reset to defaults");
 }
@@ -867,13 +834,16 @@ void SettingsPage::resetDownloadSettings()
 		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
 	}
 
+	// 使用ConfigManager的静态方法获取默认配置
+	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
+
 	m_configManager->setValue("download/defaultSavePath", defaultDownloadPath);
-	m_configManager->setValue("download/defaultVideoQuality", DEFAULT_SETTINGS["download/defaultVideoQuality"]);
-	m_configManager->setValue("download/defaultAudioQuality", DEFAULT_SETTINGS["download/defaultAudioQuality"]);
-	m_configManager->setValue("download/defaultFormat", DEFAULT_SETTINGS["download/defaultFormat"]);
-	m_configManager->setValue("download/maxConcurrentDownloads", DEFAULT_SETTINGS["download/maxConcurrentDownloads"]);
-	m_configManager->setValue("download/autoMerge", DEFAULT_SETTINGS["download/autoMerge"]);
-	m_configManager->setValue("download/autoDeleteTempFiles", DEFAULT_SETTINGS["download/autoDeleteTempFiles"]);
+	m_configManager->setValue("download/defaultVideoQuality", defaultConfig["download/defaultVideoQuality"].toVariant());
+	m_configManager->setValue("download/defaultAudioQuality", defaultConfig["download/defaultAudioQuality"].toVariant());
+	m_configManager->setValue("download/defaultFormat", defaultConfig["download/defaultFormat"].toVariant());
+	m_configManager->setValue("download/maxConcurrentDownloads", defaultConfig["download/maxConcurrentDownloads"].toVariant());
+	m_configManager->setValue("download/autoMerge", defaultConfig["download/autoMerge"].toVariant());
+	m_configManager->setValue("download/autoDeleteTempFiles", defaultConfig["download/autoDeleteTempFiles"].toVariant());
 
 	LOG_INFO("Settings", "Download settings have been reset to defaults");
 }
@@ -882,18 +852,21 @@ void SettingsPage::resetDownloadSettings()
 void SettingsPage::resetNetworkSettings()
 {
 	BENCHMARKING_FUNCTION();
-	m_configManager->setValue("network/timeout", DEFAULT_SETTINGS["network/timeout"]);
-	m_configManager->setValue("network/retryCount", DEFAULT_SETTINGS["network/retryCount"]);
-	m_configManager->setValue("network/userAgent", DEFAULT_SETTINGS["network/userAgent"]);
+	// 使用ConfigManager的静态方法获取默认配置
+	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
+
+	m_configManager->setValue("network/timeout", defaultConfig["network/timeout"].toVariant());
+	m_configManager->setValue("network/retryCount", defaultConfig["network/retryCount"].toVariant());
+	m_configManager->setValue("network/userAgent", defaultConfig["network/userAgent"].toVariant());
 
 	// 重置代理设置
 	QVariantMap proxyConfig;
-	proxyConfig["enabled"] = DEFAULT_SETTINGS["network/proxy/enabled"];
-	proxyConfig["type"] = DEFAULT_SETTINGS["network/proxy/type"];
-	proxyConfig["host"] = DEFAULT_SETTINGS["network/proxy/host"];
-	proxyConfig["port"] = DEFAULT_SETTINGS["network/proxy/port"];
-	proxyConfig["username"] = DEFAULT_SETTINGS["network/proxy/username"];
-	proxyConfig["password"] = DEFAULT_SETTINGS["network/proxy/password"];
+	proxyConfig["enabled"] = defaultConfig["network/proxy/enabled"].toVariant();
+	proxyConfig["type"] = defaultConfig["network/proxy/type"].toVariant();
+	proxyConfig["host"] = defaultConfig["network/proxy/host"].toVariant();
+	proxyConfig["port"] = defaultConfig["network/proxy/port"].toVariant();
+	proxyConfig["username"] = defaultConfig["network/proxy/username"].toVariant();
+	proxyConfig["password"] = defaultConfig["network/proxy/password"].toVariant();
 	m_configManager->setValue("network/proxy", proxyConfig);
 
 	LOG_INFO("Settings", "Network settings have been reset to defaults");
@@ -912,10 +885,13 @@ void SettingsPage::resetAdvancedSettings()
 		defaultLogPath += "/logs";
 	}
 
+	// 使用ConfigManager的静态方法获取默认配置
+	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
+
 	m_configManager->setValue("log/path", defaultLogPath);
-	m_configManager->setValue("log/level", DEFAULT_SETTINGS["log/level"]);
-	m_configManager->setValue("log/maxSize", DEFAULT_SETTINGS["log/maxSize"]);
-	m_configManager->setValue("log/maxFiles", DEFAULT_SETTINGS["log/maxFiles"]);
+	m_configManager->setValue("log/level", defaultConfig["log/level"].toVariant());
+	m_configManager->setValue("log/maxSize", defaultConfig["log/maxSize"].toVariant());
+	m_configManager->setValue("log/maxFiles", defaultConfig["log/maxFiles"].toVariant());
 
 	LOG_INFO("Settings", "Advanced settings have been reset to defaults");
 }

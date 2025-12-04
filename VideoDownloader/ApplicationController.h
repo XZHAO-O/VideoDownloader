@@ -12,7 +12,6 @@ class ConfigManager;
 class ConfigModManager;
 class PlatformAggregatorService;
 class MediaProcessingService;
-class DownloadRecordRepository;
 
 class ApplicationController : public QObject
 {
@@ -59,5 +58,4 @@ private:
 	QSharedPointer<NetworkManager> m_networkManager;
 	QSharedPointer<PlatformAggregatorService> m_platformService;
 	QSharedPointer<DownloadEngine> m_downloadEngine;
-	QSharedPointer<DownloadRecordRepository> m_recordRepository;
 };

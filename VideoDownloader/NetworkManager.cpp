@@ -23,13 +23,12 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 	m_networkManager->setCookieJar(m_cookieJar);
 
 	// 从配置加载网络设置
-	m_timeoutMs = m_configManager->getValue("network/timeout", 10000).toInt();
-	m_defaultRetryCount = m_configManager->getValue("network/retryCount", 3).toInt();
-	m_userAgent = m_configManager->getValue("network/userAgent",
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").toString();
+	m_timeoutMs = m_configManager->getValue("network/timeout").toInt();
+	m_defaultRetryCount = m_configManager->getValue("network/retryCount").toInt();
+	m_userAgent = m_configManager->getValue("network/userAgent").toString();
 
 	// 加载代理设置
-	QVariantMap proxyConfig = m_configManager->getValue("network/proxy", QVariantMap()).toMap();
+	QVariantMap proxyConfig = m_configManager->getValue("network/proxy").toMap();
 	if (proxyConfig.value("enabled", false).toBool()) {
 		NetworkProxy proxy;
 		proxy.enabled = true;
@@ -337,30 +336,17 @@ void NetworkManager::setProxy(const NetworkProxy& proxy)
 		m_networkManager->setProxy(QNetworkProxy::NoProxy);
 		LOG_INFO("Network", "Proxy disabled");
 	}
-
-	// 保存到配置
-	QVariantMap proxyConfig;
-	proxyConfig["enabled"] = proxy.enabled;
-	proxyConfig["type"] = proxy.type;
-	proxyConfig["host"] = proxy.host;
-	proxyConfig["port"] = proxy.port;
-	proxyConfig["username"] = proxy.username;
-	proxyConfig["password"] = proxy.password;
-
-	m_configManager->setValue("network/proxy", proxyConfig);
 }
 
 void NetworkManager::setTimeout(int milliseconds)
 {
 	m_timeoutMs = milliseconds;
-	m_configManager->setValue("network/timeout", milliseconds);
 	LOG_DEBUG("Network", QString("Timeout set to: %1 ms").arg(milliseconds));
 }
 
 void NetworkManager::setRetryCount(int count)
 {
 	m_defaultRetryCount = count;
-	m_configManager->setValue("network/retryCount", count);
 	LOG_DEBUG("Network", QString("Retry count set to: %1").arg(count));
 }
 
@@ -391,7 +377,6 @@ void NetworkManager::clearCookies()
 void NetworkManager::setUserAgent(const QString& userAgent)
 {
 	m_userAgent = userAgent;
-	m_configManager->setValue("network/userAgent", userAgent);
 	LOG_DEBUG("Network", QString("User agent set: %1").arg(userAgent));
 }
 

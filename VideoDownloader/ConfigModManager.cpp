@@ -55,7 +55,7 @@ void ConfigModManager::discoverMods()
 {
 	LOG_INFO("ModManager", QString("Discovering mods"));
 
-	QString modsDir = m_configManager->getValue("mods/directory", "mods").toString();
+	QString modsDir = m_configManager->getValue("mods/directory").toString();
 	QDir dir(modsDir);
 
 	if (!dir.exists()) {
@@ -110,10 +110,8 @@ bool ConfigModManager::loadMod(const QString& configPath)
 	}
 
 	// 检查是否启用
-	bool enabled = m_configManager->getValue(
-		QString("mods/%1/enabled").arg(modInfo.modId),
-		modInfo.enabled
-	).toBool();
+	bool enabled = m_configManager->getValue(QString("mods/%1/enabled").arg(modInfo.modId)).toBool();
+	enabled = true;
 
 	modInfo.enabled = enabled;
 
@@ -126,7 +124,7 @@ bool ConfigModManager::loadMod(const QString& configPath)
 
 	// 创建平台实例
 	if (enabled) {
-		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory", "mods").toString(), m_networkManager);
+		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory").toString(), m_networkManager);
 		m_platforms[modInfo.modId] = platform;
 		LOG_INFO("ModManager", QString("Loaded mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
 		emit modLoaded(modInfo);
@@ -215,7 +213,7 @@ bool ConfigModManager::enableMod(const QString& modId)
 	m_mods[modId] = modInfo;
 
 	// 创建平台实例
-	auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory", "mods").toString(), m_networkManager);
+	auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory").toString(), m_networkManager);
 	m_platforms[modId] = platform;
 
 	// 更新配置
