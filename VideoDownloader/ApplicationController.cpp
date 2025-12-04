@@ -4,6 +4,9 @@
 #include <QStandardPaths>
 #include <QCoreApplication>
 
+#include "DatabaseManager.h"
+#include "DownloadRecordDAO.h"
+
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
 #include "ConfigModManager.h"
@@ -86,6 +89,11 @@ void ApplicationController::initializeCoreSystems()
 	// 初始化配置管理器
 	m_configManager = QSharedPointer<ConfigManager>::create(appDataPath + "/config");
 
+	m_databaseManager = QSharedPointer<DatabaseManager>::create();
+	m_databaseManager->initialize(appDataPath + "/database/download.db");
+
+	m_downloadRecordDAO = QSharedPointer<DownloadRecordDAO>::create(m_databaseManager);
+
 	LogSystem::instance().info("Core systems initialized", "Application");
 }
 
@@ -123,6 +131,9 @@ void ApplicationController::cleanup()
 	m_platformService.clear();
 	m_modManager.clear();
 	m_networkManager.clear();
+
+	m_downloadRecordDAO.clear();
+	m_databaseManager.clear();
 
 	m_configManager.clear();
 

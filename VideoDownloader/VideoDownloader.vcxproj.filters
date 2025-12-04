@@ -81,6 +81,9 @@
     <Filter Include="ZO_OTL">
       <UniqueIdentifier>{e3fdd069-656b-4ff4-bc40-ebedf71282c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sql">
+      <UniqueIdentifier>{57866655-4991-468c-b5c4-688e27b52af4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -337,9 +340,6 @@
     <ClCompile Include="ApplicationController.cpp">
       <Filter>app</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadRecordRepository.cpp">
-      <Filter>Storage</Filter>
-    </ClCompile>
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Core\Config</Filter>
     </ClCompile>
@@ -414,6 +414,9 @@
     </ClCompile>
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadRecordDAO.cpp">
+      <Filter>Storage</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -648,9 +651,6 @@
     <QtMoc Include="MaterialTabWidget.h">
       <Filter>Ui\Widgets</Filter>
     </QtMoc>
-    <QtMoc Include="DownloadRecordRepository.h">
-      <Filter>Storage</Filter>
-    </QtMoc>
     <QtMoc Include="ConfigManager.h">
       <Filter>Core\Config</Filter>
     </QtMoc>
@@ -776,5 +776,13 @@
     <ClInclude Include="OrderedQHash.h">
       <Filter>ZO_OTL</Filter>
     </ClInclude>
+    <ClInclude Include="DownloadRecordDAO.h">
+      <Filter>Storage</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="all.sql">
+      <Filter>sql</Filter>
+    </None>
   </ItemGroup>
 </Project>

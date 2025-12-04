@@ -126,7 +126,7 @@
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
-    <ClCompile Include="DownloadRecordRepository.cpp" />
+    <ClCompile Include="DownloadRecordDAO.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -361,7 +361,6 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoPreviewWindow.h" />
-    <QtMoc Include="DownloadRecordRepository.h" />
     <QtMoc Include="ConfigManager.h" />
     <ClInclude Include="ApplicationState.h" />
     <QtMoc Include="DownloadCardModel.h" />
@@ -371,6 +370,7 @@
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="CookieManageUtil.h" />
+    <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
     <QtMoc Include="DownloadEngine.h" />
@@ -436,6 +436,9 @@
     <QtMoc Include="ThirdParty\LoginPageWidget.h" />
     <QtMoc Include="ThirdParty\LoadingArc.h" />
     <QtMoc Include="ThirdParty\GlassWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="all.sql" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
