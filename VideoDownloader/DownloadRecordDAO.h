@@ -2,12 +2,10 @@
 
 #include "DownloadRecord.h"
 
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QList>
 #include <QVariantMap>
-#include <QSharedPointer>
 #include <functional>
+
+class QSqlQuery;
 
 class DatabaseManager;
 
@@ -25,25 +23,23 @@ public:
     bool insert(const DownloadRecord& downloadRecord);
     bool update(const DownloadRecord& downloadRecord);
     bool remove(const QString& taskId);
-    bool get(const QString& taskId, DownloadRecord& downloadRecord);
-    QList<DownloadRecord> getAll();
+    QList<DownloadRecord> getById(const QString& taskId);
     bool insertBatch(const QList<DownloadRecord>& downloadRecords);
 
     // 查询操作
+    bool executeQuery(const QString& queryStr, const QVariantMap& params);
     bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
-    bool executeSelect(const QString& queryStr,
-        const QVariantList& params = QVariantList(),
-        std::function<void(QSqlQuery&)> resultProcessor = nullptr);
+    QList<DownloadRecord> executeSelect(const QString& queryStr, const QVariantMap& params);
+    QList<DownloadRecord> executeSelect(const QString& queryStr, const QVariantList& params = QVariantList());
 
-    // 计数和分页查询
+    // 计数
     int count();
-    QList<DownloadRecord> getPage(int page, int pageSize);
 
 private:
     // 将DownloadRecord转换为QVariantMap用于绑定参数
     QVariantMap toMap(const DownloadRecord& downloadRecord);
     // 从查询结果填充DownloadRecord
-    void fillFromQuery(const QSqlQuery& query, DownloadRecord& downloadRecord);
+    void fillFromQueryResult(const QVariantMap& result, DownloadRecord& downloadRecord);
 
 private:
     QSharedPointer<DatabaseManager> m_dbManager;

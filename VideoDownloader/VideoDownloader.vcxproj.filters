@@ -418,6 +418,9 @@
     <ClCompile Include="DownloadRecordDAO.cpp">
       <Filter>Storage</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadRecordService.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -728,6 +731,9 @@
     </QtMoc>
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadRecordService.h">
+      <Filter>Storage</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

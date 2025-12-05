@@ -28,10 +28,10 @@ public:
 	bool initialize(const QString& databasePath);
 
 	// SQL执行（通用方法）
-	bool executeQuery(const QString& query, const QVariantList& params = QVariantList());
-	bool executeSelect(const QString& query,
-		const QVariantList& params = QVariantList(),
-		std::function<void(QSqlQuery&)> resultProcessor = nullptr);
+	bool executeQuery(const QString& queryStr, const QVariantMap& params);
+	bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
+	QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
+	QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
 
 	// 实用方法
 	QString lastError() const;

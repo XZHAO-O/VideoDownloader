@@ -6,7 +6,7 @@
 #include "ApplicationState.h"
 
 class DatabaseManager;
-class DownloadRecordDAO;
+class DownloadRecordService;
 
 class LogSystem;
 class NetworkManager;
@@ -29,7 +29,7 @@ public:
 
 	// 获取服务实例
 	QSharedPointer<DatabaseManager> getDatabaseManager() const { return m_databaseManager; }
-	QSharedPointer<DownloadRecordDAO> getDownloadRecordDAO() const { return m_downloadRecordDAO; }
+	QSharedPointer<DownloadRecordService> getDownloadRecordService() const { return m_downloadRecordService; }
 	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
 	QSharedPointer<ConfigModManager> getConfigModManager() const { return m_modManager; }
 	QSharedPointer<NetworkManager> getNetworkManager() const { return m_networkManager; }
@@ -59,7 +59,7 @@ private:
 	QSharedPointer<LogSystem> m_logSystem;
 
 	QSharedPointer<DatabaseManager> m_databaseManager;
-	QSharedPointer<DownloadRecordDAO> m_downloadRecordDAO;
+	QSharedPointer<DownloadRecordService> m_downloadRecordService;
 
 	// 服务
 	QSharedPointer<ConfigModManager> m_modManager;

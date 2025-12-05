@@ -127,6 +127,7 @@
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordDAO.cpp" />
+    <ClCompile Include="DownloadRecordService.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -371,6 +372,7 @@
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
+    <QtMoc Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
     <QtMoc Include="DownloadEngine.h" />

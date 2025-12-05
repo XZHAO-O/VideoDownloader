@@ -8,12 +8,14 @@
 
 #include "ConfigManager.h"
 #include "NetworkManager.h"
+#include "DownloadRecordService.h"
 #include "StringUtil.h"
 
-DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QWidget* parent)
+DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QSharedPointer<DownloadRecordService> downloadRecordService, QWidget* parent)
 	: QWidget(parent)
 	, m_configManager(configManager)
 	, m_networkManager(networkManager)
+	, m_downloadRecordService(downloadRecordService)
 	, m_maxCurrentDownloads(5)
 	, m_maxThreadsPerDownload(3)
 	, m_maxDownloadSpeed(10)
@@ -25,9 +27,20 @@ DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSha
 
 DownloadEngine::~DownloadEngine()
 {
-	for (auto task : m_downloadingTasks)
+	for (auto it = m_downloadingTasks.begin(); it != m_downloadingTasks.end(); ++it)
 	{
-		task->pauseDownload(Qt::BlockingQueuedConnection);
+		auto task = *it;
+
+		if (task->status == DownloadStatus::Downloading)
+		{
+			if (task->isCompleted() && task->downloadFormat != DownloadFormat::Merged)
+			{
+				//保存下载记录
+				m_downloadRecordService->insertOne(task);
+			}
+			task->pauseDownload(Qt::BlockingQueuedConnection);
+			//保存下载任务
+		}
 	}
 }
 
@@ -142,18 +155,20 @@ void DownloadEngine::startDownload()
 		// 根据下载格式分配线程
 		switch (task->downloadFormat)
 		{
-		case DownloadFormat::Merged:
 		case DownloadFormat::VideoOnly:
 			if (!task->videoContext)
 				task->createVideoContext();
 			allocateAndStartForVideo(task);
 			break;
+
 		case DownloadFormat::AudioOnly:
 			if (!task->audioContext)
 				task->createAudioContext();
 			allocateAndStartForAudio(task);
 			break;
+
 		case DownloadFormat::Separated:
+		case DownloadFormat::Merged:
 			if (!task->videoContext)
 				task->createVideoContext();
 			if (!task->audioContext)
@@ -186,7 +201,6 @@ void DownloadEngine::processDownloadingTasks()
 			bool isFailed = false;
 			switch (task->downloadFormat)
 			{
-			case DownloadFormat::Merged:
 			case DownloadFormat::VideoOnly:
 				switch (task->videoContext->downloadStatus)
 				{
@@ -218,6 +232,7 @@ void DownloadEngine::processDownloadingTasks()
 				break;
 
 			case DownloadFormat::Separated:
+			case DownloadFormat::Merged:
 				switch (task->videoContext->downloadStatus)
 				{
 				case DownloadStatus::Completed:
@@ -253,7 +268,7 @@ void DownloadEngine::processDownloadingTasks()
 			if (isCompleted)
 			{
 				completedTasks.append(task->taskId);
-				emit downloadFinished(task->taskId);
+				processCompletedTasks(task);
 				continue;
 			}
 			else if (isFailed)
@@ -299,6 +314,18 @@ void DownloadEngine::allocateAndStartForAudio(QSharedPointer<DownloadTaskInfo> t
 	QMetaObject::invokeMethod(task->audioContext, [this, task]() {
 		task->audioContext->startDownload(m_networkManager);
 		}, Qt::QueuedConnection);
+}
+
+void DownloadEngine::processCompletedTasks(QSharedPointer<DownloadTaskInfo> task)
+{
+	if (task->downloadFormat != DownloadFormat::Merged)
+	{
+		//保存下载记录
+		m_downloadRecordService->insertOne(task);
+		emit downloadFinished(task->taskId);
+		return;
+	}
+	//音视频合流
 }
 
 void DownloadEngine::processFailedTasks(QSharedPointer<DownloadTaskInfo> task)
