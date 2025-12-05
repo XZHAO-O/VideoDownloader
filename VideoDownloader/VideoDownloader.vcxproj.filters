@@ -33,9 +33,6 @@
     <Filter Include="Ui\Pages">
       <UniqueIdentifier>{47fbe0a9-8c65-4a88-993f-451b2b6608b4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Storage">
-      <UniqueIdentifier>{714015af-5663-46cc-9b62-539166a5f46e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{9614c07c-4a07-46e9-bfac-37678ea133da}</UniqueIdentifier>
     </Filter>
@@ -81,8 +78,20 @@
     <Filter Include="ZO_OTL">
       <UniqueIdentifier>{e3fdd069-656b-4ff4-bc40-ebedf71282c5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sql">
+    <Filter Include="database">
+      <UniqueIdentifier>{18e44290-ad3b-4140-b9be-d1f7a041ac41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\sql">
       <UniqueIdentifier>{57866655-4991-468c-b5c4-688e27b52af4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\dao">
+      <UniqueIdentifier>{02bd1b7c-625f-4c48-8362-a0011dd2591c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\service">
+      <UniqueIdentifier>{fd37c844-d473-47c9-8cf3-c1f0621d96dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\entity">
+      <UniqueIdentifier>{15b3cd6e-d73c-4386-83b5-734429f03e14}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -406,17 +415,23 @@
     <ClCompile Include="LanguageManager.cpp">
       <Filter>Core\System</Filter>
     </ClCompile>
-    <ClCompile Include="DatabaseManager.cpp">
-      <Filter>Storage</Filter>
-    </ClCompile>
     <ClCompile Include="OpenGLWidget.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="DatabaseManager.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
     <ClCompile Include="DownloadRecordDAO.cpp">
-      <Filter>Storage</Filter>
+      <Filter>database\dao</Filter>
+    </ClCompile>
+    <ClCompile Include="DownloadRecordService.cpp">
+      <Filter>database\service</Filter>
+    </ClCompile>
+    <ClCompile Include="QueryWrapper.cpp">
+      <Filter>database</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -717,9 +732,6 @@
     <QtMoc Include="LanguageManager.h">
       <Filter>Core\System</Filter>
     </QtMoc>
-    <QtMoc Include="DatabaseManager.h">
-      <Filter>Storage</Filter>
-    </QtMoc>
     <QtMoc Include="DownloadContext.h">
       <Filter>Core\Download</Filter>
     </QtMoc>
@@ -728,6 +740,12 @@
     </QtMoc>
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
+    </QtMoc>
+    <QtMoc Include="DatabaseManager.h">
+      <Filter>database</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadRecordService.h">
+      <Filter>database\service</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -745,9 +763,6 @@
     </ClInclude>
     <ClInclude Include="VideoInfo.h">
       <Filter>Core\models</Filter>
-    </ClInclude>
-    <ClInclude Include="DownloadRecord.h">
-      <Filter>Storage</Filter>
     </ClInclude>
     <ClInclude Include="MediaInfo.h">
       <Filter>Core\models</Filter>
@@ -777,12 +792,18 @@
       <Filter>ZO_OTL</Filter>
     </ClInclude>
     <ClInclude Include="DownloadRecordDAO.h">
-      <Filter>Storage</Filter>
+      <Filter>database\dao</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadRecord.h">
+      <Filter>database\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="QueryWrapper.h">
+      <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="all.sql">
-      <Filter>sql</Filter>
+      <Filter>database\sql</Filter>
     </None>
   </ItemGroup>
 </Project>

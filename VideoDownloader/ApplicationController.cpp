@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 
 #include "DatabaseManager.h"
-#include "DownloadRecordDAO.h"
+#include "DownloadRecordService.h"
 
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
@@ -92,7 +92,7 @@ void ApplicationController::initializeCoreSystems()
 	m_databaseManager = QSharedPointer<DatabaseManager>::create();
 	m_databaseManager->initialize(appDataPath + "/database/download.db");
 
-	m_downloadRecordDAO = QSharedPointer<DownloadRecordDAO>::create(m_databaseManager);
+	m_downloadRecordService = QSharedPointer<DownloadRecordService>::create(m_databaseManager);
 
 	LogSystem::instance().info("Core systems initialized", "Application");
 }
@@ -109,7 +109,7 @@ void ApplicationController::initializeServices()
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
 	// 初始化下载管理器
-	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager);
+	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager, m_downloadRecordService);
 
 	LogSystem::instance().info("All services initialized", "Application");
 }
@@ -132,7 +132,7 @@ void ApplicationController::cleanup()
 	m_modManager.clear();
 	m_networkManager.clear();
 
-	m_downloadRecordDAO.clear();
+	m_downloadRecordService.clear();
 	m_databaseManager.clear();
 
 	m_configManager.clear();

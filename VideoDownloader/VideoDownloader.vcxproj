@@ -127,6 +127,7 @@
     <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordDAO.cpp" />
+    <ClCompile Include="DownloadRecordService.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -142,6 +143,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="AppInstanceManager.cpp" />
+    <ClCompile Include="QueryWrapper.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="SingleLevelComboBox.cpp" />
     <ClCompile Include="TrayManager.cpp" />
@@ -371,6 +373,7 @@
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
+    <QtMoc Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
     <QtMoc Include="DownloadEngine.h" />
@@ -395,6 +398,7 @@
     <QtMoc Include="SingleLevelComboBox.h" />
     <QtMoc Include="TrayManager.h" />
     <ClInclude Include="OrderedQHash.h" />
+    <ClInclude Include="QueryWrapper.h" />
     <ClInclude Include="StringUtil.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />

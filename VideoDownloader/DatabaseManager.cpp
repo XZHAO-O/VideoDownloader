@@ -1,6 +1,7 @@
 #include "DatabaseManager.h"
 
 #include <QSqlError>
+#include <QSqlRecord>
 #include <QDir>
 #include <QStandardPaths>
 #include <QFileInfo>
@@ -101,6 +102,31 @@ bool DatabaseManager::createTable(const QString& tableName, const QString& table
 	return true;
 }
 
+bool DatabaseManager::executeQuery(const QString& queryStr, const QVariantMap& params)
+{
+	QMutexLocker locker(&m_mutex);
+
+	if (!m_database.isOpen()) {
+		qCritical() << "Database is not open";
+		return false;
+	}
+
+	QSqlQuery query(m_database);
+	query.prepare(queryStr);
+
+	for (auto it = params.constBegin(); it != params.constEnd(); ++it)
+	{
+		query.bindValue(it.key(), it.value());
+	}
+
+	if (!query.exec()) {
+		qCritical() << "Failed to execute query:" << query.lastError().text();
+		return false;
+	}
+
+	return true;
+}
+
 bool DatabaseManager::executeQuery(const QString& queryStr, const QVariantList& params)
 {
 	QMutexLocker locker(&m_mutex);
@@ -125,35 +151,89 @@ bool DatabaseManager::executeQuery(const QString& queryStr, const QVariantList& 
 	return true;
 }
 
-bool DatabaseManager::executeSelect(const QString& queryStr,
-	const QVariantList& params,
-	std::function<void(QSqlQuery&)> resultProcessor)
+QList<QVariantMap> DatabaseManager::executeQueryToMap(const QString& queryStr, const QVariantMap& params)
 {
 	QMutexLocker locker(&m_mutex);
 
-	if (!resultProcessor) {
-		return false;
-	}
+	QList<QVariantMap> result;
 
-	if (!m_database.isOpen()) {
+	if (!m_database.isOpen())
+	{
 		qCritical() << "Database is not open";
-		return false;
+		return result;
 	}
 
 	QSqlQuery query(m_database);
 	query.prepare(queryStr);
 
-	for (int i = 0; i < params.size(); ++i) {
+	for (auto it = params.constBegin(); it != params.constEnd(); ++it)
+	{
+		query.bindValue(it.key(), it.value());
+	}
+
+	if (!query.exec())
+	{
+		qCritical() << "Failed to execute select:" << query.lastError().text();
+		return result;
+	}
+
+	while (query.next())
+	{
+		QVariantMap row;
+		QSqlRecord record = query.record();
+
+		for (int i = 0; i < record.count(); ++i)
+		{
+			row[record.fieldName(i)] = query.value(i);
+		}
+
+		result.append(row);
+	}
+
+	return result;
+}
+
+QList<QVariantMap> DatabaseManager::executeQueryToMap(const QString& queryStr,
+	const QVariantList& params)
+{
+	QMutexLocker locker(&m_mutex);
+
+	QList<QVariantMap> result;
+
+	if (!m_database.isOpen())
+	{
+		qCritical() << "Database is not open";
+		return result;
+	}
+
+	QSqlQuery query(m_database);
+	query.prepare(queryStr);
+
+	for (int i = 0; i < params.size(); ++i)
+	{
 		query.bindValue(i, params[i]);
 	}
 
-	if (!query.exec()) {
+	if (!query.exec())
+	{
 		qCritical() << "Failed to execute select:" << query.lastError().text();
-		return false;
+		return result;
 	}
 
-	resultProcessor(query);
-	return true;
+	while (query.next())
+	{
+		QVariantMap row;
+		QSqlRecord record = query.record();
+
+		for (int i = 0; i < record.count(); ++i)
+		{
+			row[record.fieldName(i)] = query.value(i);
+		}
+
+		result.append(row);
+	}
+
+	return result;
 }
 
 QString DatabaseManager::lastError() const

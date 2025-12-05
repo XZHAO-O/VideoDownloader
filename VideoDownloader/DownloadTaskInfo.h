@@ -18,8 +18,8 @@ enum class DownloadFormat
 {
 	VideoOnly = 0,
 	AudioOnly,
-	Merged,
 	Separated,
+	Merged,
 };
 
 class DownloadTaskInfo
@@ -77,14 +77,16 @@ public:
 	{
 		switch (downloadFormat)
 		{
-		case DownloadFormat::Separated:
-			return videoContext->downloadStatus == DownloadStatus::Completed &&
-				audioContext->downloadStatus == DownloadStatus::Completed;
+		case DownloadFormat::VideoOnly:
+			return videoContext->downloadStatus == DownloadStatus::Completed;
+
 		case DownloadFormat::AudioOnly:
 			return audioContext->downloadStatus == DownloadStatus::Completed;
-		case DownloadFormat::VideoOnly:
+
+		case DownloadFormat::Separated:
 		case DownloadFormat::Merged:
-			return videoContext->downloadStatus == DownloadStatus::Completed;
+			return videoContext->downloadStatus == DownloadStatus::Completed &&
+				audioContext->downloadStatus == DownloadStatus::Completed;
 		}
 		return false;
 	}
@@ -93,14 +95,16 @@ public:
 	{
 		switch (downloadFormat)
 		{
-		case DownloadFormat::Separated:
-			return (videoContext && videoContext->downloadStatus == DownloadStatus::Failed) ||
-				(audioContext && audioContext->downloadStatus == DownloadStatus::Failed);
+		case DownloadFormat::VideoOnly:
+			return videoContext && videoContext->downloadStatus == DownloadStatus::Failed;
+
 		case DownloadFormat::AudioOnly:
 			return audioContext && audioContext->downloadStatus == DownloadStatus::Failed;
-		case DownloadFormat::VideoOnly:
+
+		case DownloadFormat::Separated:
 		case DownloadFormat::Merged:
-			return videoContext && videoContext->downloadStatus == DownloadStatus::Failed;
+			return (videoContext && videoContext->downloadStatus == DownloadStatus::Failed) ||
+				(audioContext && audioContext->downloadStatus == DownloadStatus::Failed);
 		}
 		return false;
 	}
@@ -127,7 +131,6 @@ public:
 	{
 		switch (downloadFormat)
 		{
-		case DownloadFormat::Merged:
 		case DownloadFormat::VideoOnly:
 			pauseVideoContext(connectionType);
 			break;
@@ -135,7 +138,9 @@ public:
 		case DownloadFormat::AudioOnly:
 			pauseAudioContext(connectionType);
 			break;
+
 		case DownloadFormat::Separated:
+		case DownloadFormat::Merged:
 			switch (downloadPeriod)
 			{
 			case DownloadPeriod::Video:
@@ -153,7 +158,6 @@ public:
 	{
 		switch (downloadFormat)
 		{
-		case DownloadFormat::Merged:
 		case DownloadFormat::VideoOnly:
 			cancelVideoContext(connectionType);
 			break;
@@ -161,7 +165,9 @@ public:
 		case DownloadFormat::AudioOnly:
 			cancelAudioContext(connectionType);
 			break;
+
 		case DownloadFormat::Separated:
+		case DownloadFormat::Merged:
 			cancelVideoContext(connectionType);
 			cancelAudioContext(connectionType);
 			break;
@@ -173,12 +179,16 @@ public:
 		DownloadContext* downloadContext = nullptr;
 		switch (downloadFormat)
 		{
-		case DownloadFormat::Merged:
 		case DownloadFormat::VideoOnly:
 			downloadContext = videoContext;
 			break;
 
+		case DownloadFormat::AudioOnly:
+			downloadContext = audioContext;
+			break;
+
 		case DownloadFormat::Separated:
+		case DownloadFormat::Merged:
 		{
 			switch (downloadPeriod)
 			{
@@ -191,9 +201,6 @@ public:
 			}
 			break;
 		}
-		case DownloadFormat::AudioOnly:
-			downloadContext = audioContext;
-			break;
 		}
 		if (!downloadContext)
 			return;

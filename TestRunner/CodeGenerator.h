@@ -239,7 +239,6 @@ private:
 
 		// 使用正则表达式解析列定义
 		// 格式：column_name data_type [constraints]
-		// 修改正则表达式以更好地处理数据类型中的括号
 		QRegularExpression regex(
 			R"(\s*([\w_]+)\s+([\w\.]+(?:\([^)]+\))?(?:\[\])?)\s*(.*))",
 			QRegularExpression::CaseInsensitiveOption
@@ -273,8 +272,6 @@ private:
 		QList<TableDefinition> tableDefs;
 
 		// 正则表达式匹配CREATE TABLE语句
-		// 支持：CREATE TABLE table_name (...)
-		// 支持：CREATE TABLE IF NOT EXISTS table_name (...)
 		QRegularExpression createTableRegex(
 			R"(CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([\w_]+)\s*\(\s*([^;]+)\s*\)\s*;)",
 			QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption
@@ -452,7 +449,7 @@ private:
 		return true;
 	}
 
-	// 生成DAO头文件
+	// 生成DAO头文件（按DownloadRecordDAO风格）
 	static bool generateDaoHeader(const TableDefinition& tableDef, const QString& outputDir, bool overwrite = false)
 	{
 		QDir dir(outputDir);
@@ -490,14 +487,12 @@ private:
 
 		out << "#pragma once\n\n";
 		out << "#include \"" << tableDef.className << ".h\"\n";
-		out << "\n"; // 添加空白行
-		out << "#include <QSqlDatabase>\n";
-		out << "#include <QSqlQuery>\n";
-		out << "#include <QList>\n";
+		out << "#include \"QueryWrapper.h\"\n\n";  // 添加QueryWrapper包含
+
 		out << "#include <QVariantMap>\n";
-		out << "#include <QSharedPointer>\n";
 		out << "#include <functional>\n\n";
 
+		out << "class QSqlQuery;\n\n";
 		out << "class DatabaseManager;\n\n";
 
 		out << "class " << tableDef.className << "DAO\n";
@@ -514,40 +509,41 @@ private:
 		out << "    bool insert(const " << tableDef.className << "& " << classNameLower << ");\n";
 		out << "    bool update(const " << tableDef.className << "& " << classNameLower << ");\n";
 
-		// 根据主键生成删除和获取方法
+		// 根据主键生成删除方法
 		if (!primaryKeyName.isEmpty()) {
 			QString paramName = toCamelCase(primaryKeyName, false);
 			out << "    bool remove(const " << primaryKeyCppType << "& " << paramName << ");\n";
-			out << "    bool get(const " << primaryKeyCppType << "& " << paramName << ", "
-				<< tableDef.className << "& " << classNameLower << ");\n";
+			out << "    QList<" << tableDef.className << "> getById(const " << primaryKeyCppType << "& " << paramName << ");\n";
 		}
 		else {
 			out << "    bool remove(const QString& id);\n";
-			out << "    bool get(const QString& id, " << tableDef.className << "& " << classNameLower << ");\n";
+			out << "    QList<" << tableDef.className << "> getById(const QString& id);\n";
 		}
 
-		out << "    QList<" << tableDef.className << "> getAll();\n";
-		out << "    bool insertBatch(const QList<" << tableDef.className << ">& " << classNameLower << "s);\n\n";
+		out << "    bool insertBatch(const QList<" << tableDef.className << ">& " << classNameLower << "s);\n";
+		out << "    int count();\n\n";
+
+		out << "    QList<" << tableDef.className << "> selectList(const QueryWrapper& wrapper);\n";
+		out << "    int selectCount(const QueryWrapper& wrapper);\n";
+		out << "    bool deleteByWrapper(const QueryWrapper& wrapper);\n";
+		out << "    bool updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields);\n\n";
+
+		out << "    // 分页查询\n";
+		out << "    QList<" << tableDef.className << "> selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize);\n\n";
 
 		out << "    // 查询操作\n";
+		out << "    bool executeQuery(const QString& queryStr, const QVariantMap& params);\n";
 		out << "    bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());\n";
-		out << "    bool executeSelect(const QString& queryStr,\n";
-		out << "        const QVariantList& params = QVariantList(),\n";
-		out << "        std::function<void(QSqlQuery&)> resultProcessor = nullptr);\n\n";
-
-		out << "    // 计数和分页查询\n";
-		out << "    int count();\n";
-		out << "    QList<" << tableDef.className << "> getPage(int page, int pageSize);\n\n";
+		out << "    QList<" << tableDef.className << "> executeSelect(const QString& queryStr, const QVariantMap& params);\n";
+		out << "    QList<" << tableDef.className << "> executeSelect(const QString& queryStr, const QVariantList& params = QVariantList());\n\n";
 
 		out << "private:\n";
-		out << "    // 将" << tableDef.className << "转换为QVariantMap用于绑定参数\n";
 		out << "    QVariantMap toMap(const " << tableDef.className << "& " << classNameLower << ");\n";
-		out << "    // 从查询结果填充" << tableDef.className << "\n";
-		out << "    void fillFromQuery(const QSqlQuery& query, " << tableDef.className << "& " << classNameLower << ");\n\n";
+		out << "    void fillFromQueryResult(const QVariantMap& result, " << tableDef.className << "& " << classNameLower << ");\n\n";
 
 		out << "private:\n";
 		out << "    QSharedPointer<DatabaseManager> m_dbManager;\n";
-		out << "};\n";
+		out << "};";
 
 		daoFile.close();
 
@@ -555,7 +551,7 @@ private:
 		return true;
 	}
 
-	// 生成DAO实现文件
+	// 生成DAO实现文件（按DownloadRecordDAO风格）
 	static bool generateDaoImplementation(const TableDefinition& tableDef, const QString& outputDir, bool overwrite = false)
 	{
 		QDir dir(outputDir);
@@ -593,18 +589,16 @@ private:
 
 		// 生成实现文件内容
 		out << "#include \"" << tableDef.className << "DAO.h\"\n\n";
-		out << "#include <QSqlError>\n";
-		out << "#include <QDebug>\n\n";
 		out << "#include \"DatabaseManager.h\"\n\n";
 
 		// 命名空间定义
 		out << "// 编译时常量定义\n";
-		out << "namespace {\n";
+		out << "namespace\n{\n";
 		out << "    const QString TABLE_NAME = \"" << tableDef.tableName << "\";\n\n";
 
-		// 生成完整的CREATE TABLE SQL语句
+		// 生成CREATE TABLE SQL语句
 		out << "    // SQL语句模板\n";
-		out << "    const QString CREATE_TABLE_SQL = \n";
+		out << "    const QString CREATE_TABLE_SQL =\n";
 		out << "        \"CREATE TABLE IF NOT EXISTS " << tableDef.tableName << " (\"\n";
 
 		// 生成列定义部分
@@ -631,10 +625,10 @@ private:
 		}
 		out << "        \");\";\n\n";
 
-		out << "    const QString DROP_TABLE_SQL = \"DROP TABLE IF EXISTS %1\";\n\n";
+		out << "    const QString DROP_TABLE_SQL = \"DROP TABLE IF EXISTS " << tableDef.tableName << "\";\n\n";
 
-		// INSERT SQL
-		out << "    const QString INSERT_SQL = \n";
+		// INSERT SQL - 使用INSERT OR REPLACE
+		out << "    const QString INSERT_SQL =\n";
 		out << "        \"INSERT OR REPLACE INTO " << tableDef.tableName << " \"\n";
 		out << "        \"(";
 		for (int i = 0; i < tableDef.columns.size(); ++i) {
@@ -659,7 +653,7 @@ private:
 			out << "    const QString DELETE_SQL = \"DELETE FROM " << tableDef.tableName << " WHERE id = ?\";\n\n";
 		}
 
-		// SELECT SQL
+		// SELECT BY ID SQL
 		if (!primaryKeyName.isEmpty()) {
 			out << "    const QString SELECT_BY_ID_SQL = \"SELECT * FROM " << tableDef.tableName
 				<< " WHERE " << primaryKeyName << " = ?\";\n\n";
@@ -669,11 +663,7 @@ private:
 				<< " WHERE id = ?\";\n\n";
 		}
 
-		out << "    const QString SELECT_ALL_SQL = \"SELECT * FROM " << tableDef.tableName
-			<< " ORDER BY createdTime DESC\";\n\n";
-		out << "    const QString COUNT_SQL = \"SELECT COUNT(*) FROM " << tableDef.tableName << "\";\n\n";
-		out << "    const QString SELECT_PAGE_SQL = \n";
-		out << "        \"SELECT * FROM " << tableDef.tableName << " ORDER BY createdTime DESC LIMIT ? OFFSET ?\";\n";
+		out << "    const QString COUNT_SQL = \"SELECT COUNT(*) FROM " << tableDef.tableName << "\";\n";
 		out << "}\n\n";
 
 		// 构造函数
@@ -696,8 +686,7 @@ private:
 		// dropTable
 		out << "bool " << tableDef.className << "DAO::dropTable()\n";
 		out << "{\n";
-		out << "    QString dropTableSQL = DROP_TABLE_SQL.arg(TABLE_NAME);\n";
-		out << "    return m_dbManager->executeQuery(dropTableSQL);\n";
+		out << "    return m_dbManager->executeQuery(DROP_TABLE_SQL);\n";
 		out << "}\n\n";
 
 		// toMap
@@ -711,14 +700,15 @@ private:
 		out << "\n    return map;\n";
 		out << "}\n\n";
 
-		// fillFromQuery
-		out << "void " << tableDef.className << "DAO::fillFromQuery(const QSqlQuery& query, "
+		// fillFromQueryResult
+		out << "void " << tableDef.className << "DAO::fillFromQueryResult(const QVariantMap& result, "
 			<< tableDef.className << "& " << classNameLower << ")\n";
 		out << "{\n";
 		for (const ColumnDefinition& column : tableDef.columns) {
 			QString memberName = toCamelCase(column.name, false);
-			out << "    " << classNameLower << "." << memberName << " = query.value(\"" << column.name << "\")";
+			out << "    " << classNameLower << "." << memberName << " = result.value(\"" << column.name << "\")";
 
+			// 根据类型添加对应的转换函数
 			if (column.cppType == "QDateTime") {
 				out << ".toDateTime()";
 			}
@@ -728,22 +718,22 @@ private:
 			else if (column.cppType == "QTime") {
 				out << ".toTime()";
 			}
-			else if (column.cppType == "int") {
+			else if (column.cppType == "int" || column.cppType == "short" || column.cppType == "quint8") {
 				out << ".toInt()";
 			}
 			else if (column.cppType == "bool") {
 				out << ".toBool()";
 			}
-			else if (column.cppType == "double") {
+			else if (column.cppType == "float" || column.cppType == "double") {
 				out << ".toDouble()";
 			}
-			else if (column.cppType == "qlonglong") {
+			else if (column.cppType == "qlonglong" || column.cppType == "qint64") {
 				out << ".toLongLong()";
 			}
 			else if (column.cppType == "QByteArray") {
 				out << ".toByteArray()";
 			}
-			else {
+			else if (column.cppType == "QString") {
 				out << ".toString()";
 			}
 
@@ -754,74 +744,50 @@ private:
 		// insert
 		out << "bool " << tableDef.className << "DAO::insert(const " << tableDef.className << "& " << classNameLower << ")\n";
 		out << "{\n";
-		out << "    QVariantMap params = toMap(" << classNameLower << ");\n";
-		out << "    QVariantList paramList;\n";
-		out << "    QStringList paramNames;\n\n";
-		out << "    for (auto it = params.constBegin(); it != params.constEnd(); ++it)\n";
-		out << "    {\n";
-		out << "        paramNames << it.key().mid(1); // 移除前面的冒号\n";
-		out << "        paramList << it.value();\n";
-		out << "    }\n\n";
-		out << "    // 重新构建SQL语句以使用位置参数\n";
-		out << "    QString preparedSQL = INSERT_SQL;\n";
-		out << "    for (int i = 0; i < paramNames.size(); ++i)\n";
-		out << "    {\n";
-		out << "        QString placeholder = \":\" + paramNames[i];\n";
-		out << "        preparedSQL = preparedSQL.replace(placeholder, \"?\");\n";
-		out << "    }\n\n";
-		out << "    return m_dbManager->executeQuery(preparedSQL, paramList);\n";
+		out << "    return m_dbManager->executeQuery(INSERT_SQL, toMap(" << classNameLower << "));\n";
 		out << "}\n\n";
 
 		// update
 		out << "bool " << tableDef.className << "DAO::update(const " << tableDef.className << "& " << classNameLower << ")\n";
 		out << "{\n";
-		out << "    return insert(" << classNameLower << "); // SQLite的INSERT OR REPLACE已经实现了更新功能\n";
+		out << "    return insert(" << classNameLower << ");\n";
 		out << "}\n\n";
 
 		// remove
-		out << "bool " << tableDef.className << "DAO::remove(const " << primaryKeyCppType << "& "
-			<< toCamelCase(primaryKeyName, false) << ")\n";
-		out << "{\n";
-		out << "    QVariantList params;\n";
-		out << "    params << " << toCamelCase(primaryKeyName, false) << ";\n\n";
-		out << "    return m_dbManager->executeQuery(DELETE_SQL, params);\n";
-		out << "}\n\n";
+		if (!primaryKeyName.isEmpty()) {
+			QString paramName = toCamelCase(primaryKeyName, false);
+			out << "bool " << tableDef.className << "DAO::remove(const " << primaryKeyCppType << "& "
+				<< paramName << ")\n";
+			out << "{\n";
+			out << "    QVariantList params;\n";
+			out << "    params << " << paramName << ";\n\n";
+			out << "    return m_dbManager->executeQuery(DELETE_SQL, params);\n";
+			out << "}\n\n";
 
-		// get
-		out << "bool " << tableDef.className << "DAO::get(const " << primaryKeyCppType << "& "
-			<< toCamelCase(primaryKeyName, false) << ", " << tableDef.className << "& " << classNameLower << ")\n";
-		out << "{\n";
-		out << "    bool success = false;\n";
-		out << "    QVariantList params;\n";
-		out << "    params << " << toCamelCase(primaryKeyName, false) << ";\n\n";
-		out << "    success = m_dbManager->executeSelect(SELECT_BY_ID_SQL, params,\n";
-		out << "        [&](QSqlQuery& query) {\n";
-		out << "            if (query.next())\n";
-		out << "            {\n";
-		out << "                fillFromQuery(query, " << classNameLower << ");\n";
-		out << "                success = true;\n";
-		out << "            }\n";
-		out << "        });\n\n";
-		out << "    return success;\n";
-		out << "}\n\n";
+			// getById
+			out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::getById(const "
+				<< primaryKeyCppType << "& " << paramName << ")\n";
+			out << "{\n";
+			out << "    QVariantList params;\n";
+			out << "    params << " << paramName << ";\n\n";
+			out << "    return executeSelect(SELECT_BY_ID_SQL, params);\n";
+			out << "}\n\n";
+		}
+		else {
+			out << "bool " << tableDef.className << "DAO::remove(const QString& id)\n";
+			out << "{\n";
+			out << "    QVariantList params;\n";
+			out << "    params << id;\n\n";
+			out << "    return m_dbManager->executeQuery(DELETE_SQL, params);\n";
+			out << "}\n\n";
 
-		// getAll
-		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::getAll()\n";
-		out << "{\n";
-		out << "    QList<" << tableDef.className << "> " << classNameLower << "s;\n\n";
-		out << "    m_dbManager->executeSelect(\n";
-		out << "        SELECT_ALL_SQL,\n";
-		out << "        QVariantList(),\n";
-		out << "        [&](QSqlQuery& query) {\n";
-		out << "            while (query.next())\n";
-		out << "            {\n";
-		out << "                " << tableDef.className << " " << classNameLower << ";\n";
-		out << "                fillFromQuery(query, " << classNameLower << ");\n";
-		out << "                " << classNameLower << "s.append(" << classNameLower << ");\n";
-		out << "            }\n";
-		out << "        });\n\n";
-		out << "    return " << classNameLower << "s;\n";
-		out << "}\n\n";
+			out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::getById(const QString& id)\n";
+			out << "{\n";
+			out << "    QVariantList params;\n";
+			out << "    params << id;\n\n";
+			out << "    return executeSelect(SELECT_BY_ID_SQL, params);\n";
+			out << "}\n\n";
+		}
 
 		// insertBatch
 		out << "bool " << tableDef.className << "DAO::insertBatch(const QList<" << tableDef.className << ">& " << classNameLower << "s)\n";
@@ -841,60 +807,120 @@ private:
 		out << "    return m_dbManager->commitTransaction();\n";
 		out << "}\n\n";
 
-		// executeQuery
+		// count
+		out << "int " << tableDef.className << "DAO::count()\n";
+		out << "{\n";
+		out << "    int result = 0;\n";
+		out << "    auto results = m_dbManager->executeQueryToMap(COUNT_SQL);\n";
+		out << "    if (!results.isEmpty())\n";
+		out << "    {\n";
+		out << "        result = results.first().value(0).toInt();\n";
+		out << "    }\n";
+		out << "    return result;\n";
+		out << "}\n\n";
+
+		// selectList
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::selectList(const QueryWrapper& wrapper)\n";
+		out << "{\n";
+		out << "    QString sql = wrapper.buildSelectSql();\n";
+		out << "    QVariantList params = wrapper.getBindValues();\n\n";
+		out << "    if (sql.isEmpty())\n";
+		out << "    {\n";
+		out << "        return QList<" << tableDef.className << ">();\n";
+		out << "    }\n\n";
+		out << "    return executeSelect(sql, params);\n";
+		out << "}\n\n";
+
+		// selectCount
+		out << "int " << tableDef.className << "DAO::selectCount(const QueryWrapper& wrapper)\n";
+		out << "{\n";
+		out << "    QString sql = wrapper.buildCountSql();\n";
+		out << "    QVariantList params = wrapper.getBindValues();\n\n";
+		out << "    if (sql.isEmpty())\n";
+		out << "    {\n";
+		out << "        return 0;\n";
+		out << "    }\n\n";
+		out << "    auto results = m_dbManager->executeQueryToMap(sql, params);\n";
+		out << "    if (!results.isEmpty())\n";
+		out << "    {\n";
+		out << "        return results.first().value(0).toInt();\n";
+		out << "    }\n";
+		out << "    return 0;\n";
+		out << "}\n\n";
+
+		// deleteByWrapper
+		out << "bool " << tableDef.className << "DAO::deleteByWrapper(const QueryWrapper& wrapper)\n";
+		out << "{\n";
+		out << "    QString sql = wrapper.buildDeleteSql();\n";
+		out << "    QVariantList params = wrapper.getBindValues();\n\n";
+		out << "    if (sql.isEmpty())\n";
+		out << "    {\n";
+		out << "        return false;\n";
+		out << "    }\n\n";
+		out << "    return m_dbManager->executeQuery(sql, params);\n";
+		out << "}\n\n";
+
+		// updateByWrapper
+		out << "bool " << tableDef.className << "DAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)\n";
+		out << "{\n";
+		out << "    QString sql = wrapper.buildUpdateSql(updateFields);\n";
+		out << "    QVariantList params = wrapper.getBindValues();\n\n";
+		out << "    if (sql.isEmpty())\n";
+		out << "    {\n";
+		out << "        return false;\n";
+		out << "    }\n\n";
+		out << "    return m_dbManager->executeQuery(sql, params);\n";
+		out << "}\n\n";
+
+		// selectPage
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize)\n";
+		out << "{\n";
+		out << "    QueryWrapper pageWrapper = wrapper;\n";
+		out << "    pageWrapper.limit((pageNum - 1) * pageSize, pageSize);\n\n";
+		out << "    return selectList(pageWrapper);\n";
+		out << "}\n\n";
+
+		// executeQuery (QVariantList)
 		out << "bool " << tableDef.className << "DAO::executeQuery(const QString& queryStr, const QVariantList& params)\n";
 		out << "{\n";
 		out << "    return m_dbManager->executeQuery(queryStr, params);\n";
 		out << "}\n\n";
 
-		// executeSelect
-		out << "bool " << tableDef.className << "DAO::executeSelect(const QString& queryStr,\n";
-		out << "    const QVariantList& params,\n";
-		out << "    std::function<void(QSqlQuery&)> resultProcessor)\n";
+		// executeQuery (QVariantMap)
+		out << "bool " << tableDef.className << "DAO::executeQuery(const QString& queryStr, const QVariantMap& params)\n";
 		out << "{\n";
-		out << "    return m_dbManager->executeSelect(queryStr, params, resultProcessor);\n";
+		out << "    return m_dbManager->executeQuery(queryStr, params);\n";
 		out << "}\n\n";
 
-		// count
-		out << "int " << tableDef.className << "DAO::count()\n";
+		// executeSelect (QVariantList)
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::executeSelect(const QString& queryStr,\n";
+		out << "    const QVariantList& params)\n";
 		out << "{\n";
-		out << "    int result = 0;\n\n";
-		out << "    m_dbManager->executeSelect(\n";
-		out << "        COUNT_SQL,\n";
-		out << "        QVariantList(),\n";
-		out << "        [&](QSqlQuery& query) {\n";
-		out << "            if (query.next())\n";
-		out << "            {\n";
-		out << "                result = query.value(0).toInt();\n";
-		out << "            }\n";
-		out << "        });\n\n";
-		out << "    return result;\n";
-		out << "}\n\n";
-
-		// getPage
-		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::getPage(int page, int pageSize)\n";
-		out << "{\n";
-		out << "    QList<" << tableDef.className << "> " << classNameLower << "s;\n\n";
-		out << "    if (page < 1 || pageSize < 1)\n";
+		out << "    auto results = m_dbManager->executeQueryToMap(queryStr, params);\n";
+		out << "    QList<" << tableDef.className << "> " << classNameLower << "s;\n";
+		out << "    for (const auto& result : results)\n";
 		out << "    {\n";
-		out << "        return " << classNameLower << "s;\n";
-		out << "    }\n\n";
-		out << "    int offset = (page - 1) * pageSize;\n";
-		out << "    QVariantList params;\n";
-		out << "    params << pageSize << offset;\n\n";
-		out << "    m_dbManager->executeSelect(\n";
-		out << "        SELECT_PAGE_SQL,\n";
-		out << "        params,\n";
-		out << "        [&](QSqlQuery& query) {\n";
-		out << "            while (query.next())\n";
-		out << "            {\n";
-		out << "                " << tableDef.className << " " << classNameLower << ";\n";
-		out << "                fillFromQuery(query, " << classNameLower << ");\n";
-		out << "                " << classNameLower << "s.append(" << classNameLower << ");\n";
-		out << "            }\n";
-		out << "        });\n\n";
+		out << "        " << tableDef.className << " " << classNameLower << ";\n";
+		out << "        fillFromQueryResult(result, " << classNameLower << ");\n";
+		out << "        " << classNameLower << "s.append(" << classNameLower << ");\n";
+		out << "    }\n";
 		out << "    return " << classNameLower << "s;\n";
-		out << "}\n";
+		out << "}\n\n";
+
+		// executeSelect (QVariantMap)
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::executeSelect(const QString& queryStr,\n";
+		out << "    const QVariantMap& params)\n";
+		out << "{\n";
+		out << "    auto results = m_dbManager->executeQueryToMap(queryStr, params);\n";
+		out << "    QList<" << tableDef.className << "> " << classNameLower << "s;\n";
+		out << "    for (const auto& result : results)\n";
+		out << "    {\n";
+		out << "        " << tableDef.className << " " << classNameLower << ";\n";
+		out << "        fillFromQueryResult(result, " << classNameLower << ");\n";
+		out << "        " << classNameLower << "s.append(" << classNameLower << ");\n";
+		out << "    }\n";
+		out << "    return " << classNameLower << "s;\n";
+		out << "}";
 
 		daoFile.close();
 
