@@ -486,13 +486,13 @@ private:
 		QString classNameLower = toCamelCase(tableDef.className, false);
 
 		out << "#pragma once\n\n";
-		out << "#include \"" << tableDef.className << ".h\"\n";
-		out << "#include \"QueryWrapper.h\"\n\n";  // 添加QueryWrapper包含
+		out << "#include \"" << tableDef.className << ".h\"\n\n";
 
 		out << "#include <QVariantMap>\n";
 		out << "#include <functional>\n\n";
 
 		out << "class QSqlQuery;\n\n";
+		out << "class QueryWrapper;\n";
 		out << "class DatabaseManager;\n\n";
 
 		out << "class " << tableDef.className << "DAO\n";
@@ -589,6 +589,7 @@ private:
 
 		// 生成实现文件内容
 		out << "#include \"" << tableDef.className << "DAO.h\"\n\n";
+		out << "#include \"QueryWrapper.h\"\n";
 		out << "#include \"DatabaseManager.h\"\n\n";
 
 		// 命名空间定义

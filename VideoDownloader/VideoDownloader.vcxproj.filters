@@ -433,6 +433,9 @@
     <ClCompile Include="QueryWrapper.cpp">
       <Filter>database</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadRecordService.cpp">
+      <Filter>Storage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">

@@ -1,5 +1,6 @@
 #include "DownloadRecordDAO.h"
 
+#include "QueryWrapper.h"
 #include "DatabaseManager.h"
 
 // 编译时常量定义

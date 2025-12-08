@@ -1,13 +1,13 @@
 #pragma once
 
 #include "DownloadRecord.h"
-#include "QueryWrapper.h"
 
 #include <QVariantMap>
 #include <functional>
 
 class QSqlQuery;
 
+class QueryWrapper;
 class DatabaseManager;
 
 class DownloadRecordDAO
