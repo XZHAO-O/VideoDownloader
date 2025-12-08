@@ -6,6 +6,7 @@
 
 #include "DatabaseManager.h"
 #include "DownloadRecordService.h"
+//#include "DownloadVideoCoverService.h"
 
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
@@ -93,6 +94,7 @@ void ApplicationController::initializeCoreSystems()
 	m_databaseManager->initialize(appDataPath + "/database/download.db");
 
 	m_downloadRecordService = QSharedPointer<DownloadRecordService>::create(m_databaseManager);
+	//m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);
 
 	LogSystem::instance().info("Core systems initialized", "Application");
 }

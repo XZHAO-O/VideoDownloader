@@ -8,14 +8,11 @@
 class QueryWrapper
 {
 public:
-	explicit QueryWrapper(const QString& tableName = "");
+	explicit QueryWrapper();
 	~QueryWrapper();
 
 	// 重置包装器
 	QueryWrapper& reset();
-
-	// 设置表名
-	QueryWrapper& table(const QString& tableName);
 
 	// SELECT 字段相关
 	QueryWrapper& select(const QString& columns = "*");
@@ -109,19 +106,16 @@ public:
 	QueryWrapper& distinct();
 
 	// 构建 SQL 语句
-	QString buildSelectSql() const;
-	QString buildDeleteSql() const;
-	QString buildCountSql() const;
-	QString buildUpdateSql(const QVariantMap& updateFields) const;
+	QString buildSelectSql(const QString& tableName) const;
+	QString buildDeleteSql(const QString& tableName) const;
+	QString buildCountSql(const QString& tableName) const;
+	QString buildUpdateSql(const QString& tableName, const QVariantMap& updateFields) const;
 
 	// 获取绑定的参数
 	QList<QVariant> getBindValues() const;
 
 	// 获取最后构建的SQL
 	QString getLastSql() const { return m_lastSql; }
-
-	// 获取表名
-	QString getTableName() const { return m_tableName; }
 
 	// 获取分页参数
 	int getLimit() const { return m_limit; }
@@ -141,7 +135,6 @@ private:
 	QString buildLimitSql() const;
 	QString buildSelectColumns() const;
 
-	QString m_tableName;
 	QString m_selectColumns;
 	QList<ConditionGroup> m_conditionGroups;
 	QList<QPair<QString, QVariantList>> m_havingConditions;

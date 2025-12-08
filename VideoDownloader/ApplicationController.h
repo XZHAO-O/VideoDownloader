@@ -7,6 +7,7 @@
 
 class DatabaseManager;
 class DownloadRecordService;
+class DownloadVideoCoverService;
 
 class LogSystem;
 class NetworkManager;
@@ -30,6 +31,7 @@ public:
 	// 获取服务实例
 	QSharedPointer<DatabaseManager> getDatabaseManager() const { return m_databaseManager; }
 	QSharedPointer<DownloadRecordService> getDownloadRecordService() const { return m_downloadRecordService; }
+	QSharedPointer<DownloadVideoCoverService> getDownloadVideoCoverService() const { return m_downloadVideoCoverService; }
 	QSharedPointer<ConfigManager> getConfigManager() const { return m_configManager; }
 	QSharedPointer<ConfigModManager> getConfigModManager() const { return m_modManager; }
 	QSharedPointer<NetworkManager> getNetworkManager() const { return m_networkManager; }
@@ -60,6 +62,7 @@ private:
 
 	QSharedPointer<DatabaseManager> m_databaseManager;
 	QSharedPointer<DownloadRecordService> m_downloadRecordService;
+	QSharedPointer<DownloadVideoCoverService> m_downloadVideoCoverService;
 
 	// 服务
 	QSharedPointer<ConfigModManager> m_modManager;

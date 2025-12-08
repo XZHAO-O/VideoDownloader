@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QByteArray>
 #include <QDateTime>
 #include <QString>
 
@@ -21,7 +20,6 @@ public:
     QString selectedVideoQuality; // 选择的视频质量
     QString selectedAudioQuality; // 选择的音频质量
     QString downloadFilePath; // 下载文件路径
-    QByteArray cover; // 封面图片数据
     QDateTime endTime; // 下载完成时间
     QDateTime createdTime; // 创建时间
     QDateTime updatedTime; // 更新时间

@@ -10,8 +10,14 @@ CREATE TABLE IF NOT EXISTS download_record (
     selectedVideoQuality TEXT,            -- 选择的视频质量
     selectedAudioQuality TEXT,            -- 选择的音频质量
     downloadFilePath TEXT,                -- 下载文件路径
-    cover BLOB,                           -- 封面图片数据
     endTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,       -- 下载完成时间
+    createdTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- 创建时间
+    updatedTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP    -- 更新时间
+);
+
+CREATE TABLE IF NOT EXISTS download_video_cover (
+    taskId TEXT NOT NULL PRIMARY KEY,     -- 任务ID，主键
+    cover BLOB,                           -- 封面图片数据
     createdTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,   -- 创建时间
     updatedTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP    -- 更新时间
 );

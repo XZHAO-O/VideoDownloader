@@ -433,8 +433,8 @@
     <ClCompile Include="QueryWrapper.cpp">
       <Filter>database</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadRecordService.cpp">
-      <Filter>Storage</Filter>
+    <ClCompile Include="DownloadVideoCoverDAO.cpp">
+      <Filter>database\dao</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -801,6 +801,15 @@
       <Filter>database\entity</Filter>
     </ClInclude>
     <ClInclude Include="QueryWrapper.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadVideoCoverDAO.h">
+      <Filter>database\dao</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadVideoCover.h">
+      <Filter>database\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="RecordManager.h">
       <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>

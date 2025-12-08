@@ -22,7 +22,6 @@ namespace
         "    selectedVideoQuality TEXT,"
         "    selectedAudioQuality TEXT,"
         "    downloadFilePath TEXT,"
-        "    cover BLOB,"
         "    endTime DATETIME NOT NULL DEFAULT current_timestamp,"
         "    createdTime DATETIME NOT NULL DEFAULT current_timestamp,"
         "    updatedTime DATETIME NOT NULL DEFAULT current_timestamp"
@@ -32,9 +31,9 @@ namespace
 
     const QString INSERT_SQL =
         "INSERT OR REPLACE INTO download_record "
-        "(taskId, videoId, url, title, sectionName, author, duration, publishTime, selectedVideoQuality, selectedAudioQuality, downloadFilePath, cover, endTime, createdTime, updatedTime) "
+        "(taskId, videoId, url, title, sectionName, author, duration, publishTime, selectedVideoQuality, selectedAudioQuality, downloadFilePath, endTime, createdTime, updatedTime) "
         "VALUES "
-        "(:taskId, :videoId, :url, :title, :sectionName, :author, :duration, :publishTime, :selectedVideoQuality, :selectedAudioQuality, :downloadFilePath, :cover, :endTime, :createdTime, :updatedTime)";
+        "(:taskId, :videoId, :url, :title, :sectionName, :author, :duration, :publishTime, :selectedVideoQuality, :selectedAudioQuality, :downloadFilePath, :endTime, :createdTime, :updatedTime)";
 
     const QString DELETE_SQL = "DELETE FROM download_record WHERE taskId = ?";
 
@@ -77,7 +76,6 @@ QVariantMap DownloadRecordDAO::toMap(const DownloadRecord& downloadRecord)
     map[":selectedVideoQuality"] = downloadRecord.selectedVideoQuality;
     map[":selectedAudioQuality"] = downloadRecord.selectedAudioQuality;
     map[":downloadFilePath"] = downloadRecord.downloadFilePath;
-    map[":cover"] = downloadRecord.cover;
     map[":endTime"] = downloadRecord.endTime;
     map[":createdTime"] = downloadRecord.createdTime;
     map[":updatedTime"] = downloadRecord.updatedTime;
@@ -98,7 +96,6 @@ void DownloadRecordDAO::fillFromQueryResult(const QVariantMap& result, DownloadR
     downloadRecord.selectedVideoQuality = result.value("selectedVideoQuality").toString();
     downloadRecord.selectedAudioQuality = result.value("selectedAudioQuality").toString();
     downloadRecord.downloadFilePath = result.value("downloadFilePath").toString();
-    downloadRecord.cover = result.value("cover").toByteArray();
     downloadRecord.endTime = result.value("endTime").toDateTime();
     downloadRecord.createdTime = result.value("createdTime").toDateTime();
     downloadRecord.updatedTime = result.value("updatedTime").toDateTime();
@@ -162,7 +159,7 @@ int DownloadRecordDAO::count()
 
 QList<DownloadRecord> DownloadRecordDAO::selectList(const QueryWrapper& wrapper)
 {
-    QString sql = wrapper.buildSelectSql();
+    QString sql = wrapper.buildSelectSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
 
     if (sql.isEmpty())
@@ -175,7 +172,7 @@ QList<DownloadRecord> DownloadRecordDAO::selectList(const QueryWrapper& wrapper)
 
 int DownloadRecordDAO::selectCount(const QueryWrapper& wrapper)
 {
-    QString sql = wrapper.buildCountSql();
+    QString sql = wrapper.buildCountSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
 
     if (sql.isEmpty())
@@ -193,7 +190,7 @@ int DownloadRecordDAO::selectCount(const QueryWrapper& wrapper)
 
 bool DownloadRecordDAO::deleteByWrapper(const QueryWrapper& wrapper)
 {
-    QString sql = wrapper.buildDeleteSql();
+    QString sql = wrapper.buildDeleteSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
 
     if (sql.isEmpty())
@@ -206,7 +203,7 @@ bool DownloadRecordDAO::deleteByWrapper(const QueryWrapper& wrapper)
 
 bool DownloadRecordDAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)
 {
-    QString sql = wrapper.buildUpdateSql(updateFields);
+    QString sql = wrapper.buildUpdateSql(TABLE_NAME, updateFields);
     QVariantList params = wrapper.getBindValues();
 
     if (sql.isEmpty())

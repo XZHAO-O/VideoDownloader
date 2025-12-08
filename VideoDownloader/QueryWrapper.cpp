@@ -1,8 +1,7 @@
 #include "QueryWrapper.h"
 
-QueryWrapper::QueryWrapper(const QString& tableName)
-	: m_tableName(tableName)
-	, m_selectColumns("*")
+QueryWrapper::QueryWrapper()
+	: m_selectColumns("*")
 	, m_limit(-1)
 	, m_offset(-1)
 	, m_distinct(false)
@@ -29,12 +28,6 @@ QueryWrapper& QueryWrapper::reset()
 	m_distinct = false;
 	m_currentLogicalOp = "AND";
 	m_bindValues.clear();
-	return *this;
-}
-
-QueryWrapper& QueryWrapper::table(const QString& tableName)
-{
-	m_tableName = tableName;
 	return *this;
 }
 
@@ -387,8 +380,13 @@ QueryWrapper& QueryWrapper::distinct()
 	return *this;
 }
 
-QString QueryWrapper::buildSelectSql() const
+QString QueryWrapper::buildSelectSql(const QString& tableName) const
 {
+	if (tableName.isEmpty()) {
+		m_lastSql = "";
+		return "";
+	}
+
 	QString sql;
 
 	// SELECT
@@ -399,9 +397,7 @@ QString QueryWrapper::buildSelectSql() const
 	sql += buildSelectColumns();
 
 	// FROM
-	if (!m_tableName.isEmpty()) {
-		sql += " FROM " + m_tableName;
-	}
+	sql += " FROM " + tableName;
 
 	// WHERE
 	QString whereSql = buildWhereSql();
@@ -437,39 +433,49 @@ QString QueryWrapper::buildSelectSql() const
 	return sql;
 }
 
-QString QueryWrapper::buildDeleteSql() const
+QString QueryWrapper::buildDeleteSql(const QString& tableName) const
 {
-	QString sql = "DELETE FROM " + m_tableName;
-
-	QString whereSql = buildWhereSql();
-	if (!whereSql.isEmpty()) {
-		sql += " WHERE " + whereSql;
-	}
-
-	m_lastSql = sql;
-	return sql;
-}
-
-QString QueryWrapper::buildCountSql() const
-{
-	QString sql = "SELECT COUNT(*) FROM " + m_tableName;
-
-	QString whereSql = buildWhereSql();
-	if (!whereSql.isEmpty()) {
-		sql += " WHERE " + whereSql;
-	}
-
-	m_lastSql = sql;
-	return sql;
-}
-
-QString QueryWrapper::buildUpdateSql(const QVariantMap& updateFields) const
-{
-	if (updateFields.isEmpty() || m_tableName.isEmpty()) {
+	if (tableName.isEmpty()) {
+		m_lastSql = "";
 		return "";
 	}
 
-	QString sql = "UPDATE " + m_tableName + " SET ";
+	QString sql = "DELETE FROM " + tableName;
+
+	QString whereSql = buildWhereSql();
+	if (!whereSql.isEmpty()) {
+		sql += " WHERE " + whereSql;
+	}
+
+	m_lastSql = sql;
+	return sql;
+}
+
+QString QueryWrapper::buildCountSql(const QString& tableName) const
+{
+	if (tableName.isEmpty()) {
+		m_lastSql = "";
+		return "";
+	}
+
+	QString sql = "SELECT COUNT(*) FROM " + tableName;
+
+	QString whereSql = buildWhereSql();
+	if (!whereSql.isEmpty()) {
+		sql += " WHERE " + whereSql;
+	}
+
+	m_lastSql = sql;
+	return sql;
+}
+
+QString QueryWrapper::buildUpdateSql(const QString& tableName, const QVariantMap& updateFields) const
+{
+	if (tableName.isEmpty() || updateFields.isEmpty()) {
+		return "";
+	}
+
+	QString sql = "UPDATE " + tableName + " SET ";
 
 	QStringList setClauses;
 	QVariantList bindValues;

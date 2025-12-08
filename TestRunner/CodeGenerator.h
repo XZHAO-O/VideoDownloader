@@ -823,7 +823,7 @@ private:
 		// selectList
 		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::selectList(const QueryWrapper& wrapper)\n";
 		out << "{\n";
-		out << "    QString sql = wrapper.buildSelectSql();\n";
+		out << "    QString sql = wrapper.buildSelectSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
 		out << "    if (sql.isEmpty())\n";
 		out << "    {\n";
@@ -835,7 +835,7 @@ private:
 		// selectCount
 		out << "int " << tableDef.className << "DAO::selectCount(const QueryWrapper& wrapper)\n";
 		out << "{\n";
-		out << "    QString sql = wrapper.buildCountSql();\n";
+		out << "    QString sql = wrapper.buildCountSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
 		out << "    if (sql.isEmpty())\n";
 		out << "    {\n";
@@ -852,7 +852,7 @@ private:
 		// deleteByWrapper
 		out << "bool " << tableDef.className << "DAO::deleteByWrapper(const QueryWrapper& wrapper)\n";
 		out << "{\n";
-		out << "    QString sql = wrapper.buildDeleteSql();\n";
+		out << "    QString sql = wrapper.buildDeleteSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
 		out << "    if (sql.isEmpty())\n";
 		out << "    {\n";
@@ -864,7 +864,7 @@ private:
 		// updateByWrapper
 		out << "bool " << tableDef.className << "DAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)\n";
 		out << "{\n";
-		out << "    QString sql = wrapper.buildUpdateSql(updateFields);\n";
+		out << "    QString sql = wrapper.buildUpdateSql(TABLE_NAME, updateFields);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
 		out << "    if (sql.isEmpty())\n";
 		out << "    {\n";

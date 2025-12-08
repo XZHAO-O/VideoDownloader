@@ -16,7 +16,7 @@ DownloadRecordService::~DownloadRecordService()
 {
 }
 
-DownloadRecord DownloadRecordService::generateRecordFromTaskInfo(QSharedPointer<DownloadTaskInfo> task)
+DownloadRecord DownloadRecordService::generateFromReq(QSharedPointer<DownloadTaskInfo> task)
 {
 	DownloadRecord record;
 	record.taskId = task->taskId;
@@ -30,61 +30,33 @@ DownloadRecord DownloadRecordService::generateRecordFromTaskInfo(QSharedPointer<
 	record.selectedVideoQuality = task->selectedVideoQuality;
 	record.selectedAudioQuality = task->selectedAudioQuality;
 	record.downloadFilePath = task->downloadFilePath;
-	record.cover = task->videoInfo.cover;
 	record.endTime = task->endTime;
 	return record;
 }
 
-// ==================== 基本CRUD操作 ====================
-bool DownloadRecordService::insertOne(QSharedPointer<DownloadTaskInfo> task)
+bool DownloadRecordService::insert(const QSharedPointer<DownloadTaskInfo>& task)
 {
-	return m_dao->insert(generateRecordFromTaskInfo(task));
+	return insert(generateFromReq(task));
 }
 
-bool DownloadRecordService::insertOne(const DownloadRecord& record)
-{
-	return m_dao->insert(record);
-}
-
-bool DownloadRecordService::deleteOne(const QString& taskId)
-{
-	return m_dao->remove(taskId);
-}
-
-DownloadRecord DownloadRecordService::getOne(const QString& taskId)
-{
-	return m_dao->getById(taskId).first();
-}
-
-// ==================== 批量操作 ====================
-bool DownloadRecordService::insertBatch(const QList<QSharedPointer<DownloadTaskInfo>>& tasks)
+bool DownloadRecordService::insert(const QList<QSharedPointer<DownloadTaskInfo>>& tasks)
 {
 	QList<DownloadRecord> records;
 	for (const auto& task : tasks)
 	{
-		records << generateRecordFromTaskInfo(task);
+		records << generateFromReq(task);
 	}
-	return m_dao->insertBatch(records);
+	return insert(records);
 }
 
-bool DownloadRecordService::insertBatch(const QList<DownloadRecord>& records)
+bool DownloadRecordService::insert(const DownloadRecord& downloadrecord)
 {
-	return m_dao->insertBatch(records);
+	return m_dao->insert(downloadrecord);
 }
 
-bool DownloadRecordService::deleteBatch(const QList<QString>& taskIds)
+bool DownloadRecordService::insert(const QList<DownloadRecord>& downloadrecords)
 {
-	bool allSuccess = true;
-	for (const QString& taskId : taskIds)
-	{
-		if (!m_dao->remove(taskId))
-		{
-			allSuccess = false;
-			break;
-		}
-	}
-
-	return allSuccess;
+	return m_dao->insertBatch(downloadrecords);
 }
 
 //bool DownloadRecordService::removeAllRecords()
@@ -127,6 +99,7 @@ int DownloadRecordService::importFromJson(const QString& filePath)
 		DownloadRecord record;
 		record.taskId = obj.value("taskId").toString();
 		record.videoId = obj.value("videoId").toString();
+		record.url = obj.value("videoId").toString();
 		record.title = obj.value("title").toString();
 		record.sectionName = obj.value("sectionName").toString();
 		record.author = obj.value("author").toString();
@@ -146,7 +119,7 @@ int DownloadRecordService::importFromJson(const QString& filePath)
 		return 0;
 	}
 
-	if (insertBatch(records)) {
+	if (insert(records)) {
 		return records.size();
 	}
 
@@ -156,7 +129,7 @@ int DownloadRecordService::importFromJson(const QString& filePath)
 bool DownloadRecordService::exportToJson(const QString& filePath) const
 {
 	QList<DownloadRecord> records;
-	//QList<DownloadRecord> records = getAllRecords();
+	//QList<DownloadRecord> records = search();
 	if (records.isEmpty()) {
 		qWarning() << "No records to export";
 		return false;
@@ -167,6 +140,7 @@ bool DownloadRecordService::exportToJson(const QString& filePath) const
 		QJsonObject obj;
 		obj.insert("taskId", record.taskId);
 		obj.insert("videoId", record.videoId);
+		obj.insert("url", record.url);
 		obj.insert("title", record.title);
 		obj.insert("sectionName", record.sectionName);
 		obj.insert("author", record.author);
@@ -196,22 +170,15 @@ bool DownloadRecordService::exportToJson(const QString& filePath) const
 }
 
 // ==================== 查询功能 ====================
-QList<DownloadRecord> DownloadRecordService::query(const DownloadRecord& filter)
+QList<DownloadRecord> DownloadRecordService::search(const DownloadRecordReq& req)
 {
 	QList<DownloadRecord> records;
-	//m_dao->executeSelect(sql, params, [&](QSqlQuery& query) {
-	//	while (query.next()) {
-	//		DownloadRecord record;
-	//		m_dao->fillFromQuery(query, record);
-	//		records.append(record);
-	//	}
-	//	});
 
 	return records;
 }
 
 
-int DownloadRecordService::count()
+int DownloadRecordService::count(const QueryWrapper& wrapper)
 {
 	return m_dao->count();
 }
