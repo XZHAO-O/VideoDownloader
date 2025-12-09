@@ -6,7 +6,7 @@
 
 #include "DatabaseManager.h"
 #include "DownloadRecordService.h"
-//#include "DownloadVideoCoverService.h"
+#include "DownloadVideoCoverService.h"
 
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
@@ -94,7 +94,7 @@ void ApplicationController::initializeCoreSystems()
 	m_databaseManager->initialize(appDataPath + "/database/download.db");
 
 	m_downloadRecordService = QSharedPointer<DownloadRecordService>::create(m_databaseManager);
-	//m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);
+	m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);
 
 	LogSystem::instance().info("Core systems initialized", "Application");
 }
@@ -111,7 +111,7 @@ void ApplicationController::initializeServices()
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
 	// 初始化下载管理器
-	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager, m_downloadRecordService);
+	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager, m_downloadRecordService, m_downloadVideoCoverService);
 
 	LogSystem::instance().info("All services initialized", "Application");
 }
@@ -134,6 +134,7 @@ void ApplicationController::cleanup()
 	m_modManager.clear();
 	m_networkManager.clear();
 
+	m_downloadVideoCoverService.clear();
 	m_downloadRecordService.clear();
 	m_databaseManager.clear();
 

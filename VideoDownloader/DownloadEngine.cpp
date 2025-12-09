@@ -9,13 +9,15 @@
 #include "ConfigManager.h"
 #include "NetworkManager.h"
 #include "DownloadRecordService.h"
+#include "DownloadVideoCoverService.h"
 #include "StringUtil.h"
 
-DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QSharedPointer<DownloadRecordService> downloadRecordService, QWidget* parent)
+DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QSharedPointer<DownloadRecordService> downloadRecordService, QSharedPointer<DownloadVideoCoverService> downloadVideoCoverService, QWidget* parent)
 	: QWidget(parent)
 	, m_configManager(configManager)
 	, m_networkManager(networkManager)
 	, m_downloadRecordService(downloadRecordService)
+	, m_downloadVideoCoverService(downloadVideoCoverService)
 	, m_maxCurrentDownloads(5)
 	, m_maxThreadsPerDownload(3)
 	, m_maxDownloadSpeed(10)
@@ -36,7 +38,8 @@ DownloadEngine::~DownloadEngine()
 			if (task->isCompleted() && task->downloadFormat != DownloadFormat::Merged)
 			{
 				//保存下载记录
-				m_downloadRecordService->insertOne(task);
+				m_downloadRecordService->insert(*task);
+				m_downloadVideoCoverService->insert(*task);
 			}
 			task->pauseDownload(Qt::BlockingQueuedConnection);
 			//保存下载任务
@@ -321,7 +324,8 @@ void DownloadEngine::processCompletedTasks(QSharedPointer<DownloadTaskInfo> task
 	if (task->downloadFormat != DownloadFormat::Merged)
 	{
 		//保存下载记录
-		m_downloadRecordService->insertOne(task);
+		m_downloadRecordService->insert(*task);
+		m_downloadVideoCoverService->insert(*task);
 		emit downloadFinished(task->taskId);
 		return;
 	}

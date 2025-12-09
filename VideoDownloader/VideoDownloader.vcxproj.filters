@@ -436,6 +436,9 @@
     <ClCompile Include="DownloadVideoCoverDAO.cpp">
       <Filter>database\dao</Filter>
     </ClCompile>
+    <ClCompile Include="DownloadVideoCoverService.cpp">
+      <Filter>database\service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -748,6 +751,9 @@
       <Filter>database</Filter>
     </QtMoc>
     <QtMoc Include="DownloadRecordService.h">
+      <Filter>database\service</Filter>
+    </QtMoc>
+    <QtMoc Include="DownloadVideoCoverService.h">
       <Filter>database\service</Filter>
     </QtMoc>
   </ItemGroup>

@@ -23,18 +23,18 @@ public:
     // CRUD操作
     bool insert(const DownloadVideoCover& downloadVideoCover);
     bool update(const DownloadVideoCover& downloadVideoCover);
-    bool remove(const QString& taskId);
+    bool deleteById(const QString& taskId);
     QList<DownloadVideoCover> getById(const QString& taskId);
     bool insertBatch(const QList<DownloadVideoCover>& downloadVideoCovers);
     int count();
 
-    QList<DownloadVideoCover> selectList(const QueryWrapper& wrapper);
-    int selectCount(const QueryWrapper& wrapper);
-    bool deleteByWrapper(const QueryWrapper& wrapper);
-    bool updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields);
+    QList<DownloadVideoCover> list(const QueryWrapper& wrapper);
+    int count(const QueryWrapper& wrapper);
+    bool remove(const QueryWrapper& wrapper);
+    bool update(const QueryWrapper& wrapper, const QVariantMap& updateFields);
 
     // 分页查询
-    QList<DownloadVideoCover> selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize);
+    QList<DownloadVideoCover> page(const QueryWrapper& wrapper, int pageNum, int pageSize);
 
     // 查询操作
     bool executeQuery(const QString& queryStr, const QVariantMap& params);

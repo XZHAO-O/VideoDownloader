@@ -129,6 +129,7 @@
     <ClCompile Include="DownloadRecordDAO.cpp" />
     <ClCompile Include="DownloadRecordService.cpp" />
     <ClCompile Include="DownloadVideoCoverDAO.cpp" />
+    <ClCompile Include="DownloadVideoCoverService.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -387,6 +388,7 @@
     <QtMoc Include="LoginManager.h" />
     <ClInclude Include="DownloadVideoCover.h" />
     <ClInclude Include="DownloadVideoCoverDAO.h" />
+    <QtMoc Include="DownloadVideoCoverService.h" />
     <ClInclude Include="Instrumentor.h" />
     <QtMoc Include="LanguageManager.h" />
     <ClInclude Include="MediaInfo.h" />

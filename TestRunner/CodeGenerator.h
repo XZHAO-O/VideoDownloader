@@ -14,14 +14,18 @@ class CodeGenerator
 public:
 	// 生成选项枚举
 	enum GenerateOption {
-		GenerateClassOnly,      // 只生成实体类
-		GenerateDaoOnly,        // 只生成DAO类
-		GenerateBoth           // 两者都生成
+		GenerateClassOnly = 0,      // 只生成实体类
+		GenerateDaoOnly,           // 只生成DAO类
+		GenerateServiceOnly,       // 只生成Service类
+		GenerateClassAndDao,       // 生成实体类和DAO类
+		GenerateClassAndService,   // 生成实体类和Service类
+		GenerateDaoAndService,     // 生成DAO类和Service类
+		GenerateAll               // 三者都生成
 	};
 
 	// 对外提供的唯一函数
 	static bool generateFromSql(const QString& sqlFilePath,
-		GenerateOption option = GenerateBoth,
+		GenerateOption option = GenerateAll,
 		const QString& outputDir = "",
 		bool overwrite = false)
 	{
@@ -64,33 +68,49 @@ public:
 
 		// 根据选项生成代码
 		for (const TableDefinition& tableDef : tableDefs) {
-			switch (option) {
-			case GenerateClassOnly:
+			bool classSuccess = true;
+			bool daoSuccess = true;
+			bool serviceSuccess = true;
+
+			// 确定需要生成哪些文件
+			bool generateClass = (option == GenerateClassOnly || option == GenerateClassAndDao ||
+				option == GenerateClassAndService || option == GenerateAll);
+			bool generateDao = (option == GenerateDaoOnly || option == GenerateClassAndDao ||
+				option == GenerateDaoAndService || option == GenerateAll);
+			bool generateService = (option == GenerateServiceOnly || option == GenerateClassAndService ||
+				option == GenerateDaoAndService || option == GenerateAll);
+
+			// 生成实体类
+			if (generateClass) {
 				if (!generateCppClass(tableDef, outputPath, overwrite)) {
 					qWarning() << "Failed to generate class for table:" << tableDef.tableName;
+					classSuccess = false;
 					success = false;
 				}
-				break;
+			}
 
-			case GenerateDaoOnly:
+			// 生成DAO类
+			if (generateDao) {
 				if (!generateDaoHeader(tableDef, outputPath, overwrite) ||
 					!generateDaoImplementation(tableDef, outputPath, overwrite)) {
 					qWarning() << "Failed to generate DAO for table:" << tableDef.tableName;
+					daoSuccess = false;
 					success = false;
 				}
-				break;
+			}
 
-			case GenerateBoth:
-				if (!generateCppClass(tableDef, outputPath, overwrite)) {
-					qWarning() << "Failed to generate class for table:" << tableDef.tableName;
+			// 生成Service类
+			if (generateService) {
+				if (!generateServiceHeader(tableDef, outputPath, overwrite) ||
+					!generateServiceImplementation(tableDef, outputPath, overwrite)) {
+					qWarning() << "Failed to generate Service for table:" << tableDef.tableName;
+					serviceSuccess = false;
 					success = false;
 				}
-				if (!generateDaoHeader(tableDef, outputPath, overwrite) ||
-					!generateDaoImplementation(tableDef, outputPath, overwrite)) {
-					qWarning() << "Failed to generate DAO for table:" << tableDef.tableName;
-					success = false;
-				}
-				break;
+			}
+
+			if (classSuccess && daoSuccess && serviceSuccess) {
+				qDebug() << "Successfully generated for table:" << tableDef.tableName;
 			}
 		}
 
@@ -512,24 +532,24 @@ private:
 		// 根据主键生成删除方法
 		if (!primaryKeyName.isEmpty()) {
 			QString paramName = toCamelCase(primaryKeyName, false);
-			out << "    bool remove(const " << primaryKeyCppType << "& " << paramName << ");\n";
+			out << "    bool deleteById(const " << primaryKeyCppType << "& " << paramName << ");\n";
 			out << "    QList<" << tableDef.className << "> getById(const " << primaryKeyCppType << "& " << paramName << ");\n";
 		}
 		else {
-			out << "    bool remove(const QString& id);\n";
+			out << "    bool deleteById(const QString& id);\n";
 			out << "    QList<" << tableDef.className << "> getById(const QString& id);\n";
 		}
 
 		out << "    bool insertBatch(const QList<" << tableDef.className << ">& " << classNameLower << "s);\n";
 		out << "    int count();\n\n";
 
-		out << "    QList<" << tableDef.className << "> selectList(const QueryWrapper& wrapper);\n";
-		out << "    int selectCount(const QueryWrapper& wrapper);\n";
-		out << "    bool deleteByWrapper(const QueryWrapper& wrapper);\n";
-		out << "    bool updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields);\n\n";
+		out << "    QList<" << tableDef.className << "> list(const QueryWrapper& wrapper);\n";
+		out << "    int count(const QueryWrapper& wrapper);\n";
+		out << "    bool remove(const QueryWrapper& wrapper);\n";
+		out << "    bool update(const QueryWrapper& wrapper, const QVariantMap& updateFields);\n\n";
 
 		out << "    // 分页查询\n";
-		out << "    QList<" << tableDef.className << "> selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize);\n\n";
+		out << "    QList<" << tableDef.className << "> page(const QueryWrapper& wrapper, int pageNum, int pageSize);\n\n";
 
 		out << "    // 查询操作\n";
 		out << "    bool executeQuery(const QString& queryStr, const QVariantMap& params);\n";
@@ -754,10 +774,10 @@ private:
 		out << "    return insert(" << classNameLower << ");\n";
 		out << "}\n\n";
 
-		// remove
+		// deleteById
 		if (!primaryKeyName.isEmpty()) {
 			QString paramName = toCamelCase(primaryKeyName, false);
-			out << "bool " << tableDef.className << "DAO::remove(const " << primaryKeyCppType << "& "
+			out << "bool " << tableDef.className << "DAO::deleteById(const " << primaryKeyCppType << "& "
 				<< paramName << ")\n";
 			out << "{\n";
 			out << "    QVariantList params;\n";
@@ -820,8 +840,8 @@ private:
 		out << "    return result;\n";
 		out << "}\n\n";
 
-		// selectList
-		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::selectList(const QueryWrapper& wrapper)\n";
+		// list
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::list(const QueryWrapper& wrapper)\n";
 		out << "{\n";
 		out << "    QString sql = wrapper.buildSelectSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
@@ -832,8 +852,8 @@ private:
 		out << "    return executeSelect(sql, params);\n";
 		out << "}\n\n";
 
-		// selectCount
-		out << "int " << tableDef.className << "DAO::selectCount(const QueryWrapper& wrapper)\n";
+		// count
+		out << "int " << tableDef.className << "DAO::count(const QueryWrapper& wrapper)\n";
 		out << "{\n";
 		out << "    QString sql = wrapper.buildCountSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
@@ -849,8 +869,8 @@ private:
 		out << "    return 0;\n";
 		out << "}\n\n";
 
-		// deleteByWrapper
-		out << "bool " << tableDef.className << "DAO::deleteByWrapper(const QueryWrapper& wrapper)\n";
+		// remove
+		out << "bool " << tableDef.className << "DAO::remove(const QueryWrapper& wrapper)\n";
 		out << "{\n";
 		out << "    QString sql = wrapper.buildDeleteSql(TABLE_NAME);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
@@ -861,8 +881,8 @@ private:
 		out << "    return m_dbManager->executeQuery(sql, params);\n";
 		out << "}\n\n";
 
-		// updateByWrapper
-		out << "bool " << tableDef.className << "DAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)\n";
+		// update
+		out << "bool " << tableDef.className << "DAO::update(const QueryWrapper& wrapper, const QVariantMap& updateFields)\n";
 		out << "{\n";
 		out << "    QString sql = wrapper.buildUpdateSql(TABLE_NAME, updateFields);\n";
 		out << "    QVariantList params = wrapper.getBindValues();\n\n";
@@ -873,12 +893,12 @@ private:
 		out << "    return m_dbManager->executeQuery(sql, params);\n";
 		out << "}\n\n";
 
-		// selectPage
-		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize)\n";
+		// page
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "DAO::page(const QueryWrapper& wrapper, int pageNum, int pageSize)\n";
 		out << "{\n";
 		out << "    QueryWrapper pageWrapper = wrapper;\n";
 		out << "    pageWrapper.limit((pageNum - 1) * pageSize, pageSize);\n\n";
-		out << "    return selectList(pageWrapper);\n";
+		out << "    return list(pageWrapper);\n";
 		out << "}\n\n";
 
 		// executeQuery (QVariantList)
@@ -926,6 +946,344 @@ private:
 		daoFile.close();
 
 		qDebug() << "Generated DAO implementation:" << daoPath << (overwrite ? "(overwritten)" : "");
+		return true;
+	}
+
+	// 生成Service头文件
+	static bool generateServiceHeader(const TableDefinition& tableDef, const QString& outputDir, bool overwrite = false)
+	{
+		QDir dir(outputDir);
+		QString serviceFileName = tableDef.className + "Service.h";
+		QString servicePath = dir.filePath(serviceFileName);
+
+		// 检查文件是否存在，根据overwrite参数决定是否继续
+		if (QFile::exists(servicePath) && !overwrite) {
+			qWarning() << "Service file already exists:" << servicePath << "(use overwrite=true to override)";
+			return false;
+		}
+
+		QFile serviceFile(servicePath);
+		if (!serviceFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+			qCritical() << "Failed to create Service file:" << servicePath;
+			return false;
+		}
+
+		QTextStream out(&serviceFile);
+		out.setEncoding(QStringConverter::Utf8);
+
+		// 生成变量名：类名首字母小写
+		QString classNameLower = toCamelCase(tableDef.className, false);
+
+		out << "#pragma once\n\n";
+		out << "#include <QObject>\n";
+		out << "#include <QSharedPointer>\n\n";
+
+		// 包含DAO头文件
+		out << "#include \"" << tableDef.className << ".h\"\n\n";
+
+		// 前置声明
+		out << "class DatabaseManager;\n";
+		out << "class QueryWrapper;\n";
+		out << "class " << tableDef.className << "DAO;\n";
+		out << "class " << tableDef.className << "Req;\n\n";
+
+		out << "class " << tableDef.className << "Service : public QObject\n";
+		out << "{\n";
+		out << "    Q_OBJECT\n\n";
+		out << "public:\n";
+		out << "    explicit " << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager,\n";
+		out << "        QObject* parent = nullptr);\n";
+		out << "    ~" << tableDef.className << "Service();\n\n";
+
+		// 生成generateFromReq函数
+		out << "    " << tableDef.className << " generateFromReq(const " << tableDef.className << "Req& req);\n\n";
+
+		// 插入函数
+		out << "    bool insert(const " << tableDef.className << "& " << classNameLower << ");\n";
+		out << "    bool insert(const QList<" << tableDef.className << ">& " << classNameLower << "s);\n";
+		out << "    bool insert(const " << tableDef.className << "Req& req);\n";
+		out << "    bool insert(const QList<" << tableDef.className << "Req>& reqs);\n\n";
+
+		// 删除函数
+		out << "    bool remove(const " << tableDef.className << "Req& req);\n\n";
+
+		// 查询函数
+		out << "    QList<" << tableDef.className << "> search(const " << tableDef.className << "Req& req); \n\n";
+		out << "    int count(const " << tableDef.className << "Req& req); \n\n";
+
+		// JSON导入导出
+		out << "    int importFromJson(const QString& filePath);\n";
+		out << "    bool exportToJson(const QString& filePath) const;\n\n";
+
+		out << "private:\n";
+		out << "    QSharedPointer<" << tableDef.className << "DAO> m_dao;\n";
+		out << "};";
+
+		serviceFile.close();
+
+		qDebug() << "Generated Service header:" << servicePath << (overwrite ? "(overwritten)" : "");
+		return true;
+	}
+
+	// 生成Service实现文件
+	static bool generateServiceImplementation(const TableDefinition& tableDef, const QString& outputDir, bool overwrite = false)
+	{
+		QDir dir(outputDir);
+		QString serviceFileName = tableDef.className + "Service.cpp";
+		QString servicePath = dir.filePath(serviceFileName);
+
+		// 检查文件是否存在，根据overwrite参数决定是否继续
+		if (QFile::exists(servicePath) && !overwrite) {
+			qWarning() << "Service implementation file already exists:" << servicePath << "(use overwrite=true to override)";
+			return false;
+		}
+
+		QFile serviceFile(servicePath);
+		if (!serviceFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+			qCritical() << "Failed to create Service implementation file:" << servicePath;
+			return false;
+		}
+
+		QTextStream out(&serviceFile);
+		out.setEncoding(QStringConverter::Utf8);
+
+		// 查找主键列
+		QString primaryKeyName;
+		QString primaryKeyCppType;
+		for (const ColumnDefinition& column : tableDef.columns) {
+			if (column.isPrimaryKey) {
+				primaryKeyName = column.name;
+				primaryKeyCppType = column.cppType;
+				break;
+			}
+		}
+
+		// 生成变量名：类名首字母小写
+		QString classNameLower = toCamelCase(tableDef.className, false);
+
+		// 生成实现文件内容
+		out << "#include \"" << tableDef.className << "Service.h\"\n\n";
+		out << "#include <QFile>\n";
+		out << "#include <QJsonDocument>\n";
+		out << "#include <QJsonArray>\n";
+		out << "#include <QJsonObject>\n\n";
+		out << "#include \"QueryWrapper.h\"\n";
+		out << "#include \"" << tableDef.className << "DAO.h\"\n";
+		out << "#include \"" << tableDef.className << "Req.h\"\n\n";
+
+		// 构造函数
+		out << tableDef.className << "Service::" << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager,\n";
+		out << "    QObject* parent)\n";
+		out << "    : QObject(parent)\n";
+		out << "    , m_dao(QSharedPointer<" << tableDef.className << "DAO>::create(dbManager))\n";
+		out << "{\n";
+		out << "}\n\n";
+
+		// 析构函数
+		out << tableDef.className << "Service::~" << tableDef.className << "Service()\n";
+		out << "{\n";
+		out << "}\n\n";
+
+		// generateFromReq函数 - 实体类和Req类字段相同，直接赋值
+		out << tableDef.className << " " << tableDef.className << "Service::generateFromReq(const " << tableDef.className << "Req& req)\n";
+		out << "{\n";
+		out << "    " << tableDef.className << " " << classNameLower << ";\n";
+
+		// 为每个字段生成赋值语句，假设Req类和实体类字段名相同
+		for (const ColumnDefinition& column : tableDef.columns) {
+			QString memberName = toCamelCase(column.name, false);
+			out << "    " << classNameLower << "." << memberName << " = req." << memberName << ";\n";
+		}
+
+		out << "    return " << classNameLower << ";\n";
+		out << "}\n\n";
+
+		// insert单个实体
+		out << "bool " << tableDef.className << "Service::insert(const " << tableDef.className << "& " << classNameLower << ")\n";
+		out << "{\n";
+		out << "    return m_dao->insert(" << classNameLower << ");\n";
+		out << "}\n\n";
+
+		// insert实体列表
+		out << "bool " << tableDef.className << "Service::insert(const QList<" << tableDef.className << ">& " << classNameLower << "s)\n";
+		out << "{\n";
+		out << "    return m_dao->insertBatch(" << classNameLower << "s);\n";
+		out << "}\n\n";
+
+		// insert单个Req
+		out << "bool " << tableDef.className << "Service::insert(const " << tableDef.className << "Req& req)\n";
+		out << "{\n";
+		out << "    " << tableDef.className << " " << classNameLower << " = generateFromReq(req);\n";
+		out << "    return insert(" << classNameLower << ");\n";
+		out << "}\n\n";
+
+		// insert Req列表
+		out << "bool " << tableDef.className << "Service::insert(const QList<" << tableDef.className << "Req>& reqs)\n";
+		out << "{\n";
+		out << "    QList<" << tableDef.className << "> " << classNameLower << "s;\n";
+		out << "    " << classNameLower << "s" << ".reserve(reqs.size());\n";
+		out << "    for (const auto& req : reqs)\n";
+		out << "\t{\n";
+		out << "        " << classNameLower << "s.append(generateFromReq(req));\n";
+		out << "    }\n";
+		out << "    return insert(" << classNameLower << "s);\n";
+		out << "}\n\n";
+
+		// remove
+		out << "bool " << tableDef.className << "Service::remove(const " << tableDef.className << "Req& req)\n";
+		out << "{\n";
+		out << "    QueryWrapper wrapper;\n";
+		out << "    return m_dao->remove(wrapper);\n";
+		out << "}\n\n";
+
+		// search函数
+		out << "QList<" << tableDef.className << "> " << tableDef.className << "Service::search(const " << tableDef.className << "Req& req)\n";
+		out << "{\n";
+		out << "    QueryWrapper wrapper;\n";
+		out << "    return m_dao->list(wrapper);\n";
+		out << "}\n\n";
+
+		// count函数
+		out << "int " << tableDef.className << "Service::count(const " << tableDef.className << "Req& req)\n";
+		out << "{\n";
+		out << "    QueryWrapper wrapper;\n";
+		out << "    return m_dao->count(wrapper);\n";
+		out << "}\n\n";
+
+		// importFromJson函数
+		out << "int " << tableDef.className << "Service::importFromJson(const QString& filePath)\n";
+		out << "{\n";
+		out << "    QFile file(filePath);\n";
+		out << "    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {\n";
+		out << "        qWarning() << \"Failed to open JSON file:\" << filePath;\n";
+		out << "        return 0;\n";
+		out << "    }\n\n";
+		out << "    QByteArray jsonData = file.readAll();\n";
+		out << "    file.close();\n\n";
+		out << "    QJsonDocument doc = QJsonDocument::fromJson(jsonData);\n";
+		out << "    if (doc.isNull() || !doc.isArray()) {\n";
+		out << "        qWarning() << \"Invalid JSON format\";\n";
+		out << "        return 0;\n";
+		out << "    }\n\n";
+		out << "    QJsonArray jsonArray = doc.array();\n";
+		out << "    QList<" << tableDef.className << "> records;\n";
+		out << "    records.reserve(jsonArray.size());\n";
+		out << "    for (const QJsonValue& value : jsonArray) {\n";
+		out << "        QJsonObject obj = value.toObject();\n\n";
+		out << "        " << tableDef.className << " record;\n";
+
+		// 为每个字段生成从JSON对象中读取的代码
+		for (const ColumnDefinition& column : tableDef.columns) {
+			QString memberName = toCamelCase(column.name, false);
+			QString jsonKey = column.name; // 使用列名作为JSON键
+
+			if (column.cppType == "QDateTime") {
+				out << "        record." << memberName << " = QDateTime::fromString(obj.value(\"" << jsonKey << "\").toString(), Qt::ISODate);\n";
+			}
+			else if (column.cppType == "QDate") {
+				out << "        record." << memberName << " = QDate::fromString(obj.value(\"" << jsonKey << "\").toString(), Qt::ISODate);\n";
+			}
+			else if (column.cppType == "QTime") {
+				out << "        record." << memberName << " = QTime::fromString(obj.value(\"" << jsonKey << "\").toString(), Qt::ISODate);\n";
+			}
+			else if (column.cppType == "int" || column.cppType == "short" || column.cppType == "quint8") {
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toInt();\n";
+			}
+			else if (column.cppType == "bool") {
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toBool();\n";
+			}
+			else if (column.cppType == "float" || column.cppType == "double") {
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toDouble();\n";
+			}
+			else if (column.cppType == "qlonglong" || column.cppType == "qint64") {
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toVariant().toLongLong();\n";
+			}
+			else if (column.cppType == "QByteArray") {
+				out << "        record." << memberName << " = QByteArray::fromBase64(obj.value(\"" << jsonKey << "\").toString().toLatin1());\n";
+			}
+			else if (column.cppType == "QString") {
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toString();\n";
+			}
+			else {
+				// 默认当作字符串处理
+				out << "        record." << memberName << " = obj.value(\"" << jsonKey << "\").toString();\n";
+			}
+		}
+
+		out << "\n        records.append(record);\n";
+		out << "    }\n\n";
+		out << "    if (records.isEmpty()) {\n";
+		out << "        return 0;\n";
+		out << "    }\n\n";
+		out << "    if (insert(records)) {\n";
+		out << "        return records.size();\n";
+		out << "    }\n\n";
+		out << "    return 0;\n";
+		out << "}\n\n";
+
+		// exportToJson函数
+		out << "bool " << tableDef.className << "Service::exportToJson(const QString& filePath) const\n";
+		out << "{\n";
+		out << "    // 使用空查询条件获取所有记录\n";
+		out << "    QList<" << tableDef.className << "> records = search(" << tableDef.className << "Req()); \n";
+		out << "    if (records.isEmpty()) {\n";
+		out << "        qWarning() << \"No records to export\";\n";
+		out << "        return false;\n";
+		out << "    }\n\n";
+		out << "    QJsonArray jsonArray;\n";
+		out << "    for (const " << tableDef.className << "& record : records) {\n";
+		out << "        QJsonObject obj;\n";
+
+		// 为每个字段生成插入JSON对象的代码
+		for (const ColumnDefinition& column : tableDef.columns) {
+			QString memberName = toCamelCase(column.name, false);
+			QString jsonKey = column.name; // 使用列名作为JSON键
+
+			if (column.cppType == "QDateTime") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ".toString(Qt::ISODate));\n";
+			}
+			else if (column.cppType == "QDate") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ".toString(Qt::ISODate));\n";
+			}
+			else if (column.cppType == "QTime") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ".toString(Qt::ISODate));\n";
+			}
+			else if (column.cppType == "int" || column.cppType == "short" || column.cppType == "quint8" ||
+				column.cppType == "qlonglong" || column.cppType == "qint64" ||
+				column.cppType == "float" || column.cppType == "double") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ");\n";
+			}
+			else if (column.cppType == "bool") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ");\n";
+			}
+			else if (column.cppType == "QByteArray") {
+				out << "        obj.insert(\"" << jsonKey << "\", QString(record." << memberName << ".toBase64()));\n";
+			}
+			else if (column.cppType == "QString") {
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ");\n";
+			}
+			else {
+				// 默认当作字符串处理
+				out << "        obj.insert(\"" << jsonKey << "\", record." << memberName << ");\n";
+			}
+		}
+
+		out << "\n        jsonArray.append(obj);\n";
+		out << "    }\n\n";
+		out << "    QJsonDocument doc(jsonArray);\n";
+		out << "    QFile file(filePath);\n";
+		out << "    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {\n";
+		out << "        qWarning() << \"Failed to open file for writing:\" << filePath;\n";
+		out << "        return false;\n";
+		out << "    }\n\n";
+		out << "    file.write(doc.toJson());\n";
+		out << "    file.close();\n\n";
+		out << "    return true;\n";
+		out << "}";
+
+		serviceFile.close();
+
+		qDebug() << "Generated Service implementation:" << servicePath << (overwrite ? "(overwritten)" : "");
 		return true;
 	}
 };

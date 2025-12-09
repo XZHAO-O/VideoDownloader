@@ -111,7 +111,7 @@ bool DownloadRecordDAO::update(const DownloadRecord& downloadRecord)
     return insert(downloadRecord);
 }
 
-bool DownloadRecordDAO::remove(const QString& taskId)
+bool DownloadRecordDAO::deleteById(const QString& taskId)
 {
     QVariantList params;
     params << taskId;
@@ -157,7 +157,7 @@ int DownloadRecordDAO::count()
     return result;
 }
 
-QList<DownloadRecord> DownloadRecordDAO::selectList(const QueryWrapper& wrapper)
+QList<DownloadRecord> DownloadRecordDAO::list(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildSelectSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -170,7 +170,7 @@ QList<DownloadRecord> DownloadRecordDAO::selectList(const QueryWrapper& wrapper)
     return executeSelect(sql, params);
 }
 
-int DownloadRecordDAO::selectCount(const QueryWrapper& wrapper)
+int DownloadRecordDAO::count(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildCountSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -188,7 +188,7 @@ int DownloadRecordDAO::selectCount(const QueryWrapper& wrapper)
     return 0;
 }
 
-bool DownloadRecordDAO::deleteByWrapper(const QueryWrapper& wrapper)
+bool DownloadRecordDAO::remove(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildDeleteSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -201,7 +201,7 @@ bool DownloadRecordDAO::deleteByWrapper(const QueryWrapper& wrapper)
     return m_dbManager->executeQuery(sql, params);
 }
 
-bool DownloadRecordDAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)
+bool DownloadRecordDAO::update(const QueryWrapper& wrapper, const QVariantMap& updateFields)
 {
     QString sql = wrapper.buildUpdateSql(TABLE_NAME, updateFields);
     QVariantList params = wrapper.getBindValues();
@@ -214,12 +214,12 @@ bool DownloadRecordDAO::updateByWrapper(const QueryWrapper& wrapper, const QVari
     return m_dbManager->executeQuery(sql, params);
 }
 
-QList<DownloadRecord> DownloadRecordDAO::selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize)
+QList<DownloadRecord> DownloadRecordDAO::page(const QueryWrapper& wrapper, int pageNum, int pageSize)
 {
     QueryWrapper pageWrapper = wrapper;
     pageWrapper.limit((pageNum - 1) * pageSize, pageSize);
 
-    return selectList(pageWrapper);
+    return list(pageWrapper);
 }
 
 bool DownloadRecordDAO::executeQuery(const QString& queryStr, const QVariantList& params)

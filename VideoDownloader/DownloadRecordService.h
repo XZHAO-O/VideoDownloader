@@ -3,10 +3,14 @@
 #include <QObject>
 #include <QSharedPointer>
 
-#include "DownloadRecordDAO.h"
-#include "DownloadTaskInfo.h"
+#include "DownloadRecord.h"
 
-class DownloadRecordReq;
+class DatabaseManager;
+class QueryWrapper;
+class DownloadRecordDAO;
+class DownloadTaskInfo;
+
+typedef DownloadTaskInfo DownloadRecordReq;
 
 class DownloadRecordService : public QObject
 {
@@ -17,19 +21,18 @@ public:
 		QObject* parent = nullptr);
 	~DownloadRecordService();
 
-	DownloadRecord generateFromReq(QSharedPointer<DownloadTaskInfo> task);
+	DownloadRecord generateFromReq(const DownloadRecordReq& req);
 
-	bool insert(const QSharedPointer<DownloadTaskInfo>& task);
-	bool insert(const QList<QSharedPointer<DownloadTaskInfo>>& task);
-	bool insert(const DownloadRecord& downloadrecord);
-	bool insert(const QList<DownloadRecord>& downloadrecords);
+	bool insert(const DownloadRecord& downloadRecord);
+	bool insert(const QList<DownloadRecord>& downloadRecords);
+	bool insert(const DownloadRecordReq& req);
+	bool insert(const QList<DownloadRecordReq>& reqs);
 
-	bool remove(const QSharedPointer<DownloadTaskInfo>& task);
-	bool remove(const QList<QSharedPointer<DownloadTaskInfo>>& tasks);
+	bool remove(const DownloadRecordReq& req);
 
 	QList<DownloadRecord> search(const DownloadRecordReq& req);
 
-	int count(const QueryWrapper& wrapper);
+	int count(const DownloadRecordReq& req);
 
 	int importFromJson(const QString& filePath);
 	bool exportToJson(const QString& filePath) const;

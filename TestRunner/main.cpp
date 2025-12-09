@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 
 	bool result = CodeGenerator::generateFromSql(
 		"../VideoDownloader/all.sql",
-		CodeGenerator::GenerateBoth,
+		CodeGenerator::GenerateAll,
 		"../VideoDownloader/",
 		true
 	);

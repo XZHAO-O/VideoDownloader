@@ -1,9 +1,13 @@
 #include "DownloadRecordService.h"
 
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QtConcurrent>
+
+#include "QueryWrapper.h"
+#include "DownloadRecordDAO.h"
+#include "DownloadTaskInfo.h"
 
 DownloadRecordService::DownloadRecordService(QSharedPointer<DatabaseManager> dbManager,
 	QObject* parent)
@@ -16,62 +20,68 @@ DownloadRecordService::~DownloadRecordService()
 {
 }
 
-DownloadRecord DownloadRecordService::generateFromReq(QSharedPointer<DownloadTaskInfo> task)
+DownloadRecord DownloadRecordService::generateFromReq(const DownloadRecordReq& req)
 {
-	DownloadRecord record;
-	record.taskId = task->taskId;
-	record.videoId = task->videoInfo.videoId;
-	record.url = task->videoInfo.videoId;
-	record.title = task->videoInfo.title;
-	record.sectionName = task->videoInfo.sectionName;
-	record.author = task->videoInfo.author;
-	record.duration = task->videoInfo.duration;
-	record.publishTime = task->videoInfo.publishTime;
-	record.selectedVideoQuality = task->selectedVideoQuality;
-	record.selectedAudioQuality = task->selectedAudioQuality;
-	record.downloadFilePath = task->downloadFilePath;
-	record.endTime = task->endTime;
-	return record;
+	DownloadRecord downloadRecord;
+	downloadRecord.taskId = req.taskId;
+	downloadRecord.videoId = req.videoInfo.videoId;
+	downloadRecord.url = req.videoInfo.videoId;
+	downloadRecord.title = req.videoInfo.title;
+	downloadRecord.sectionName = req.videoInfo.sectionName;
+	downloadRecord.author = req.videoInfo.author;
+	downloadRecord.duration = req.videoInfo.duration;
+	downloadRecord.publishTime = req.videoInfo.publishTime;
+	downloadRecord.selectedVideoQuality = req.selectedVideoQuality;
+	downloadRecord.selectedAudioQuality = req.selectedAudioQuality;
+	downloadRecord.downloadFilePath = req.downloadFilePath;
+	downloadRecord.endTime = req.endTime;
+	return downloadRecord;
 }
 
-bool DownloadRecordService::insert(const QSharedPointer<DownloadTaskInfo>& task)
+bool DownloadRecordService::insert(const DownloadRecord& downloadRecord)
 {
-	return insert(generateFromReq(task));
+	return m_dao->insert(downloadRecord);
 }
 
-bool DownloadRecordService::insert(const QList<QSharedPointer<DownloadTaskInfo>>& tasks)
+bool DownloadRecordService::insert(const QList<DownloadRecord>& downloadRecords)
 {
-	QList<DownloadRecord> records;
-	for (const auto& task : tasks)
+	return m_dao->insertBatch(downloadRecords);
+}
+
+bool DownloadRecordService::insert(const DownloadRecordReq& req)
+{
+	DownloadRecord downloadRecord = generateFromReq(req);
+	return insert(downloadRecord);
+}
+
+bool DownloadRecordService::insert(const QList<DownloadRecordReq>& reqs)
+{
+	QList<DownloadRecord> downloadRecords;
+	downloadRecords.reserve(reqs.size());
+	for (const auto& req : reqs)
 	{
-		records << generateFromReq(task);
+		downloadRecords.append(generateFromReq(req));
 	}
-	return insert(records);
+	return insert(downloadRecords);
 }
 
-bool DownloadRecordService::insert(const DownloadRecord& downloadrecord)
+bool DownloadRecordService::remove(const DownloadRecordReq& req)
 {
-	return m_dao->insert(downloadrecord);
+	QueryWrapper wrapper;
+	return m_dao->remove(wrapper);
 }
 
-bool DownloadRecordService::insert(const QList<DownloadRecord>& downloadrecords)
+QList<DownloadRecord> DownloadRecordService::search(const DownloadRecordReq& req)
 {
-	return m_dao->insertBatch(downloadrecords);
+	QueryWrapper wrapper;
+	return m_dao->list(wrapper);
 }
 
-//bool DownloadRecordService::removeAllRecords()
-//{
-//	// 获取所有记录ID用于信号
-//	QList<DownloadRecord> allRecords = getAllRecords();
-//	QList<QString> taskIds;
-//	for (const auto& record : allRecords) {
-//		taskIds << record.taskId;
-//	}
-//
-//	// 执行删除
-//	bool success = m_dao->executeQuery("DELETE FROM download_record");
-//	return success;
-//}
+int DownloadRecordService::count(const DownloadRecordReq& req)
+{
+	QueryWrapper wrapper;
+	return m_dao->count(wrapper);
+}
 
 int DownloadRecordService::importFromJson(const QString& filePath)
 {
@@ -92,14 +102,14 @@ int DownloadRecordService::importFromJson(const QString& filePath)
 
 	QJsonArray jsonArray = doc.array();
 	QList<DownloadRecord> records;
-
+	records.reserve(jsonArray.size());
 	for (const QJsonValue& value : jsonArray) {
 		QJsonObject obj = value.toObject();
 
 		DownloadRecord record;
 		record.taskId = obj.value("taskId").toString();
 		record.videoId = obj.value("videoId").toString();
-		record.url = obj.value("videoId").toString();
+		record.url = obj.value("url").toString();
 		record.title = obj.value("title").toString();
 		record.sectionName = obj.value("sectionName").toString();
 		record.author = obj.value("author").toString();
@@ -128,8 +138,10 @@ int DownloadRecordService::importFromJson(const QString& filePath)
 
 bool DownloadRecordService::exportToJson(const QString& filePath) const
 {
+	// 使用空查询条件获取所有记录
+	DownloadRecordReq req;
+	//QList<DownloadRecord> records = search(req);
 	QList<DownloadRecord> records;
-	//QList<DownloadRecord> records = search();
 	if (records.isEmpty()) {
 		qWarning() << "No records to export";
 		return false;
@@ -168,20 +180,3 @@ bool DownloadRecordService::exportToJson(const QString& filePath) const
 
 	return true;
 }
-
-// ==================== 查询功能 ====================
-QList<DownloadRecord> DownloadRecordService::search(const DownloadRecordReq& req)
-{
-	QList<DownloadRecord> records;
-
-	return records;
-}
-
-
-int DownloadRecordService::count(const QueryWrapper& wrapper)
-{
-	return m_dao->count();
-}
-
-// 文件操作统计和去重功能的具体实现由于篇幅原因省略
-// 但提供了完整的框架设计

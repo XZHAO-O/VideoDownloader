@@ -81,7 +81,7 @@ bool DownloadVideoCoverDAO::update(const DownloadVideoCover& downloadVideoCover)
     return insert(downloadVideoCover);
 }
 
-bool DownloadVideoCoverDAO::remove(const QString& taskId)
+bool DownloadVideoCoverDAO::deleteById(const QString& taskId)
 {
     QVariantList params;
     params << taskId;
@@ -127,7 +127,7 @@ int DownloadVideoCoverDAO::count()
     return result;
 }
 
-QList<DownloadVideoCover> DownloadVideoCoverDAO::selectList(const QueryWrapper& wrapper)
+QList<DownloadVideoCover> DownloadVideoCoverDAO::list(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildSelectSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -140,7 +140,7 @@ QList<DownloadVideoCover> DownloadVideoCoverDAO::selectList(const QueryWrapper& 
     return executeSelect(sql, params);
 }
 
-int DownloadVideoCoverDAO::selectCount(const QueryWrapper& wrapper)
+int DownloadVideoCoverDAO::count(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildCountSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -158,7 +158,7 @@ int DownloadVideoCoverDAO::selectCount(const QueryWrapper& wrapper)
     return 0;
 }
 
-bool DownloadVideoCoverDAO::deleteByWrapper(const QueryWrapper& wrapper)
+bool DownloadVideoCoverDAO::remove(const QueryWrapper& wrapper)
 {
     QString sql = wrapper.buildDeleteSql(TABLE_NAME);
     QVariantList params = wrapper.getBindValues();
@@ -171,7 +171,7 @@ bool DownloadVideoCoverDAO::deleteByWrapper(const QueryWrapper& wrapper)
     return m_dbManager->executeQuery(sql, params);
 }
 
-bool DownloadVideoCoverDAO::updateByWrapper(const QueryWrapper& wrapper, const QVariantMap& updateFields)
+bool DownloadVideoCoverDAO::update(const QueryWrapper& wrapper, const QVariantMap& updateFields)
 {
     QString sql = wrapper.buildUpdateSql(TABLE_NAME, updateFields);
     QVariantList params = wrapper.getBindValues();
@@ -184,12 +184,12 @@ bool DownloadVideoCoverDAO::updateByWrapper(const QueryWrapper& wrapper, const Q
     return m_dbManager->executeQuery(sql, params);
 }
 
-QList<DownloadVideoCover> DownloadVideoCoverDAO::selectPage(const QueryWrapper& wrapper, int pageNum, int pageSize)
+QList<DownloadVideoCover> DownloadVideoCoverDAO::page(const QueryWrapper& wrapper, int pageNum, int pageSize)
 {
     QueryWrapper pageWrapper = wrapper;
     pageWrapper.limit((pageNum - 1) * pageSize, pageSize);
 
-    return selectList(pageWrapper);
+    return list(pageWrapper);
 }
 
 bool DownloadVideoCoverDAO::executeQuery(const QString& queryStr, const QVariantList& params)
