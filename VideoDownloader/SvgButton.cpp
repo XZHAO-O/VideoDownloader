@@ -1,9 +1,10 @@
 #include "SvgButton.h"
 
+#include "DesignSystem.h"
+
 SvgButton::SvgButton(QWidget* parent)
 	: QPushButton(parent),
 	m_iconKey(""),
-	m_currentTheme(DesignSystem::Light),
 	m_hovered(false),
 	m_pressed(false),
 	m_hoverIconEnabled(true),
@@ -16,21 +17,17 @@ SvgButton::SvgButton(QWidget* parent)
 {
 	setCursor(Qt::PointingHandCursor);
 
-	// 初始化主题
-	m_currentTheme = DesignSystem::instance()->themeMode();
-
 	// 设置默认大小
 	setFixedSize(m_iconSize);
 
-	// 连接主题变化信号
+	// 连接主题变化信号，直接触发重绘
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged,
-		this, &SvgButton::onThemeChanged);
+		this, QOverload<>::of(&SvgButton::update));
 }
 
 SvgButton::SvgButton(const QString& iconKey, QWidget* parent)
 	: QPushButton(parent),
 	m_iconKey(iconKey),
-	m_currentTheme(DesignSystem::Light),
 	m_hovered(false),
 	m_pressed(false),
 	m_hoverIconEnabled(true),
@@ -43,15 +40,12 @@ SvgButton::SvgButton(const QString& iconKey, QWidget* parent)
 {
 	setCursor(Qt::PointingHandCursor);
 
-	// 初始化主题
-	m_currentTheme = DesignSystem::instance()->themeMode();
-
 	// 设置默认大小
 	setFixedSize(m_iconSize);
 
-	// 连接主题变化信号
+	// 连接主题变化信号，直接触发重绘
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged,
-		this, &SvgButton::onThemeChanged);
+		this, QOverload<>::of(&SvgButton::update));
 }
 
 SvgButton::~SvgButton()
@@ -217,25 +211,19 @@ void SvgButton::resizeEvent(QResizeEvent* event)
 	QPushButton::resizeEvent(event);
 }
 
-void SvgButton::onThemeChanged()
-{
-	// 更新当前主题
-	m_currentTheme = DesignSystem::instance()->themeMode();
-
-	// 更新显示
-	update();
-}
-
 QPixmap SvgButton::getCurrentPixmap() const
 {
 	if (m_iconKey.isEmpty()) {
 		return QPixmap();
 	}
 
+	// 获取当前主题模式
+	DesignSystem::ThemeMode theme = DesignSystem::instance()->themeMode();
+
 	// 根据当前主题和悬停状态确定索引
 	int index = 0;
 
-	if (m_currentTheme == DesignSystem::Dark) {
+	if (theme == DesignSystem::Dark) {
 		index = (m_hovered && m_hoverIconEnabled) ? 3 : 2;
 	}
 	else {

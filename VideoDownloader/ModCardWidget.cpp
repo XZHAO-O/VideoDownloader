@@ -10,6 +10,7 @@
 #include "BubbleViewController.h"
 #include "DialogViewController.h"
 #include "CircularAvatar.h"
+#include "SvgButton.h"
 #include "ConfigVideoPlatform.h"
 #include "ModCardModel.h"
 
@@ -233,8 +234,9 @@ void ModCardWidget::initUI()
 	m_toggleButton->setShowText(true);
 
 	// 打开文件夹按钮
-	m_openFolderButton = new AntButton(tr("打开模组所在文件夹"), 12, this); // 增大字体
-	m_openFolderButton->setFixedSize(200, 40); // 增大按钮尺寸
+	m_openFolderButton = new SvgButton("folder2", this);
+	m_openFolderButton->setFixedSize(32, 32);
+	m_openFolderButton->setToolTip(tr("打开模组所在文件夹"));
 
 	// 更新按钮
 	m_updateButton = new AntButton(tr("更新模组"), 12, this);

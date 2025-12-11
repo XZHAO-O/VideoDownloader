@@ -11,6 +11,7 @@ class AntToggleButton;
 class BubbleViewController;
 class DialogViewController;
 class CircularAvatar;
+class SvgButton;
 class ModCardModel;
 class ConfigVideoPlatform;
 
@@ -67,7 +68,7 @@ private:
 	QLabel* m_descriptionLabel = nullptr;
 
 	AntToggleButton* m_toggleButton = nullptr;
-	AntButton* m_openFolderButton = nullptr;
+	SvgButton* m_openFolderButton = nullptr;
 	AntButton* m_updateButton = nullptr;
 	AntButton* m_uninstallButton = nullptr;
 

@@ -1,11 +1,9 @@
 #pragma once
 
 #include <QPushButton>
-#include <QEnterEvent>
-#include <QParallelAnimationGroup>
-#include <QSvgRenderer>
 
 #include "Ripple.h"
+#include "AntTooltipManager.h"
 
 class AntButton : public QPushButton
 {
@@ -22,7 +20,9 @@ public:
 	AntButton(QString btnText, qreal textSize, QWidget* parent);
 	~AntButton();
 
-	void setSvgIcon(const QString& iconPath);
+	// 设置图标键值（类似SvgButton）
+	void setIconKey(const QString& iconKey);
+	QString iconKey() const { return m_iconKey; }
 
 	// 设置按钮模式
 	void setButtonMode(ButtonMode mode);
@@ -40,6 +40,21 @@ public:
 	void setTextColor(const QColor& color);
 	QColor textColor() const { return m_textColor; }
 
+	// 设置图标缩放比例
+	void setIconScale(qreal scale);
+	qreal iconScale() const { return m_scaleFactor; }
+
+	// 设置是否启用悬停图标
+	void setHoverIconEnabled(bool enabled);
+	bool isHoverIconEnabled() const { return m_hoverIconEnabled; }
+
+	// 重写setToolTip，保存tooltip文本
+	void setToolTip(const QString& text);
+
+	// 设置是否启用自定义tooltip
+	void setToolTipEnabled(bool enabled);
+	bool isToolTipEnabled() const { return m_toolTipEnabled; }
+
 protected:
 	// 重写绘制逻辑
 	void paintEvent(QPaintEvent* event) override;
@@ -51,6 +66,18 @@ protected:
 	void leaveEvent(QEvent* event) override;
 
 private:
+	// 获取当前状态的图标
+	QPixmap getCurrentIcon() const;
+
+	// 更新按钮大小
+	void updateButtonSize();
+
+	// 显示tooltip
+	void showCustomTooltip();
+
+	// 隐藏tooltip
+	void hideCustomTooltip();
+
 	// 动画属性
 	int animTime = 500;
 	int m_radius;
@@ -70,9 +97,15 @@ private:
 	bool m_hovered;
 	bool m_pressed;
 
-	// 图标
-	QSvgRenderer* m_svgRenderer = nullptr;
-	qreal m_scaleFactor = 0.65;
+	// 图标相关
+	QString m_iconKey;  // 图标键值
+	bool m_hoverIconEnabled = true;  // 是否启用悬停图标
+	qreal m_scaleFactor = 0.65;  // 图标缩放比例
+
+	// Tooltip相关
+	bool m_toolTipEnabled = true;  // 是否启用自定义tooltip
+	QString m_toolTipText;  // 存储tooltip文本
+	AntTooltipManager::Position m_toolTipPosition;  // tooltip显示位置
 
 	// 防止短时间内多次点击
 	QElapsedTimer m_clickTimer;

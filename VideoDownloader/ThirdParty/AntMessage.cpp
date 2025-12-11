@@ -31,8 +31,8 @@ AntMessage::~AntMessage() {}
 void AntMessage::initResources()
 {
 	int padding = 18;
-	int iconWidth = 20;
-	int spacing = 10;
+	int iconWidth = 16;
+	int spacing = 8;
 
 	// 使用字体测量文字宽度
 	QFont font;
@@ -108,8 +108,8 @@ void AntMessage::paintEvent(QPaintEvent* event)
 
 	// 图标绘制
 	int padding = 18;
-	int iconWidth = 20;
-	int spacing = 10;
+	int iconWidth = 16;
+	int spacing = 8;
 	QSvgRenderer svgRenderer(m_svgPath);
 	QRect iconRect(padding, (height() - iconWidth) / 2, iconWidth, iconWidth);
 	svgRenderer.render(&painter, iconRect);

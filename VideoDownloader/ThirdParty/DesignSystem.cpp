@@ -81,7 +81,7 @@ void DesignSystem::loadThemes()
 	m_lightTheme.tabContainerColor = QColor(200, 200, 200);
 	m_lightTheme.notifBgColor = QColor(255, 255, 255);
 	// 添加新的颜色定义
-	m_lightTheme.cardBackgroundColor = QColor(255, 255, 255);
+	m_lightTheme.cardBackgroundColor = QColor(254, 254, 254);
 	m_lightTheme.primaryTextColor = QColor(0, 0, 0);
 	m_lightTheme.secondaryTextColor = QColor(100, 100, 100);
 	m_lightTheme.tertiaryTextColor = QColor(150, 150, 150);
@@ -303,11 +303,11 @@ QString& DesignSystem::btnDownloadIconPath()
 {
 	if (m_mode == Light)
 	{
-		btnDownload = ":/Imgs/function.svg";
+		btnDownload = ":/Imgs/download-squar.svg";
 	}
 	else
 	{
-		btnDownload = ":/Imgs/functionDark.svg";
+		btnDownload = ":/Imgs/download-squar-dark.svg";
 	}
 
 	return btnDownload;
@@ -317,11 +317,11 @@ QString& DesignSystem::btnModManagerIconPath()
 {
 	if (m_mode == Light)
 	{
-		btnModManager = ":/Imgs/about.svg";
+		btnModManager = ":/Imgs/function.svg";
 	}
 	else
 	{
-		btnModManager = ":/Imgs/aboutDark.svg";
+		btnModManager = ":/Imgs/functionDark.svg";
 	}
 
 	return btnModManager;
@@ -359,11 +359,11 @@ QString& DesignSystem::btnDownloadActiveIconPath()
 {
 	if (m_mode == Light)
 	{
-		btnDownload = ":/Imgs/function_active.svg";
+		btnDownload = ":/Imgs/download-squar-active.svg";
 	}
 	else
 	{
-		btnDownload = ":/Imgs/functionDark_active.svg";
+		btnDownload = ":/Imgs/download-squar-dark-active.svg";
 	}
 
 	return btnDownload;
@@ -373,11 +373,11 @@ QString& DesignSystem::btnModManagerActiveIconPath()
 {
 	if (m_mode == Light)
 	{
-		btnModManager = ":/Imgs/about_active.svg";
+		btnModManager = ":/Imgs/function_active.svg";
 	}
 	else
 	{
-		btnModManager = ":/Imgs/about_activeDark.svg";
+		btnModManager = ":/Imgs/functionDark_active.svg";
 	}
 
 	return btnModManager;

@@ -31,20 +31,9 @@
         <file>Imgs/nextBtn.svg</file>
         <file>Imgs/PreviousBtn.svg</file>
         <file>Imgs/closeItem.svg</file>
-        <file>Imgs/bee.png</file>
         <file>Imgs/git.svg</file>
         <file>Imgs/search.svg</file>
-        <file>Imgs/amd.jpg</file>
-        <file>Imgs/apple.jpg</file>
-        <file>Imgs/google.jpg</file>
-        <file>Imgs/varda.jpg</file>
-        <file>Imgs/grok.jpg</file>
-        <file>Imgs/wechat.jpg</file>
-        <file>Imgs/openai.jpg</file>
-        <file>Imgs/nvidia.jpg</file>
-        <file>Imgs/huawei.jpg</file>
         <file>Imgs/rightArrowBtn.svg</file>
-        <file>Imgs/gpt.jpg</file>
         <file>Imgs/taobao.svg</file>
         <file>Imgs/x.svg</file>
         <file>Imgs/WeChat.svg</file>
@@ -121,5 +110,9 @@
         <file>Svgs/volume-mute-fill.svg</file>
         <file>Svgs/x-circle.svg</file>
         <file>Svgs/x.svg</file>
+        <file>Imgs/download-squar.svg</file>
+        <file>Imgs/download-squar-active.svg</file>
+        <file>Imgs/download-squar-dark.svg</file>
+        <file>Imgs/download-squar-dark-active.svg</file>
     </qresource>
 </RCC>

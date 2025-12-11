@@ -2,7 +2,6 @@
 
 #include <QPushButton>
 
-#include "DesignSystem.h"
 #include "AntTooltipManager.h"
 
 class SvgButton : public QPushButton
@@ -63,10 +62,6 @@ protected:
 	// 大小调整事件
 	void resizeEvent(QResizeEvent* event) override;
 
-private slots:
-	// 主题变化槽函数
-	void onThemeChanged();
-
 private:
 	// 根据当前主题和悬停状态获取pixmap
 	QPixmap getCurrentPixmap() const;
@@ -87,7 +82,6 @@ private:
 	QString m_iconKey;
 
 	// 状态
-	DesignSystem::ThemeMode m_currentTheme;
 	bool m_hovered;
 	bool m_pressed;
 	bool m_hoverIconEnabled;

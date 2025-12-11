@@ -9,7 +9,10 @@ AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
 	m_radius(6),
 	m_margin(8),
 	m_hovered(false),
-	m_pressed(false)
+	m_pressed(false),
+	m_toolTipEnabled(true),  // 默认启用tooltip
+	m_toolTipText(""),
+	m_toolTipPosition(AntTooltipManager::Position::Top)  // 默认顶部显示
 {
 	setCursor(Qt::PointingHandCursor);
 	QFont font;
@@ -17,18 +20,16 @@ AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
 	setFont(font);
 	setText(btnText);
 
-	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]()
-		{
-			update();
-		});
+	// 连接主题变化信号，直接触发重绘
+	connect(DesignSystem::instance(), &DesignSystem::themeChanged,
+		this, QOverload<>::of(&AntButton::update));
 }
 
 AntButton::~AntButton()
 {
-	if (m_svgRenderer)
-	{
-		delete m_svgRenderer;
-	}
+	// 确保隐藏tooltip
+	hideCustomTooltip();
+
 	if (m_ripples.size() > 0)
 	{
 		for (auto ripple : m_ripples)
@@ -48,10 +49,12 @@ AntButton::~AntButton()
 	}
 }
 
-void AntButton::setSvgIcon(const QString& iconPath)
+void AntButton::setIconKey(const QString& iconKey)
 {
-	m_svgRenderer = new QSvgRenderer(iconPath, this);
-	update();
+	if (m_iconKey != iconKey) {
+		m_iconKey = iconKey;
+		update();
+	}
 }
 
 void AntButton::setButtonMode(ButtonMode mode)
@@ -87,6 +90,44 @@ void AntButton::setTextColor(const QColor& color)
 	{
 		m_textColor = color;
 		update();
+	}
+}
+
+void AntButton::setIconScale(qreal scale)
+{
+	if (scale > 0 && scale <= 1.0)
+	{
+		m_scaleFactor = scale;
+		update();
+	}
+}
+
+void AntButton::setHoverIconEnabled(bool enabled)
+{
+	if (m_hoverIconEnabled != enabled)
+	{
+		m_hoverIconEnabled = enabled;
+		update();
+	}
+}
+
+void AntButton::setToolTip(const QString& text)
+{
+	// 保存tooltip文本到成员变量
+	m_toolTipText = text;
+}
+
+void AntButton::setToolTipEnabled(bool enabled)
+{
+	if (m_toolTipEnabled != enabled)
+	{
+		m_toolTipEnabled = enabled;
+
+		// 如果禁用了tooltip且当前有显示，则隐藏它
+		if (!enabled && m_hovered)
+		{
+			hideCustomTooltip();
+		}
 	}
 }
 
@@ -169,13 +210,25 @@ void AntButton::enterEvent(QEnterEvent* event)
 {
 	m_hovered = true;
 	update();
+
+	// 如果启用了tooltip且有tooltip文本，显示tooltip
+	if (m_toolTipEnabled && !m_toolTipText.isEmpty())
+	{
+		showCustomTooltip();
+	}
+
 	QPushButton::enterEvent(event);
 }
 
 void AntButton::leaveEvent(QEvent* event)
 {
 	m_hovered = false;
+	m_pressed = false;
 	update();
+
+	// 离开时隐藏tooltip
+	hideCustomTooltip();
+
 	QPushButton::leaveEvent(event);
 }
 
@@ -184,12 +237,13 @@ void AntButton::paintEvent(QPaintEvent* event)
 	Q_UNUSED(event);
 	QPainter painter(this);
 	painter.setRenderHint(QPainter::Antialiasing);
+	painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
 	// 1. 定义按钮矩形区域
 	QRectF buttonRect;
 
 	// 2. 判断是否设置了图标
-	bool hasIcon = (m_svgRenderer != nullptr);
+	bool hasIcon = !m_iconKey.isEmpty();
 
 	// 3. 获取当前主题
 	const Theme& theme = DesignSystem::instance()->currentTheme();
@@ -272,14 +326,30 @@ void AntButton::paintEvent(QPaintEvent* event)
 	// 6. 绘制图标或文字
 	if (hasIcon)
 	{
-		// 绘制SVG图标
-		QSizeF iconSize = buttonRect.size() * m_scaleFactor;
-		QRectF iconRect = buttonRect;
-		iconRect.setSize(iconSize);
-		iconRect.moveCenter(buttonRect.center());
+		// 获取当前状态下的图标
+		QPixmap iconPixmap = getCurrentIcon();
+		if (!iconPixmap.isNull())
+		{
+			// 计算图标矩形
+			QSizeF iconSize = buttonRect.size() * m_scaleFactor;
+			QRectF iconRect = buttonRect;
+			iconRect.setSize(iconSize);
+			iconRect.moveCenter(buttonRect.center());
 
-		// 图标按钮通常使用主题色或白色
-		m_svgRenderer->render(&painter, iconRect.toRect());
+			// 绘制图标，保持宽高比
+			QRectF targetRect = iconRect;
+			QRectF sourceRect = iconPixmap.rect();
+
+			qreal scale = qMin(targetRect.width() / sourceRect.width(),
+				targetRect.height() / sourceRect.height());
+
+			QRectF scaledRect;
+			scaledRect.setWidth(sourceRect.width() * scale);
+			scaledRect.setHeight(sourceRect.height() * scale);
+			scaledRect.moveCenter(targetRect.center());
+
+			painter.drawPixmap(scaledRect, iconPixmap, sourceRect);
+		}
 	}
 	else
 	{
@@ -361,4 +431,46 @@ void AntButton::paintEvent(QPaintEvent* event)
 			painter.drawPath(ringPath);
 		}
 	}
+}
+
+QPixmap AntButton::getCurrentIcon() const
+{
+	if (m_iconKey.isEmpty()) {
+		return QPixmap();
+	}
+
+	// 获取当前主题模式
+	DesignSystem::ThemeMode theme = DesignSystem::instance()->themeMode();
+
+	// 根据当前主题和悬停状态确定索引
+	int index = 0;
+
+	if (theme == DesignSystem::Dark) {
+		index = (m_hovered && m_hoverIconEnabled) ? 3 : 2;
+	}
+	else {
+		index = (m_hovered && m_hoverIconEnabled) ? 1 : 0;
+	}
+
+	// 通过DesignSystem获取pixmap
+	return DesignSystem::instance()->getSvgIcon(m_iconKey, index);
+}
+
+void AntButton::updateButtonSize()
+{
+	// 注意：AntButton的大小通常由布局控制，这里不设置固定大小
+	// 如果需要固定大小，可以在外部调用setFixedSize
+}
+
+void AntButton::showCustomTooltip()
+{
+	// 只有鼠标仍在按钮上时才显示tooltip
+	if (m_hovered && m_toolTipEnabled && !m_toolTipText.isEmpty()) {
+		AntTooltipManager::instance()->showTooltip(this, m_toolTipText, m_toolTipPosition);
+	}
+}
+
+void AntButton::hideCustomTooltip()
+{
+	AntTooltipManager::instance()->hideTooltip();
 }

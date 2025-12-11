@@ -192,15 +192,11 @@ void DownloadCard::mousePressEvent(QMouseEvent* event)
 
 void DownloadCard::enterEvent(QEnterEvent* event)
 {
-	m_hovered = true;
-	update();
 	QWidget::enterEvent(event);
 }
 
 void DownloadCard::leaveEvent(QEvent* event)
 {
-	m_hovered = false;
-	update();
 	QWidget::leaveEvent(event);
 }
 
@@ -212,24 +208,19 @@ void DownloadCard::paintEvent(QPaintEvent* event)
 
 	// 绘制背景
 	QRect bgRect = rect();
-	QColor bgColor = DesignSystem::instance()->currentTheme().cardBackgroundColor;
-
-	if (m_hovered) {
-		bgColor = bgColor.lighter(105);
-	}
+	auto theme = DesignSystem::instance()->currentTheme();
+	QColor bgColor = theme.cardBackgroundColor;
 
 	painter.setBrush(bgColor);
 	painter.setPen(Qt::NoPen);
 	painter.drawRoundedRect(bgRect, 8, 8);
 
 	// 绘制边框
-	if (m_hovered) {
-		QPen borderPen(DesignSystem::instance()->primaryColor());
-		borderPen.setWidth(1);
-		painter.setPen(borderPen);
-		painter.setBrush(Qt::NoBrush);
-		painter.drawRoundedRect(bgRect.adjusted(1, 1, -1, -1), 8, 8);
-	}
+	QPen borderPen = QPen(theme.borderColor);
+	borderPen.setWidth(1);
+	painter.setPen(borderPen);
+	painter.setBrush(Qt::NoBrush);
+	painter.drawRoundedRect(bgRect.adjusted(1, 1, -1, -1), 8, 8);
 
 	QWidget::paintEvent(event);
 }
@@ -261,7 +252,14 @@ void DownloadCard::onCoverClicked()
 
 void DownloadCard::onTitleClicked()
 {
-	emit openUrlClicked();
+	if (m_model->state() == DownloadCardState::Downloaded)
+	{
+		onCoverClicked();
+	}
+	else
+	{
+		emit openUrlClicked();
+	}
 }
 
 void DownloadCard::onVideoQualityChanged(const QString& quality)

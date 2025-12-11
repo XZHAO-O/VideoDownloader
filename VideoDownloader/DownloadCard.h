@@ -138,8 +138,7 @@ private:
 	QSharedPointer<DownloadCardModel> m_model;
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
-	bool m_hovered = false;
 	bool m_isCoverLoaded = false;
-	bool m_coverHovered = false;  // 新增：标记封面是否被鼠标悬停
+	bool m_coverHovered = false;  // 标记封面是否被鼠标悬停
 	DownloadCardState m_currentState;
 };
