@@ -1,9 +1,6 @@
 ﻿#include "PopupWidget.h"
+
 #include "StyleSheet.h"
-#include <QVBoxLayout>
-#include <QGraphicsDropShadowEffect>
-#include <QPainterPath>
-#include <QScrollBar>
 
 PopupWidget::PopupWidget(int maxHeight, bool enableMultiLevel, QWidget* parent)
 	: QListView(parent),
@@ -28,7 +25,7 @@ PopupWidget::PopupWidget(int maxHeight, bool enableMultiLevel, QWidget* parent)
 	setItemDelegate(m_itmeDele);
 
 	QFont font = this->font();
-	font.setPointSize(11);
+	font.setPointSize(10);
 	setFont(font);
 
 	connect(this, &QListView::clicked, this, [this, enableMultiLevel](const QModelIndex& idx)

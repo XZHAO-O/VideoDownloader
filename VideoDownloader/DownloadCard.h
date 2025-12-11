@@ -14,6 +14,7 @@ class AntComboBox;
 class AntCellWidget;
 class MaterialProgressBar;
 class SingleLevelComboBox;
+class SvgButton;
 
 class DownloadCard : public QWidget
 {
@@ -66,6 +67,9 @@ protected:
 	void leaveEvent(QEvent* event) override;
 	void paintEvent(QPaintEvent* event) override;
 
+	// 新增事件过滤器
+	bool eventFilter(QObject* watched, QEvent* event) override;
+
 private slots:
 	void onModelChanged();
 	void onCoverClicked();
@@ -77,7 +81,11 @@ private:
 	void initUI();
 	void initConnections();
 	void initModelConnections();
-	void updateTextColors(); // 添加文本颜色更新函数
+	void updateTextColors();
+
+	// 新增封面图标相关方法
+	void setupPlayIcon();
+	void updatePlayIconVisibility(bool visible);
 
 	// 根据状态初始化不同的UI
 	void initPendingUI();
@@ -112,25 +120,26 @@ private:
 	AntButton* m_downloadBtn = nullptr;
 	AntButton* m_videoDownloadBtn = nullptr;
 	AntButton* m_audioDownloadBtn = nullptr;
-	AntButton* m_closeBtn = nullptr;
+	SvgButton* m_closeBtn = nullptr;
 
 	// 下载中状态特有组件
 	MaterialProgressBar* m_progressBar = nullptr;
 	QLabel* m_speedLabel = nullptr;
 	QLabel* m_progressInfoLabel = nullptr;
-	AntButton* m_pauseBtn_downloading = nullptr;
-	AntButton* m_openFolderBtn_downloading = nullptr;
-	AntButton* m_deleteBtn_downloading = nullptr;
+	SvgButton* m_pauseBtn_downloading = nullptr;
+	SvgButton* m_openFolderBtn_downloading = nullptr;
+	SvgButton* m_deleteBtn_downloading = nullptr;
 
 	// 已下载状态特有组件
-	AntButton* m_openUrlBtn_downloaded = nullptr;
-	AntButton* m_openFolderBtn_downloaded = nullptr;
-	AntButton* m_deleteBtn_downloaded = nullptr;
+	SvgButton* m_openUrlBtn_downloaded = nullptr;
+	SvgButton* m_openFolderBtn_downloaded = nullptr;
+	SvgButton* m_deleteBtn_downloaded = nullptr;
 
 	QSharedPointer<DownloadCardModel> m_model;
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
 	bool m_hovered = false;
 	bool m_isCoverLoaded = false;
-	DownloadCardState m_currentState; // 记录当前状态
+	bool m_coverHovered = false;  // 新增：标记封面是否被鼠标悬停
+	DownloadCardState m_currentState;
 };

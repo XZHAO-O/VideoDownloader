@@ -165,6 +165,7 @@ void HomePage::getVideoList(const QString& searchText)
 			if (videoInfoList.isEmpty() || !videoInfoList.first().isValid())
 			{
 				m_searchResultsWidget->hide();
+				searchChanged = true;
 				return;
 			}
 
@@ -178,6 +179,8 @@ void HomePage::getVideoList(const QString& searchText)
 
 	LOG_WARN("HomePage", "no matched video platforms");
 	AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, tr("无对应的视频平台！"));
+	m_searchResultsWidget->hide();
+	searchChanged = true;
 }
 
 void HomePage::processVideoList(const QList<VideoInfo>& videos)

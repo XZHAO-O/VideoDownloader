@@ -1,8 +1,8 @@
 ﻿#include "DrawerWidget.h"
-#include "DesignSystem.h"
-#include "StyleSheet.h"
+
 #include <QLabel>
-#include <QVBoxLayout>
+
+#include "DesignSystem.h"
 
 DrawerWidget::DrawerWidget(int width, QWidget* parent)
 	: QWidget(parent)

@@ -148,6 +148,7 @@
     <ClCompile Include="QueryWrapper.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="SingleLevelComboBox.cpp" />
+    <ClCompile Include="SvgButton.cpp" />
     <ClCompile Include="TrayManager.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
@@ -406,6 +407,7 @@
     <ClInclude Include="QueryWrapper.h" />
     <ClInclude Include="RecordManager.h" />
     <ClInclude Include="StringUtil.h" />
+    <QtMoc Include="SvgButton.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />
     <QtMoc Include="DownloadPage.h" />

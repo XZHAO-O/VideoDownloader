@@ -1,7 +1,7 @@
-﻿#include "AntButton.h"
-#include <QPainter>
+#include "AntButton.h"
+
 #include <QPainterPath>
-#include <QOverload>
+
 #include "DesignSystem.h"
 
 AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
@@ -9,8 +9,7 @@ AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
 	m_radius(6),
 	m_margin(8),
 	m_hovered(false),
-	m_pressed(false),
-	baseColor(DesignSystem::instance()->primaryColor()) // Ant Design 默认主蓝色
+	m_pressed(false)
 {
 	setCursor(Qt::PointingHandCursor);
 	QFont font;
@@ -20,7 +19,6 @@ AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
 
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]()
 		{
-			baseColor = DesignSystem::instance()->primaryColor();
 			update();
 		});
 }
@@ -29,7 +27,7 @@ AntButton::~AntButton()
 {
 	if (m_svgRenderer)
 	{
-		delete m_svgRenderer; // 清理SVG渲染器
+		delete m_svgRenderer;
 	}
 	if (m_ripples.size() > 0)
 	{
@@ -53,7 +51,43 @@ AntButton::~AntButton()
 void AntButton::setSvgIcon(const QString& iconPath)
 {
 	m_svgRenderer = new QSvgRenderer(iconPath, this);
-	update(); // 更新按钮显示
+	update();
+}
+
+void AntButton::setButtonMode(ButtonMode mode)
+{
+	if (m_buttonMode != mode)
+	{
+		m_buttonMode = mode;
+		update();
+	}
+}
+
+void AntButton::setStrokeWidth(int width)
+{
+	if (width >= 0 && m_strokeWidth != width)
+	{
+		m_strokeWidth = width;
+		update();
+	}
+}
+
+void AntButton::setButtonColor(const QColor& color)
+{
+	if (m_buttonColor != color)
+	{
+		m_buttonColor = color;
+		update();
+	}
+}
+
+void AntButton::setTextColor(const QColor& color)
+{
+	if (m_textColor != color)
+	{
+		m_textColor = color;
+		update();
+	}
 }
 
 void AntButton::mousePressEvent(QMouseEvent* event)
@@ -67,7 +101,7 @@ void AntButton::mousePressEvent(QMouseEvent* event)
 			// 点击时创建一个新的波纹实例
 			QRectF buttonRect = QRectF(m_margin, m_margin,
 				width() - 2 * m_margin,
-				height() - 2 * m_margin);	// 波纹起始矩形区域
+				height() - 2 * m_margin);
 			Ripple* ripple = new Ripple(buttonRect, m_radius, this);
 			m_ripples.append(ripple);
 
@@ -79,7 +113,7 @@ void AntButton::mousePressEvent(QMouseEvent* event)
 			offsetAnimation->setDuration(animTime);
 			offsetAnimation->setEasingCurve(QEasingCurve::InOutSine);
 
-			// 透明度动画：从 0.8 → 0.0
+			// 透明度动画：从 0.3 → 0.0
 			QPropertyAnimation* opacityAnimation = new QPropertyAnimation(ripple, "m_opacity");
 			opacityAnimation->setDuration(animTime + 300);
 			opacityAnimation->setEasingCurve(QEasingCurve::InOutSine);
@@ -90,7 +124,7 @@ void AntButton::mousePressEvent(QMouseEvent* event)
 			// 仅当动画未运行时才重置
 			if (rippleAnimationGroup->state() != QAbstractAnimation::Running)
 			{
-				ripple->setBeginValue(0, 0.5);
+				ripple->setBeginValue(0, 0.3);
 			}
 
 			// 配置动画参数
@@ -155,87 +189,176 @@ void AntButton::paintEvent(QPaintEvent* event)
 	QRectF buttonRect;
 
 	// 2. 判断是否设置了图标
-	bool hasIcon = (m_svgRenderer != nullptr); // 如果有图标，背景是圆形
+	bool hasIcon = (m_svgRenderer != nullptr);
+
+	// 3. 获取当前主题
+	const Theme& theme = DesignSystem::instance()->currentTheme();
+
+	// 4. 确定实际使用的颜色
+	QColor currentButtonColor = m_buttonColor.isValid() ? m_buttonColor : theme.primaryColor;
+	QColor currentTextColor = m_textColor.isValid() ? m_textColor :
+		(m_buttonMode == Filled ? theme.textColor : theme.primaryTextColor);
+
+	// 5. 确定边框颜色
+	QColor borderColor;
+	if (m_buttonMode == Filled) {
+		// 填充模式：无边框
+		borderColor = Qt::transparent;
+	}
+	else {
+		// 描边模式：边框颜色为主题边框色
+		borderColor = theme.borderColor;
+		// 悬停时边框颜色为主题悬停边框色
+		if (m_hovered)
+			borderColor = theme.borderColorHover;
+	}
 
 	if (hasIcon)
 	{
-		// 2.1 绘制按钮背景（圆形）
-		int diameter = qMin(width(), height()); // 使用宽度或高度中的较小值来确保按钮是圆形的
+		// 5.1 圆形按钮
+		int diameter = qMin(width(), height());
 		buttonRect = QRectF(m_margin, m_margin, diameter - 2 * m_margin, diameter - 2 * m_margin);
-		QColor fillColor = baseColor;
-		if (m_pressed)
-			fillColor = baseColor.darker(120); // 按下时变暗
-		else if (m_hovered)
-			fillColor = baseColor.lighter(110); // 悬停时变亮
-		painter.setBrush(fillColor);
-		painter.setPen(Qt::NoPen);
-		painter.drawEllipse(buttonRect); // 绘制圆形背景
+
+		if (m_buttonMode == Filled)
+		{
+			// 填充模式
+			QColor fillColor = currentButtonColor;
+			if (m_pressed)
+				fillColor = fillColor.darker(120);
+			else if (m_hovered)
+				fillColor = fillColor.lighter(110);
+
+			painter.setBrush(fillColor);
+			painter.setPen(Qt::NoPen);
+			painter.drawEllipse(buttonRect);
+		}
+		else // Outlined 模式
+		{
+			// 描边模式：Ant Design 的图标按钮描边模式
+			// 背景保持透明
+			painter.setBrush(Qt::transparent);
+			painter.setPen(QPen(borderColor, m_strokeWidth));
+			painter.drawEllipse(buttonRect);
+		}
 	}
 	else
 	{
-		// 2.2 绘制按钮背景（圆角矩形）
+		// 5.2 圆角矩形按钮
 		buttonRect = QRectF(m_margin, m_margin, width() - 2 * m_margin, height() - 2 * m_margin);
-		QColor fillColor = baseColor;
-		if (m_pressed)
-			fillColor = baseColor.darker(120); // 按下时变暗
-		else if (m_hovered)
-			fillColor = baseColor.lighter(110); // 悬停时变亮
-		painter.setBrush(fillColor);
-		painter.setPen(Qt::NoPen);
-		painter.drawRoundedRect(buttonRect, m_radius, m_radius); // 绘制圆角矩形背景
+
+		if (m_buttonMode == Filled)
+		{
+			// 填充模式：Ant Design 的主要按钮
+			QColor fillColor = currentButtonColor;
+			if (m_pressed)
+				fillColor = fillColor.darker(120);
+			else if (m_hovered)
+				fillColor = fillColor.lighter(110);
+
+			painter.setBrush(fillColor);
+			painter.setPen(Qt::NoPen);
+			painter.drawRoundedRect(buttonRect, m_radius, m_radius);
+		}
+		else // Outlined 模式
+		{
+			// 描边模式：Ant Design 的默认按钮（取消按钮）
+			// 背景保持透明
+			painter.setBrush(Qt::transparent);
+			painter.setPen(QPen(borderColor, m_strokeWidth));
+			painter.drawRoundedRect(buttonRect, m_radius, m_radius);
+		}
 	}
 
-	// 3. 绘制图标或文字
+	// 6. 绘制图标或文字
 	if (hasIcon)
 	{
-		// 如果有图标，绘制SVG图标
+		// 绘制SVG图标
 		QSizeF iconSize = buttonRect.size() * m_scaleFactor;
 		QRectF iconRect = buttonRect;
 		iconRect.setSize(iconSize);
 		iconRect.moveCenter(buttonRect.center());
+
+		// 图标按钮通常使用主题色或白色
 		m_svgRenderer->render(&painter, iconRect.toRect());
 	}
 	else
 	{
-		// 如果没有图标，绘制文本
-		painter.setPen(DesignSystem::instance()->currentTheme().textColor);
+		// 绘制文本
+		QColor textColor = currentTextColor;
+
+		// 描边模式下，正常状态文字颜色为主题主文字色
+		// 悬停和按下时的文字颜色变化
+		if (m_buttonMode == Outlined) {
+			// 正常状态：使用主题主文字色
+			textColor = currentTextColor;
+
+			// 悬停时文字颜色变化
+			if (m_hovered) {
+				// 如果悬停，文字颜色使用主题色
+				textColor = currentButtonColor;
+				// 根据按下状态调整
+				if (m_pressed)
+					textColor = textColor.darker(120);
+				else
+					textColor = textColor.lighter(110);
+			}
+			// 按下状态（但鼠标未悬停，这种情况很少见）
+			else if (m_pressed) {
+				textColor = currentButtonColor.darker(120);
+			}
+		}
+		else {
+			// 填充模式下的文字颜色变化
+			if (m_pressed)
+				textColor = textColor.darker(120);
+			else if (m_hovered)
+				textColor = textColor.lighter(110);
+		}
+
+		painter.setPen(textColor);
 		painter.setFont(font());
-		painter.drawText(buttonRect, Qt::AlignCenter, text()); // 绘制文字
+		painter.drawText(buttonRect, Qt::AlignCenter, text());
 	}
 
-	// 4. 如果正在播放波纹动画，绘制涟漪效果
-	QColor rippleColor = baseColor;
-	painter.setPen(Qt::NoPen);
-	for (Ripple* ripple : m_ripples)
+	// 7. 如果正在播放波纹动画，绘制涟漪效果（改回最初的样子）
+	if (!m_ripples.isEmpty())
 	{
-		rippleColor.setAlphaF(ripple->opacity());
-		painter.setBrush(rippleColor);
+		// 改回最初的样子：统一使用按钮颜色作为涟漪颜色
+		QColor rippleColor = currentButtonColor;
+		painter.setPen(Qt::NoPen);
 
-		// 4.1 绘制涟漪“环形”路径
-		int rippleOffset = ripple->offset();
-		QRectF outerRect = buttonRect.adjusted(
-			-rippleOffset, -rippleOffset,
-			+rippleOffset, +rippleOffset
-		);
+		for (Ripple* ripple : m_ripples)
+		{
+			// 改回最初的样子：涟漪颜色透明度由ripple->opacity()控制
+			rippleColor.setAlphaF(ripple->opacity());
+			painter.setBrush(rippleColor);
 
-		QRectF innerRect = buttonRect;
+			// 7.1 绘制涟漪"环形"路径
+			int rippleOffset = ripple->offset();
+			QRectF outerRect = buttonRect.adjusted(
+				-rippleOffset, -rippleOffset,
+				+rippleOffset, +rippleOffset
+			);
 
-		// 4.2 计算外环与内环路径
-		QPainterPath outerPath;
-		if (hasIcon)
-			outerPath.addEllipse(outerRect); // 如果是圆形背景，使用圆形路径
-		else
-			outerPath.addRoundedRect(outerRect, m_radius, m_radius); // 否则使用圆角矩形
+			QRectF innerRect = buttonRect;
 
-		QPainterPath innerPath;
-		if (hasIcon)
-			innerPath.addEllipse(innerRect); // 内环路径为圆形
-		else
-			innerPath.addRoundedRect(innerRect, m_radius, m_radius); // 内环路径为圆角矩形
+			// 7.2 计算外环与内环路径
+			QPainterPath outerPath;
+			if (hasIcon)
+				outerPath.addEllipse(outerRect);
+			else
+				outerPath.addRoundedRect(outerRect, m_radius, m_radius);
 
-		QPainterPath ringPath = outerPath.subtracted(innerPath);
+			QPainterPath innerPath;
+			if (hasIcon)
+				innerPath.addEllipse(innerRect);
+			else
+				innerPath.addRoundedRect(innerRect, m_radius, m_radius);
 
-		// 4.3 填充涟漪环形路径
-		painter.drawPath(ringPath);
+			QPainterPath ringPath = outerPath.subtracted(innerPath);
+
+			// 7.3 填充涟漪环形路径
+			painter.drawPath(ringPath);
+		}
 	}
 }

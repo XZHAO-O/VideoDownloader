@@ -1,5 +1,5 @@
 ﻿#include "DesignSystem.h"
-#include <QApplication>
+
 #include <QDir>
 
 DesignSystem* DesignSystem::m_instance = nullptr;
@@ -30,7 +30,7 @@ DesignSystem::DesignSystem()
 void DesignSystem::loadThemes()
 {
 	// Light Theme
-	m_lightTheme.primaryColor = QColor(22, 119, 255);	// Ant 蓝色
+	m_lightTheme.primaryColor = QColor(64, 150, 255);	// Ant 蓝色
 	m_lightTheme.primaryHoverColor = m_lightTheme.primaryColor.lighter(130);
 	m_lightTheme.textColor = QColor(255, 255, 255);
 	m_lightTheme.backgroundColor = QColor(255, 255, 255);
@@ -511,4 +511,14 @@ QColor DesignSystem::borderColorHover() const
 QColor DesignSystem::disabledColor() const
 {
 	return m_currentTheme.disabledColor;
+}
+
+void DesignSystem::cacheSvgIcon(const QString& key, const std::array<QPixmap, 4>& pixmaps)
+{
+	m_svgIconCache[key] = pixmaps;
+}
+
+QPixmap DesignSystem::getSvgIcon(const QString& key, const int& index) const
+{
+	return m_svgIconCache.value(key)[index];
 }

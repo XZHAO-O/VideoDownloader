@@ -1,9 +1,6 @@
 ﻿#pragma once
 
 #include <QWidget>
-#include <QPropertyAnimation>
-#include <QEvent>
-#include <QParallelAnimationGroup>
 
 class AntTooltip : public QWidget
 {
@@ -35,8 +32,8 @@ private:
 	QString m_text;
 	QFont m_font;
 	int margin = 6;					// 气泡框(圆角矩形)的外边距
-	int arrowHeight = 14;			// 箭头高度 箭头垂直方向
-	int arrowWidth = 7;				// 箭头宽度 箭头水平方向
+	int arrowHeight = 0;			// 箭头高度设为0，表示没有箭头
+	int arrowWidth = 0;				// 箭头宽度设为0，表示没有箭头
 
 	ArrowDir m_arrowDirection = ArrowDir::None;
 };

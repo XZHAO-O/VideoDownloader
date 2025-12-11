@@ -4,6 +4,7 @@
 #include <qlayout.h>
 #include <qpainter.h>
 #include <qscreen.h>
+#include <QDir>
 
 #include "StyleSheet.h"
 #include "AntMessageManager.h"
@@ -73,6 +74,89 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	// 全局深色动画遮罩
 	MaskWidget* darkMask = new MaskWidget(w, h, this);
 	DesignSystem::instance()->setDarkMask(darkMask);
+
+	// 访问资源文件中的指定目录
+	QDir svgDir(":/Svgs/");
+	if (svgDir.exists()) {
+		QStringList svgFiles = svgDir.entryList(QStringList() << "*.svg", QDir::Files);
+
+		// 定义渲染SVG的函数
+		auto renderSvgWithColor = [](const QString& svgPath, const QColor& color) -> QPixmap {
+			// 读取SVG文件内容
+			QFile file(svgPath);
+			if (!file.open(QIODevice::ReadOnly)) {
+				return QPixmap();
+			}
+
+			QString svgContent = QString::fromUtf8(file.readAll());
+			file.close();
+
+			// 替换currentColor为指定颜色
+			QString colorStr = QString("rgb(%1,%2,%3)")
+				.arg(color.red())
+				.arg(color.green())
+				.arg(color.blue());
+			svgContent.replace("currentColor", colorStr);
+			svgContent.replace("fill=\"currentColor\"", QString("fill=\"%1\"").arg(colorStr));
+			svgContent.replace("stroke=\"currentColor\"", QString("stroke=\"%1\"").arg(colorStr));
+
+			// 创建SVG渲染器
+			QSvgRenderer renderer(svgContent.toUtf8());
+			if (!renderer.isValid()) {
+				return QPixmap();
+			}
+
+			// 设置Pixmap大小
+			QSize defaultSize = renderer.defaultSize();
+			if (!defaultSize.isValid()) {
+				defaultSize = QSize(64, 64); // 默认大小
+			}
+
+			QPixmap pixmap(defaultSize);
+			pixmap.fill(Qt::transparent);
+
+			QPainter painter(&pixmap);
+			painter.setRenderHint(QPainter::Antialiasing);
+			renderer.render(&painter, pixmap.rect());
+			painter.end();
+
+			return pixmap;
+			};
+
+		// 获取DesignSystem实例
+		auto* ds = DesignSystem::instance();
+
+		// 保存当前主题
+		auto originalMode = ds->themeMode();
+
+		// 为每个SVG文件渲染四个pixmap
+		for (const QString& svgFile : svgFiles) {
+			QString svgPath = ":/Svgs/" + svgFile;
+			QString fileName = QFileInfo(svgFile).baseName(); // 文件名作为键
+
+			std::array<QPixmap, 4> pixmaps;
+
+			// Light普通
+			ds->setThemeMode(DesignSystem::Light);
+			pixmaps[0] = renderSvgWithColor(svgPath, ds->currentTheme().secondaryTextColor.lighter());
+
+			// Light激活
+			pixmaps[1] = renderSvgWithColor(svgPath, ds->primaryColor());
+
+			// Dark普通
+			ds->setThemeMode(DesignSystem::Dark);
+			pixmaps[2] = renderSvgWithColor(svgPath, ds->currentTheme().secondaryTextColor);
+
+			// Dark激活
+			pixmaps[3] = renderSvgWithColor(svgPath, ds->primaryColor());
+
+			// 将文件名作为键，pixmap数组作为值插入QHash
+			ds->cacheSvgIcon(fileName, pixmaps);
+		}
+
+		// 恢复原主题
+		ds->setThemeMode(originalMode);
+	}
 
 	// 任务栏 内容区域 导航栏 布局调整
 	ui.navi_widget->setFixedWidth(m_naviWidth); // 希望的宽度

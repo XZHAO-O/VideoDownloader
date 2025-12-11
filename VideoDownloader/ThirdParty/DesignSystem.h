@@ -1,8 +1,5 @@
 ﻿#pragma once
 
-#include <QObject>
-#include <QColor>
-#include <QFont>
 #include "TransparentMask.h"
 #include "MaskWidget.h"
 
@@ -181,6 +178,11 @@ public:
 	// 内容区域尺寸
 	void setContentSize(QSize size);
 	QSize contentSize() const;
+
+	// SVG图标缓存
+	void cacheSvgIcon(const QString& key, const std::array<QPixmap, 4>& pixmaps);
+	QPixmap getSvgIcon(const QString& key, const int& index) const;
+
 signals:
 	void themeChanged();
 
@@ -219,4 +221,6 @@ private:
 	QString nextDisBtn;
 	// 多媒体文件路径
 	QString homeVideoPath;
+	// SVG图标缓存
+	QHash<QString, std::array<QPixmap, 4>> m_svgIconCache;
 };

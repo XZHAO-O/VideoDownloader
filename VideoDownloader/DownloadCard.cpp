@@ -1,15 +1,14 @@
 #include "DownloadCard.h"
 
 #include <QLabel>
-#include <QNetworkReply>
 
+#include "SvgButton.h"
 #include "AntButton.h"
 #include "AntCellWidget.h"
 #include "DesignSystem.h"
 #include "AntTooltipManager.h"
 #include "MaterialProgressBar.h"
 #include "SingleLevelComboBox.h"
-#include "DownloadTaskInfo.h"
 #include "StringUtil.h"
 #include "Instrumentor.h"
 
@@ -42,6 +41,48 @@ DownloadCard::DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* par
 DownloadCard::~DownloadCard()
 {
 	qDebug() << "=== DownloadCard Destroying - Third Party Components ===";
+}
+
+bool DownloadCard::eventFilter(QObject* watched, QEvent* event)
+{
+	if (watched == m_coverContainer || watched == m_coverLabel) {
+		if (event->type() == QEvent::Enter) {
+			m_coverHovered = true;
+			updatePlayIconVisibility(true);
+			return true;
+		}
+		else if (event->type() == QEvent::Leave) {
+			m_coverHovered = false;
+			updatePlayIconVisibility(false);
+			return true;
+		}
+	}
+	return QWidget::eventFilter(watched, event);
+}
+
+void DownloadCard::setupPlayIcon()
+{
+	if (!m_playIcon) {
+		m_playIcon = new QLabel(m_coverContainer);
+		m_playIcon->setFixedSize(40, 40);
+		m_playIcon->setStyleSheet("QLabel{"
+			"background-color: rgba(0, 0, 0, 0.6);"
+			"border-radius: 20px;"
+			"}");
+		m_playIcon->setAlignment(Qt::AlignCenter);
+		m_playIcon->setPixmap(QPixmap(":/Imgs/play.png").scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+		m_playIcon->setVisible(false);
+
+		// 确保播放图标在所有子控件的最上层
+		m_playIcon->raise();
+	}
+}
+
+void DownloadCard::updatePlayIconVisibility(bool visible)
+{
+	if (m_playIcon) {
+		m_playIcon->setVisible(visible);
+	}
 }
 
 void DownloadCard::setModel(QSharedPointer<DownloadCardModel> model)
@@ -220,7 +261,7 @@ void DownloadCard::onCoverClicked()
 
 void DownloadCard::onTitleClicked()
 {
-	onCoverClicked();
+	emit openUrlClicked();
 }
 
 void DownloadCard::onVideoQualityChanged(const QString& quality)
@@ -264,15 +305,17 @@ void DownloadCard::initPendingUI()
 	// 主布局
 	m_mainLayout = new QHBoxLayout(this);
 	m_mainLayout->setSpacing(12);
-	m_mainLayout->setContentsMargins(16, 8, 16, 8);
+	m_mainLayout->setContentsMargins(12, 4, 12, 4);
 
 	// 封面容器
 	m_coverContainer = new QWidget(this);
 	m_coverContainer->setFixedSize(228, 128);
+	m_coverContainer->setAttribute(Qt::WA_Hover, true);
+	m_coverContainer->installEventFilter(this);
 
-	QVBoxLayout* coverLayout = new QVBoxLayout(m_coverContainer);
-	coverLayout->setContentsMargins(0, 0, 0, 0);
-	coverLayout->setSpacing(0);
+	// 使用绝对定位布局，方便覆盖
+	m_coverContainer->setLayout(new QVBoxLayout());
+	m_coverContainer->layout()->setContentsMargins(0, 0, 0, 0);
 
 	m_coverLabel = new QLabel(m_coverContainer);
 	m_coverLabel->setFixedSize(228, 128);
@@ -283,26 +326,28 @@ void DownloadCard::initPendingUI()
 		"}").arg(DesignSystem::instance()->borderColor().name()));
 	m_coverLabel->setScaledContents(true);
 	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
+	m_coverLabel->setAttribute(Qt::WA_Hover, true);
+	m_coverLabel->installEventFilter(this);
 
-	m_playIcon = new QLabel(m_coverContainer);
-	m_playIcon->setFixedSize(40, 40);
-	m_playIcon->setStyleSheet("QLabel{"
-		"background-color: rgba(0, 0, 0, 0.6);"
-		"border-radius: 20px;"
-		"}");
-	m_playIcon->setAlignment(Qt::AlignCenter);
-	m_playIcon->setPixmap(QPixmap(":/Imgs/play.png").scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-	m_playIcon->setVisible(false);
+	// 将封面标签添加到容器
+	m_coverContainer->layout()->addWidget(m_coverLabel);
 
-	coverLayout->addWidget(m_coverLabel);
-	coverLayout->addWidget(m_playIcon, 0, Qt::AlignCenter);
+	// 初始化播放图标
+	setupPlayIcon();
+
+	// 设置播放图标的位置（居中）
+	if (m_playIcon) {
+		int x = (228 - 40) / 2;  // (容器宽度 - 图标宽度) / 2
+		int y = (128 - 40) / 2;  // (容器高度 - 图标高度) / 2
+		m_playIcon->move(x, y);
+	}
 
 	// 内容区域
 	QWidget* contentWidget = new QWidget(this);
 	contentWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 	m_contentLayout = new QVBoxLayout(contentWidget);
 	m_contentLayout->setSpacing(8);
-	m_contentLayout->setContentsMargins(0, 0, 0, 0);
+	m_contentLayout->setContentsMargins(0, 0, 0, 10);
 
 	// 头部布局（标题 + 操作按钮）
 	m_headerLayout = new QHBoxLayout();
@@ -337,16 +382,20 @@ void DownloadCard::initPendingUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建待下载状态按钮
-	m_downloadBtn = new AntButton(tr("下载"), 10, this);
-	m_downloadBtn->setFixedSize(70, 32);
+	m_downloadBtn = new AntButton(tr("下载"), 8, this);
+	m_downloadBtn->setButtonMode(AntButton::Outlined);
+	m_downloadBtn->setFixedSize(70, 35);
 
-	m_videoDownloadBtn = new AntButton(tr("视频"), 10, this);
-	m_videoDownloadBtn->setFixedSize(70, 32);
+	m_videoDownloadBtn = new AntButton(tr("视频"), 8, this);
+	m_videoDownloadBtn->setButtonMode(AntButton::Outlined);
+	m_videoDownloadBtn->setFixedSize(70, 35);
 
-	m_audioDownloadBtn = new AntButton(tr("音频"), 10, this);
-	m_audioDownloadBtn->setFixedSize(70, 32);
+	m_audioDownloadBtn = new AntButton(tr("音频"), 8, this);
+	m_audioDownloadBtn->setButtonMode(AntButton::Outlined);
+	m_audioDownloadBtn->setFixedSize(70, 35);
 
-	m_closeBtn = new AntButton("×", 10, this);
+	m_closeBtn = new SvgButton("x", this);
+	m_closeBtn->setIconSize(SvgButton::Medium);
 	m_closeBtn->setFixedSize(32, 32);
 
 	// 添加到操作布局
@@ -374,11 +423,11 @@ void DownloadCard::initPendingUI()
 
 	QStringList qualityList = { "480p", "720p", "1080p", "4K", "原画", "8K" };
 	m_videoQualityCombo = new SingleLevelComboBox(tr("画质"), qualityList, this);
-	m_videoQualityCombo->setFixedSize(150, 30);
+	m_videoQualityCombo->setFixedSize(170, 35);
 
 	QStringList audioQualityList = { "低音质", "中音质", "高音质", "无损" };
 	m_audioQualityCombo = new SingleLevelComboBox(tr("音质"), audioQualityList, this);
-	m_audioQualityCombo->setFixedSize(150, 30);
+	m_audioQualityCombo->setFixedSize(170, 35);
 
 	qualityLayout->addWidget(m_videoQualityCombo);
 	qualityLayout->addWidget(m_audioQualityCombo);
@@ -433,15 +482,17 @@ void DownloadCard::initDownloadingUI()
 	// 主布局
 	m_mainLayout = new QHBoxLayout(this);
 	m_mainLayout->setSpacing(12);
-	m_mainLayout->setContentsMargins(16, 8, 16, 8);
+	m_mainLayout->setContentsMargins(12, 4, 12, 4);
 
 	// 封面容器
 	m_coverContainer = new QWidget(this);
 	m_coverContainer->setFixedSize(228, 128);
+	m_coverContainer->setAttribute(Qt::WA_Hover, true);
+	m_coverContainer->installEventFilter(this);
 
-	QVBoxLayout* coverLayout = new QVBoxLayout(m_coverContainer);
-	coverLayout->setContentsMargins(0, 0, 0, 0);
-	coverLayout->setSpacing(0);
+	// 使用绝对定位布局
+	m_coverContainer->setLayout(new QVBoxLayout());
+	m_coverContainer->layout()->setContentsMargins(0, 0, 0, 0);
 
 	m_coverLabel = new QLabel(m_coverContainer);
 	m_coverLabel->setFixedSize(228, 128);
@@ -451,8 +502,21 @@ void DownloadCard::initDownloadingUI()
 		"border: 1px solid %1;"
 		"}").arg(DesignSystem::instance()->borderColor().name()));
 	m_coverLabel->setScaledContents(true);
+	m_coverLabel->setAttribute(Qt::WA_Hover, true);
+	m_coverLabel->installEventFilter(this);
 
-	coverLayout->addWidget(m_coverLabel);
+	// 将封面标签添加到容器
+	m_coverContainer->layout()->addWidget(m_coverLabel);
+
+	// 初始化播放图标
+	setupPlayIcon();
+
+	// 设置播放图标的位置（居中）
+	if (m_playIcon) {
+		int x = (228 - 40) / 2;
+		int y = (128 - 40) / 2;
+		m_playIcon->move(x, y);
+	}
 
 	// 内容区域
 	QWidget* contentWidget = new QWidget(this);
@@ -494,14 +558,20 @@ void DownloadCard::initDownloadingUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建下载中状态按钮
-	m_pauseBtn_downloading = new AntButton(tr("暂停"), 10, this);
-	m_pauseBtn_downloading->setFixedSize(70, 32);
+	m_pauseBtn_downloading = new SvgButton("pause-circle", this); // 暂停图标
+	m_pauseBtn_downloading->setIconSize(SvgButton::Medium);
+	m_pauseBtn_downloading->setFixedSize(32, 32);
+	m_pauseBtn_downloading->setToolTip(tr("暂停"));
 
-	m_openFolderBtn_downloading = new AntButton(tr("文件夹"), 10, this);
-	m_openFolderBtn_downloading->setFixedSize(70, 32);
+	m_openFolderBtn_downloading = new SvgButton("folder2", this); // 文件夹图标
+	m_openFolderBtn_downloading->setIconSize(SvgButton::Medium);
+	m_openFolderBtn_downloading->setFixedSize(32, 32);
+	m_openFolderBtn_downloading->setToolTip(tr("打开文件夹"));
 
-	m_deleteBtn_downloading = new AntButton(tr("删除"), 10, this);
-	m_deleteBtn_downloading->setFixedSize(70, 32);
+	m_deleteBtn_downloading = new SvgButton("trash", this); // 删除图标
+	m_deleteBtn_downloading->setIconSize(SvgButton::Medium);
+	m_deleteBtn_downloading->setFixedSize(32, 32);
+	m_deleteBtn_downloading->setToolTip(tr("删除"));
 
 	// 添加到操作布局
 	m_actionLayout->addWidget(m_pauseBtn_downloading);
@@ -570,15 +640,17 @@ void DownloadCard::initDownloadedUI()
 	// 主布局
 	m_mainLayout = new QHBoxLayout(this);
 	m_mainLayout->setSpacing(12);
-	m_mainLayout->setContentsMargins(16, 8, 16, 8);
+	m_mainLayout->setContentsMargins(12, 4, 12, 4);
 
 	// 封面容器
 	m_coverContainer = new QWidget(this);
 	m_coverContainer->setFixedSize(228, 128);
+	m_coverContainer->setAttribute(Qt::WA_Hover, true);
+	m_coverContainer->installEventFilter(this);
 
-	QVBoxLayout* coverLayout = new QVBoxLayout(m_coverContainer);
-	coverLayout->setContentsMargins(0, 0, 0, 0);
-	coverLayout->setSpacing(0);
+	// 使用绝对定位布局
+	m_coverContainer->setLayout(new QVBoxLayout());
+	m_coverContainer->layout()->setContentsMargins(0, 0, 0, 0);
 
 	m_coverLabel = new QLabel(m_coverContainer);
 	m_coverLabel->setFixedSize(228, 128);
@@ -589,19 +661,21 @@ void DownloadCard::initDownloadedUI()
 		"}").arg(DesignSystem::instance()->borderColor().name()));
 	m_coverLabel->setScaledContents(true);
 	m_coverLabel->setText(QString("<a href='preview' style='text-decoration:none; color:transparent;'> </a>"));
+	m_coverLabel->setAttribute(Qt::WA_Hover, true);
+	m_coverLabel->installEventFilter(this);
 
-	m_playIcon = new QLabel(m_coverContainer);
-	m_playIcon->setFixedSize(40, 40);
-	m_playIcon->setStyleSheet("QLabel{"
-		"background-color: rgba(0, 0, 0, 0.6);"
-		"border-radius: 20px;"
-		"}");
-	m_playIcon->setAlignment(Qt::AlignCenter);
-	m_playIcon->setPixmap(QPixmap(":/Imgs/play.png").scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-	m_playIcon->setVisible(true);
+	// 将封面标签添加到容器
+	m_coverContainer->layout()->addWidget(m_coverLabel);
 
-	coverLayout->addWidget(m_coverLabel);
-	coverLayout->addWidget(m_playIcon, 0, Qt::AlignCenter);
+	// 初始化播放图标
+	setupPlayIcon();
+
+	// 设置播放图标的位置（居中）
+	if (m_playIcon) {
+		int x = (228 - 40) / 2;
+		int y = (128 - 40) / 2;
+		m_playIcon->move(x, y);
+	}
 
 	// 内容区域
 	QWidget* contentWidget = new QWidget(this);
@@ -643,14 +717,20 @@ void DownloadCard::initDownloadedUI()
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
 	// 创建已下载状态按钮
-	m_openUrlBtn_downloaded = new AntButton(tr("打开链接"), 10, this);
-	m_openUrlBtn_downloaded->setFixedSize(70, 32);
+	m_openUrlBtn_downloaded = new SvgButton("link-45deg", this); // 链接图标
+	m_openUrlBtn_downloaded->setIconSize(SvgButton::Medium);
+	m_openUrlBtn_downloaded->setFixedSize(32, 32);
+	m_openUrlBtn_downloaded->setToolTip(tr("打开链接"));
 
-	m_openFolderBtn_downloaded = new AntButton(tr("文件夹"), 10, this);
-	m_openFolderBtn_downloaded->setFixedSize(70, 32);
+	m_openFolderBtn_downloaded = new SvgButton("folder2", this); // 文件夹图标
+	m_openFolderBtn_downloaded->setIconSize(SvgButton::Medium);
+	m_openFolderBtn_downloaded->setFixedSize(32, 32);
+	m_openFolderBtn_downloaded->setToolTip(tr("打开文件夹"));
 
-	m_deleteBtn_downloaded = new AntButton(tr("删除"), 10, this);
-	m_deleteBtn_downloaded->setFixedSize(70, 32);
+	m_deleteBtn_downloaded = new SvgButton("trash", this); // 删除图标
+	m_deleteBtn_downloaded->setIconSize(SvgButton::Medium);
+	m_deleteBtn_downloaded->setFixedSize(32, 32);
+	m_deleteBtn_downloaded->setToolTip(tr("删除"));
 
 	// 添加到操作布局
 	m_actionLayout->addWidget(m_openUrlBtn_downloaded);
@@ -704,44 +784,32 @@ void DownloadCard::initConnections()
 	BENCHMARKING_FUNCTION();
 	// 公共连接
 	connect(m_coverLabel, &QLabel::linkActivated, this, &DownloadCard::onCoverClicked);
-
 	connect(m_titleCell->getBtn(), &QPushButton::clicked, this, &DownloadCard::onTitleClicked);
 
 	// 根据状态初始化特定连接
 	switch (m_currentState)
 	{
 	case DownloadCardState::Pending:
-
 		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onVideoQualityChanged);
 		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onAudioQualityChanged);
-
 		connect(m_downloadBtn, &AntButton::clicked, this, &DownloadCard::downloadClicked);
-
 		connect(m_videoDownloadBtn, &AntButton::clicked, this, &DownloadCard::videoDownloadClicked);
-
 		connect(m_audioDownloadBtn, &AntButton::clicked, this, &DownloadCard::audioDownloadClicked);
-
-		connect(m_closeBtn, &AntButton::clicked, this, &DownloadCard::deleteClicked);
+		connect(m_closeBtn, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
 		break;
 
 	case DownloadCardState::Downloading:
-
-		connect(m_pauseBtn_downloading, &AntButton::clicked, this, [this]() {
+		connect(m_pauseBtn_downloading, &SvgButton::clicked, this, [this]() {
 			emit pauseClicked();
 			});
-
-		connect(m_openFolderBtn_downloading, &AntButton::clicked, this, &DownloadCard::openFolderClicked);
-
-		connect(m_deleteBtn_downloading, &AntButton::clicked, this, &DownloadCard::deleteClicked);
+		connect(m_openFolderBtn_downloading, &SvgButton::clicked, this, &DownloadCard::openFolderClicked);
+		connect(m_deleteBtn_downloading, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
 		break;
 
 	case DownloadCardState::Downloaded:
-
-		connect(m_openUrlBtn_downloaded, &AntButton::clicked, this, &DownloadCard::openUrlClicked);
-
-		connect(m_openFolderBtn_downloaded, &AntButton::clicked, this, &DownloadCard::openFolderClicked);
-
-		connect(m_deleteBtn_downloaded, &AntButton::clicked, this, &DownloadCard::deleteClicked);
+		connect(m_openUrlBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openUrlClicked);
+		connect(m_openFolderBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openFolderClicked);
+		connect(m_deleteBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
 		break;
 	}
 }
@@ -853,8 +921,6 @@ void DownloadCard::updateDownloadedUI()
 	BENCHMARKING_FUNCTION();
 
 	m_timeLabel->setText(QString(tr("下载完成: %1")).arg(StringUtil::formatDateTime(m_model->publishTime())));
-
-	m_playIcon->setVisible(true);
 }
 
 void DownloadCard::updateTextColors()

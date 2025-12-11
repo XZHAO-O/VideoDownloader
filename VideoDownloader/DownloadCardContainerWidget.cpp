@@ -291,6 +291,11 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 				updateCurrentPageCards();
 			}
 			});
+
+		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
+			// 打开原始视频链接
+			QDesktopServices::openUrl(taskInfo->videoInfo.url);
+			});
 		break;
 
 	case ContainerState::Downloading:
@@ -337,6 +342,11 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			}
 			QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 			});
+
+		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
+			// 打开原始视频链接
+			QDesktopServices::openUrl(taskInfo->videoInfo.url);
+			});
 		break;
 
 	case ContainerState::Downloaded:
@@ -349,9 +359,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
 			// 打开原始视频链接
-			//if (taskInfo.videoInfo.url.isValid()) {
-			//    QDesktopServices::openUrl(taskInfo.videoInfo.url);
-			//}
+			QDesktopServices::openUrl(taskInfo->videoInfo.url);
 			});
 
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {

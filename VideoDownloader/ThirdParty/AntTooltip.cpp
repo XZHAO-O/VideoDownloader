@@ -1,10 +1,7 @@
 ﻿#include "AntTooltip.h"
-#include "QVBoxLayout"
-#include <QLabel>
-#include <QLayout>
-#include <QGraphicsDropShadowEffect>
+
 #include <QPainterPath>
-#include <QPainter>
+
 #include "DesignSystem.h"
 
 AntTooltip::AntTooltip(QString text, ArrowDir dir, QWidget* parent)
@@ -13,22 +10,28 @@ AntTooltip::AntTooltip(QString text, ArrowDir dir, QWidget* parent)
 	setAttribute(Qt::WA_TranslucentBackground);
 	setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
 
+	// 设置更小的字体
 	QFont font;
-	font.setPointSize(11);
+	font.setPointSize(9);  // 缩小字体大小
 	m_font = font;
 	QFontMetrics metrics(m_font);
 
-	const int maxTextWidth = 300;  // 最大文本宽度限制
+	// 最大文本宽度限制更小
+	const int maxTextWidth = 180;  // 减小最大宽度
 	QRect textBounding = metrics.boundingRect(0, 0, maxTextWidth, 1000, Qt::TextWordWrap, m_text);
 
-	// 加额外 padding 使整体更美观
-	const int Padding = 16;
+	// 内边距
+	const int Padding = 10;  // 调整内边距
 	int paddedTextWidth = textBounding.width() + Padding * 2;
 	int paddedTextHeight = textBounding.height() + Padding * 2;
 
-	// 计算总宽高，考虑箭头方向额外宽度或高度
-	int tiptoolWidth = paddedTextWidth + (m_arrowDirection == ArrowLeft || m_arrowDirection == ArrowRight ? arrowWidth : 0);
-	int tiptoolHeight = paddedTextHeight + (m_arrowDirection == ArrowTop || m_arrowDirection == ArrowBottom ? arrowHeight : 0);
+	// 计算总宽高（不再考虑箭头宽度，因为箭头为0）
+	int tiptoolWidth = paddedTextWidth;
+	int tiptoolHeight = paddedTextHeight;
+
+	// 设置最小尺寸，避免过小
+	if (tiptoolWidth < 80) tiptoolWidth = 80;
+	if (tiptoolHeight < 40) tiptoolHeight = 40;
 
 	// 设置控件尺寸
 	resize(tiptoolWidth, tiptoolHeight);
@@ -60,147 +63,25 @@ void AntTooltip::paintEvent(QPaintEvent*)
 	p.setRenderHint(QPainter::Antialiasing);
 	p.setPen(Qt::NoPen);
 
-	const int radius = 6;
-	QRect rectBubble;  // 气泡矩形区域（不包括箭头）
+	const int radius = 4;  // 圆角半径
+	QRect rectBubble = QRect(0, 0, width(), height());  // 整个控件都是气泡区域
 
 	QPainterPath path;
 
-	// 判断三角形的宽高
-	if (m_arrowDirection == ArrowDir::ArrowLeft || m_arrowDirection == ArrowDir::ArrowRight)
-	{
-		arrowHeight = 14;
-		arrowWidth = 7;
-	}
-	else
-	{
-		arrowHeight = 7;
-		arrowWidth = 14;
-	}
+	// 创建圆角矩形路径（没有箭头）
+	QRectF r = rectBubble.adjusted(margin, margin, -margin, -margin);
 
-	switch (m_arrowDirection) {
-	case ArrowDir::ArrowLeft: {
-		rectBubble = QRect(arrowWidth, 0, width() - arrowWidth, height());
-		QRectF r = rectBubble.adjusted(margin, margin, -margin, -margin);
-
-		int ax = r.left();
-		int ay = (height() - arrowHeight) / 2;
-		int ah = arrowHeight;
-
-		path.moveTo(ax, ay);
-		path.lineTo(ax - arrowWidth, ay + ah / 2);
-		path.lineTo(ax, ay + ah);
-
-		// 左下圆角
-		path.lineTo(ax, r.bottom() - radius);
-		path.quadTo(r.left(), r.bottom(), r.left() + radius, r.bottom());
-
-		// 右下圆角
-		path.lineTo(r.right() - radius, r.bottom());
-		path.quadTo(r.right(), r.bottom(), r.right(), r.bottom() - radius);
-
-		// 右上圆角
-		path.lineTo(r.right(), r.top() + radius);
-		path.quadTo(r.right(), r.top(), r.right() - radius, r.top());
-
-		// 左上圆角
-		path.lineTo(r.left() + radius, r.top());
-		path.quadTo(r.left(), r.top(), r.left(), r.top() + radius);
-
-		path.lineTo(ax, ay);
-		break;
-	}
-	case ArrowDir::ArrowRight: {
-		rectBubble = QRect(0, 0, width() - arrowWidth, height());
-		QRectF r = rectBubble.adjusted(margin, margin, -margin, -margin);
-
-		int ax = r.right();
-		int ay = (rectBubble.height() - arrowHeight) / 2;
-		int ah = arrowHeight;
-
-		path.moveTo(ax, ay);
-		path.lineTo(ax + arrowWidth, ay + ah / 2);
-		path.lineTo(ax, ay + ah);
-
-		// 右下圆角
-		path.lineTo(ax, r.bottom() - radius);
-		path.quadTo(r.right(), r.bottom(), r.right() - radius, r.bottom());
-
-		// 左下圆角
-		path.lineTo(r.left() + radius, r.bottom());
-		path.quadTo(r.left(), r.bottom(), r.left(), r.bottom() - radius);
-
-		// 左上圆角
-		path.lineTo(r.left(), r.top() + radius);
-		path.quadTo(r.left(), r.top(), r.left() + radius, r.top());
-
-		// 右上圆角
-		path.lineTo(r.right() - radius, r.top());
-		path.quadTo(r.right(), r.top(), r.right(), r.top() + radius);
-
-		path.lineTo(ax, ay);
-		break;
-	}
-	case ArrowDir::ArrowTop: {
-		rectBubble = QRect(0, arrowHeight, width(), height() - arrowHeight);
-		QRectF r = rectBubble.adjusted(margin, margin, -margin, -margin);
-
-		int ax = (r.width() / 2);
-		int ay = r.top();
-
-		path.moveTo(ax, ay);
-		path.lineTo(ax + arrowWidth / 2, ay - arrowHeight);
-		path.lineTo(ax + arrowWidth, ay);
-
-		// 右上圆角
-		path.lineTo(r.right() - radius, ay);
-		path.quadTo(r.right(), ay, r.right(), ay + radius);
-
-		// 右下圆角
-		path.lineTo(r.right(), r.bottom() - radius);
-		path.quadTo(r.right(), r.bottom(), r.right() - radius, r.bottom());
-
-		// 左下圆角
-		path.lineTo(r.left() + radius, r.bottom());
-		path.quadTo(r.left(), r.bottom(), r.left(), r.bottom() - radius);
-
-		// 左上圆角
-		path.lineTo(r.left(), ay + radius);
-		path.quadTo(r.left(), ay, r.left() + radius, ay);
-
-		path.lineTo(ax, ay);
-		break;
-	}
-	case ArrowDir::ArrowBottom: {
-		rectBubble = QRect(0, 0, width(), height() - arrowHeight);
-		QRectF r = rectBubble.adjusted(margin, margin, -margin, -margin);
-
-		int ax = (r.width() / 2);
-		int ay = r.bottom();
-
-		path.moveTo(ax, ay);
-		path.lineTo(ax + arrowWidth / 2, ay + arrowHeight);
-		path.lineTo(ax + arrowWidth, ay);
-
-		// 右下圆角
-		path.lineTo(r.right() - radius, ay);
-		path.quadTo(r.right(), ay, r.right(), ay - radius);
-
-		// 右上圆角
-		path.lineTo(r.right(), r.top() + radius);
-		path.quadTo(r.right(), r.top(), r.right() - radius, r.top());
-
-		// 左上圆角
-		path.lineTo(r.left() + radius, r.top());
-		path.quadTo(r.left(), r.top(), r.left(), r.top() + radius);
-
-		// 左下圆角
-		path.lineTo(r.left(), ay - radius);
-		path.quadTo(r.left(), ay, r.left() + radius, ay);
-
-		path.lineTo(ax, ay);
-		break;
-	}
-	}
+	// 绘制圆角矩形
+	path.moveTo(r.left() + radius, r.top());
+	path.lineTo(r.right() - radius, r.top());
+	path.quadTo(r.right(), r.top(), r.right(), r.top() + radius);
+	path.lineTo(r.right(), r.bottom() - radius);
+	path.quadTo(r.right(), r.bottom(), r.right() - radius, r.bottom());
+	path.lineTo(r.left() + radius, r.bottom());
+	path.quadTo(r.left(), r.bottom(), r.left(), r.bottom() - radius);
+	path.lineTo(r.left(), r.top() + radius);
+	path.quadTo(r.left(), r.top(), r.left() + radius, r.top());
+	path.closeSubpath();
 
 	// 填充气泡主体
 	p.setBrush(DesignSystem::instance()->currentTheme().toolTipBgColor);
@@ -208,11 +89,17 @@ void AntTooltip::paintEvent(QPaintEvent*)
 
 	// 设置字体与颜色
 	p.setFont(m_font);
-	p.setPen(DesignSystem::instance()->currentTheme().toolTipTextColor);  // 深灰色文本，更柔和
+	p.setPen(DesignSystem::instance()->currentTheme().toolTipTextColor);
 
 	// 计算文本区域（在 rectBubble 内部减去 margin）
 	int padding = 8;  // 内边距
 	QRect textRect = rectBubble.adjusted(margin + padding, margin + padding, -margin - padding, -margin - padding);
-	// 绘制文本，不支持自动换行
-	p.drawText(textRect, Qt::TextWordWrap | Qt::AlignLeft | Qt::AlignVCenter, m_text);
+
+	// 使用QTextOption确保文本居中
+	QTextOption textOption;
+	textOption.setAlignment(Qt::AlignCenter);
+	textOption.setWrapMode(QTextOption::WordWrap);
+
+	// 绘制文本，支持自动换行并居中
+	p.drawText(textRect, m_text, textOption);
 }

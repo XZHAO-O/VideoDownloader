@@ -439,6 +439,9 @@
     <ClCompile Include="DownloadVideoCoverService.cpp">
       <Filter>database\service</Filter>
     </ClCompile>
+    <ClCompile Include="SvgButton.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -755,6 +758,9 @@
     </QtMoc>
     <QtMoc Include="DownloadVideoCoverService.h">
       <Filter>database\service</Filter>
+    </QtMoc>
+    <QtMoc Include="SvgButton.h">
+      <Filter>Ui\Components</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

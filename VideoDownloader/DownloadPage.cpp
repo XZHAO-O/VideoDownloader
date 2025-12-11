@@ -2,6 +2,7 @@
 
 #include <QtConcurrent>
 
+#include "AntButton.h"
 #include "AntScrollArea.h"
 #include "MaterialTabWidget.h"
 #include "DownloadCard.h"
@@ -68,7 +69,7 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	pageLay->setSpacing(14);
 	pageLay->setContentsMargins(0, 0, 0, 0);
 
-	QHBoxLayout* row8Layout = new QHBoxLayout();
+	QVBoxLayout* row8Layout = new QVBoxLayout();
 	row8Layout->setSpacing(1);
 	row8Layout->setContentsMargins(0, 0, 0, 0);
 	// 创建卡片模型
@@ -84,9 +85,25 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 
 	// 创建卡片
 	auto downloadCard = new DownloadCard(cardModel, this);
+	cardModel->setState(DownloadCardState::Pending);
+	auto downloadCard2 = new DownloadCard(cardModel, this);
+	cardModel->setState(DownloadCardState::Downloaded);
+	auto downloadCard3 = new DownloadCard(cardModel, this);
+	auto downloadCard4 = new DownloadCard(cardModel, this);
+	cardModel->setState(DownloadCardState::Pending);
+	auto downloadCard5 = new DownloadCard(cardModel, this);
 
+	AntButton* btn1 = new AntButton("取消", 10, this);
+	btn1->setFixedWidth(80);
+	btn1->setFixedHeight(50);
+	btn1->setButtonMode(AntButton::Outlined);
 	// 添加到布局中
 	row8Layout->addWidget(downloadCard);
+	row8Layout->addWidget(downloadCard2);
+	row8Layout->addWidget(downloadCard3);
+	row8Layout->addWidget(downloadCard4);
+	row8Layout->addWidget(downloadCard5);
+	row8Layout->addWidget(btn1);
 
 	// 添加到页面布局
 	pageLay->addLayout(row8Layout);

@@ -35,6 +35,7 @@ struct StreamInfo
 struct VideoInfo
 {
 	QString videoId;
+	QUrl url;
 	QString title;
 	QString sectionName;
 	QString author;
