@@ -1,16 +1,15 @@
 #pragma once
 
-#include "DownloadCard.h"
-#include "DownloadTaskInfo.h"
+#include <QWidget>
 
-#include <list>
+#include "OrderedQHash.h"
 
 class QVBoxLayout;
 class NoDataWidget;
 class AntScrollArea;
 class PaginationWidget;
 class MaterialSpinner;
-class DownloadCardPool;
+class DownloadTaskInfo;
 class DownloadCard;
 class DownloadEngine;
 
@@ -35,6 +34,7 @@ public:
 	// 公共接口
 	void addDownloadCard(QSharedPointer<DownloadTaskInfo> downloadTaskInfo);
 	void showLoading();
+	void hideLoading();
 	void addDownloadCards(QList<QSharedPointer<DownloadTaskInfo>> tasks);
 	ContainerState state() const { return m_containerState; }
 
@@ -62,19 +62,12 @@ public slots:
 	void onPageChanged(int page);
 
 private:
-	// 保护方法
+	// 初始化UI
 	void initUI();
-	void downloadVideo(const QUrl& url);
 	void updateVisibility();
 
 	// 根据状态设置卡片连接
 	void setupCardConnections(DownloadCard* card, QSharedPointer<DownloadTaskInfo> taskInfo);
-
-	// 获取无数据文本
-	QString getNoDataText() const;
-
-	// 设置无数据文本
-	void setNoDataText(const QString& text) { m_noDataText = text; }
 
 	// 清理当前显示的卡片（只隐藏，不删除）
 	void clearCurrentCards();
@@ -101,6 +94,4 @@ private:
 
 	// 预创建的卡片列表
 	QList<DownloadCard*> m_precreatedCards;
-
-	qint64 m_currentSpeed;
 };

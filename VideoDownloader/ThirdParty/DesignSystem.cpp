@@ -30,6 +30,7 @@ DesignSystem::DesignSystem()
 void DesignSystem::loadThemes()
 {
 	// Light Theme
+	m_lightTheme.dangerColor = QColor(236, 91, 86);
 	m_lightTheme.primaryColor = QColor(64, 150, 255);	// Ant 蓝色
 	m_lightTheme.primaryHoverColor = m_lightTheme.primaryColor.lighter(130);
 	m_lightTheme.textColor = QColor(255, 255, 255);
@@ -91,6 +92,7 @@ void DesignSystem::loadThemes()
 	m_lightTheme.vipGradientEndColor = QColor("#e2e8ff");    // 非常浅的蓝色，渐变终点，清爽柔和
 
 	// Dark Theme
+	m_darkTheme.dangerColor = QColor(236, 91, 86);
 	m_darkTheme.primaryColor = QColor(243, 128, 100);           // 橙红色
 	m_darkTheme.primaryHoverColor = m_darkTheme.primaryColor.lighter(130);
 

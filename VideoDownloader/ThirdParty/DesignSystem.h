@@ -6,6 +6,7 @@
 struct Theme
 {
 	// 添加缺失的颜色定义
+	QColor dangerColor;
 	QColor cardBackgroundColor;
 	QColor primaryTextColor;
 	QColor secondaryTextColor;

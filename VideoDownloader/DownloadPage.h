@@ -3,6 +3,8 @@
 #include <QDateTime>
 #include <QMutex>
 
+#include <QFutureWatcher>
+
 #include "AntProfileTable.h"
 #include "DownloadCardContainerWidget.h"
 #include "VideoInfo.h"

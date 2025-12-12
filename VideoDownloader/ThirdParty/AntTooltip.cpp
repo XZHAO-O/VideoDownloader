@@ -1,6 +1,7 @@
 ﻿#include "AntTooltip.h"
 
 #include <QPainterPath>
+#include <QTextDocument>
 
 #include "DesignSystem.h"
 
@@ -16,25 +17,35 @@ AntTooltip::AntTooltip(QString text, ArrowDir dir, QWidget* parent)
 	m_font = font;
 	QFontMetrics metrics(m_font);
 
-	// 最大文本宽度限制更小
-	const int maxTextWidth = 180;  // 减小最大宽度
-	QRect textBounding = metrics.boundingRect(0, 0, maxTextWidth, 1000, Qt::TextWordWrap, m_text);
+	// 使用 QTextDocument 计算文本尺寸
+	QTextDocument doc;
+	doc.setDefaultFont(m_font);
+	doc.setPlainText(m_text);
+
+	// 设置文本宽度，-1表示不限制（计算单行宽度）
+	doc.setTextWidth(-1);
+	qreal idealWidth = doc.idealWidth();
+
+	// 限制最大宽度为300像素
+	const int maxTextWidth = 300;
+	if (idealWidth > maxTextWidth) {
+		doc.setTextWidth(maxTextWidth);
+	}
+
+	// 获取文档大小
+	QSizeF docSize = doc.size();
 
 	// 内边距
-	const int Padding = 10;  // 调整内边距
-	int paddedTextWidth = textBounding.width() + Padding * 2;
-	int paddedTextHeight = textBounding.height() + Padding * 2;
+	const int Padding = 10;
+	int paddedTextWidth = qCeil(docSize.width()) + Padding * 2;
+	int paddedTextHeight = qCeil(docSize.height()) + Padding * 2;
 
-	// 计算总宽高（不再考虑箭头宽度，因为箭头为0）
-	int tiptoolWidth = paddedTextWidth;
-	int tiptoolHeight = paddedTextHeight;
-
-	// 设置最小尺寸，避免过小
-	if (tiptoolWidth < 80) tiptoolWidth = 80;
-	if (tiptoolHeight < 40) tiptoolHeight = 40;
+	// 最小尺寸
+	if (paddedTextWidth < 80) paddedTextWidth = 80;
+	if (paddedTextHeight < 40) paddedTextHeight = 40;
 
 	// 设置控件尺寸
-	resize(tiptoolWidth, tiptoolHeight);
+	resize(paddedTextWidth, paddedTextHeight);
 }
 
 AntTooltip::~AntTooltip()

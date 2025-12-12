@@ -114,8 +114,10 @@ void SettingsPage::setupGeneralSettings()
 
 	// 重置按钮
 	QHBoxLayout* resetLayout = new QHBoxLayout();
-	m_resetButton = new AntButton(tr("重置设置"), 11, m_generalTab);
+	m_resetButton = new AntButton(tr("重置"), 11, m_generalTab);
+	m_resetButton->setButtonColor(DesignSystem::instance()->currentTheme().dangerColor);
 	m_resetButton->setFixedSize(120, 40);
+	m_resetButton->setToolTip(tr("重置所有设置为默认状态666666666666666666666666"));
 
 	resetLayout->addWidget(m_resetButton);
 	resetLayout->addStretch();

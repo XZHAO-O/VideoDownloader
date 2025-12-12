@@ -361,9 +361,6 @@
     <ClCompile Include="PlatformAggregatorService.cpp">
       <Filter>Services</Filter>
     </ClCompile>
-    <ClCompile Include="DownloadCardModel.cpp">
-      <Filter>Core\models</Filter>
-    </ClCompile>
     <ClCompile Include="VideoPreviewWindow.cpp">
       <Filter>Ui\Widgets</Filter>
     </ClCompile>
@@ -692,9 +689,6 @@
     </QtMoc>
     <QtMoc Include="ApplicationController.h">
       <Filter>app</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadCardModel.h">
-      <Filter>Core\models</Filter>
     </QtMoc>
     <QtMoc Include="VideoPreviewWindow.h">
       <Filter>Ui\Widgets</Filter>

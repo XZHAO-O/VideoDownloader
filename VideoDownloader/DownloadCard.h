@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-#include "DownloadCardModel.h"
+#include "DownloadTaskInfo.h"
 #include "VideoPreviewWindow.h"
 
 class QLabel;
@@ -10,22 +10,40 @@ class QPushButton;
 class QHBoxLayout;
 class QVBoxLayout;
 class AntButton;
-class AntComboBox;
 class AntCellWidget;
 class MaterialProgressBar;
 class SingleLevelComboBox;
 class SvgButton;
+
+enum class DownloadCardState
+{
+	Pending,        // 待下载
+	Downloading,    // 下载中
+	Downloaded,     // 已下载
+	Error           // 错误
+};
 
 class DownloadCard : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit DownloadCard(QSharedPointer<DownloadCardModel> model, QWidget* parent = nullptr);
+	explicit DownloadCard(DownloadCardState downloadCardState, QWidget* parent = nullptr);
 	~DownloadCard();
 
-	QSharedPointer<DownloadCardModel> model() const { return m_model; }
-	void setModel(QSharedPointer<DownloadCardModel> model);
+	// 完全更新卡片UI（传入完整任务信息）
+	void updateFromTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo);
+
+	// 部分更新方法（只更新指定部分）
+	void updateProgress(const ProgressInfo& progress);
+	void updateDownloadedFile(const QString& filePath);
+	void updateQualityOptions(const QStringList& videoQualities, const QStringList& audioQualities);
+	void updateSelectedQuality(const QString& videoQuality, const QString& audioQuality);
+	void updateCover(const QByteArray& coverData);
+	void updateTitle(const QString& title);
+	void updateFileSizes(qint64 videoSize, qint64 audioSize);
+	void updateTimeInfo(const QString& timeInfo);
+	void updatePublisher(const QString& publisher);
 
 	// 设置质量选项
 	void setVideoQualityOptions(const QStringList& qualities);
@@ -43,7 +61,11 @@ public:
 	QSize sizeHint() const override;
 	QSize minimumSizeHint() const override;
 
-	void updateUI();
+	// 获取当前UI状态
+	DownloadCardState currentState() const { return m_currentState; }
+
+	// 刷新UI（用于主题变化等）
+	void refreshUI();
 
 signals:
 	void downloadClicked();
@@ -54,51 +76,48 @@ signals:
 	void cancelClicked();
 	void deleteClicked();
 	void openFolderClicked();
-	void copyUrlClicked();
 	void openUrlClicked();
 	void previewClicked();
+	void retryClicked();
 
 	void videoQualityChanged(const QString& quality);
 	void audioQualityChanged(const QString& quality);
-
-public slots:
-	void onDownloadProgress(const QString& progressInfo, int progress);
 
 protected:
 	void mousePressEvent(QMouseEvent* event) override;
 	void enterEvent(QEnterEvent* event) override;
 	void leaveEvent(QEvent* event) override;
 	void paintEvent(QPaintEvent* event) override;
-
-	// 新增事件过滤器
 	bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
-	void onModelChanged();
 	void onCoverClicked();
 	void onTitleClicked();
 
 private:
+	// 初始化UI（根据状态）
 	void initUI();
-	void initConnections();
-	void initModelConnections();
-	void updateTextColors();
-
-	// 新增封面图标相关方法
-	void setupPlayIcon();
-	void updatePlayIconVisibility(bool visible);
 
 	// 根据状态初始化不同的UI
 	void initPendingUI();
 	void initDownloadingUI();
 	void initDownloadedUI();
+	void initErrorUI();
 
-	// 根据状态更新不同的UI
-	void updatePendingUI();
-	void updateDownloadingUI();
-	void updateDownloadedUI();
+	// 初始化连接
+	void initConnections();
 
-	// UI组件 - 公共部分
+	// 更新文本颜色（主题变化）
+	void updateTextColors();
+
+	// 设置播放图标
+	void setupPlayIcon();
+	void updatePlayIconVisibility(bool visible);
+
+	// 清理UI组件
+	void clearUI();
+
+	// UI组件
 	QLabel* m_coverLabel = nullptr;
 	QLabel* m_playIcon = nullptr;
 	AntCellWidget* m_titleCell = nullptr;
@@ -136,10 +155,15 @@ private:
 	SvgButton* m_openFolderBtn_downloaded = nullptr;
 	SvgButton* m_deleteBtn_downloaded = nullptr;
 
-	QSharedPointer<DownloadCardModel> m_model;
+	// 错误状态特有组件
+	QLabel* m_errorLabel = nullptr;
+	SvgButton* m_retryBtn = nullptr;
+	SvgButton* m_closeBtn_error = nullptr;
+
 	QSharedPointer<VideoPreviewWindow> m_previewWindow;
 
-	bool m_isCoverLoaded = false;
-	bool m_coverHovered = false;  // 标记封面是否被鼠标悬停
+	// UI状态信息
 	DownloadCardState m_currentState;
+	bool m_isCoverLoaded = false;
+	bool m_coverHovered = false;
 };

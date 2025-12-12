@@ -72,38 +72,93 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	QVBoxLayout* row8Layout = new QVBoxLayout();
 	row8Layout->setSpacing(1);
 	row8Layout->setContentsMargins(0, 0, 0, 0);
-	// 创建卡片模型
-	auto cardModel = QSharedPointer<DownloadCardModel>::create();
-	cardModel->setTitle("示例视频标题");
-	cardModel->setDuration("12:34");
-	cardModel->setPublishTime("2016-01-01 12:00:00");
-	cardModel->setPublisher("视频发布者");
-	cardModel->setVideoSize(1024 * 1024 * 150); // 150MB
-	cardModel->setAudioSize(1024 * 1024 * 20);  // 20MB
-	cardModel->setProgress(50);
-	cardModel->setState(DownloadCardState::Downloading);
+	// 创建示例任务信息
+	auto createSampleTaskInfo = [](const QString& title, DownloadStatus status) {
+		auto taskInfo = QSharedPointer<DownloadTaskInfo>::create();
+		taskInfo->taskId = StringUtil::generateId("sample");
+		taskInfo->videoInfo.title = title;
+		taskInfo->videoInfo.duration = "12:34";
+		taskInfo->videoInfo.publishTime = "1672502400"; // 2023-01-01 00:00:00
+		taskInfo->videoInfo.author = "示例发布者";
+		taskInfo->videoInfo.coverUrl = QUrl("https://example.com/cover.jpg");
+		taskInfo->videoInfo.cover = QByteArray(); // 空封面数据
 
-	// 创建卡片
-	auto downloadCard = new DownloadCard(cardModel, this);
-	cardModel->setState(DownloadCardState::Pending);
-	auto downloadCard2 = new DownloadCard(cardModel, this);
-	cardModel->setState(DownloadCardState::Downloaded);
-	auto downloadCard3 = new DownloadCard(cardModel, this);
-	auto downloadCard4 = new DownloadCard(cardModel, this);
-	cardModel->setState(DownloadCardState::Pending);
-	auto downloadCard5 = new DownloadCard(cardModel, this);
+		// 添加视频流信息
+		StreamInfo videoStream;
+		videoStream.url = QUrl("https://example.com/video.mp4");
+		videoStream.fileSize = 1024 * 1024 * 150; // 150MB
+		taskInfo->videoStreamInfo.insert("4K", videoStream);
 
-	AntButton* btn1 = new AntButton("取消", 10, this);
-	btn1->setFixedWidth(80);
-	btn1->setFixedHeight(50);
-	btn1->setButtonMode(AntButton::Outlined);
+		StreamInfo videoStream2;
+		videoStream2.url = QUrl("https://example.com/video2.mp4");
+		videoStream2.fileSize = 1024 * 1024 * 100; // 100MB
+		taskInfo->videoStreamInfo.insert("1080P", videoStream2);
+
+		// 添加音频流信息
+		StreamInfo audioStream;
+		audioStream.url = QUrl("https://example.com/audio.aac");
+		audioStream.fileSize = 1024 * 1024 * 20; // 20MB
+		taskInfo->audioStreamInfo.insert("无损", audioStream);
+
+		StreamInfo audioStream2;
+		audioStream2.url = QUrl("https://example.com/audio2.aac");
+		audioStream2.fileSize = 1024 * 1024 * 10; // 10MB
+		taskInfo->audioStreamInfo.insert("高品质", audioStream2);
+
+		taskInfo->selectedVideoQuality = "4K";
+		taskInfo->selectedAudioQuality = "无损";
+		taskInfo->downloadFormat = DownloadFormat::Separated;
+		taskInfo->status = status;
+		taskInfo->downloadFilePath = "E:/Downloads/示例视频.mp4";
+		taskInfo->endTime = QDateTime::currentDateTime();
+
+		// 如果是下载中状态，设置进度信息
+		if (status == DownloadStatus::Downloading) {
+			taskInfo->progressInfo.progress = 50;
+			taskInfo->progressInfo.text = "75.0MB/150.0MB";
+			taskInfo->progressInfo.downloadSpeed = "1.2MB/s";
+		}
+
+		return taskInfo;
+		};
+
+	// 创建示例卡片
+	// 1. 待下载状态卡片
+	auto pendingTask = createSampleTaskInfo("示例视频 - 待下载", DownloadStatus::Queued);
+	DownloadCardState cardState = DownloadCardState::Pending;
+	DownloadCard* downloadCard1 = new DownloadCard(cardState, this);
+	downloadCard1->updateFromTaskInfo(pendingTask);
+
+	// 2. 下载中状态卡片
+	auto downloadingTask = createSampleTaskInfo("示例视频 - 下载中", DownloadStatus::Downloading);
+	cardState = DownloadCardState::Downloading;
+	DownloadCard* downloadCard2 = new DownloadCard(cardState, this);
+	downloadCard2->updateFromTaskInfo(downloadingTask);
+
+	// 3. 已下载状态卡片
+	auto downloadedTask = createSampleTaskInfo("示例视频 - 已下载", DownloadStatus::Completed);
+	cardState = DownloadCardState::Downloaded;
+	DownloadCard* downloadCard3 = new DownloadCard(cardState, this);
+	downloadCard3->updateFromTaskInfo(downloadedTask);
+
+	// 4. 错误状态卡片
+	auto errorTask = createSampleTaskInfo("示例视频 - 下载失败", DownloadStatus::Failed);
+	cardState = DownloadCardState::Error;
+	DownloadCard* downloadCard4 = new DownloadCard(cardState, this);
+	downloadCard4->updateFromTaskInfo(errorTask);
+
+	// 5. 另一个待下载卡片
+	auto pendingTask2 = createSampleTaskInfo("另一个示例视频 - 待下载", DownloadStatus::Queued);
+	cardState = DownloadCardState::Pending;
+	DownloadCard* downloadCard5 = new DownloadCard(cardState, this);
+	downloadCard5->updateFromTaskInfo(pendingTask2);
+
 	// 添加到布局中
-	row8Layout->addWidget(downloadCard);
+	row8Layout->addWidget(downloadCard1);
 	row8Layout->addWidget(downloadCard2);
 	row8Layout->addWidget(downloadCard3);
 	row8Layout->addWidget(downloadCard4);
 	row8Layout->addWidget(downloadCard5);
-	row8Layout->addWidget(btn1);
 
 	// 添加到页面布局
 	pageLay->addLayout(row8Layout);

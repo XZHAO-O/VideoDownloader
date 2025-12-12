@@ -124,7 +124,6 @@
     <ClCompile Include="DatabaseManager.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
-    <ClCompile Include="DownloadCardModel.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
     <ClCompile Include="DownloadRecordDAO.cpp" />
     <ClCompile Include="DownloadRecordService.cpp" />
@@ -368,7 +367,6 @@
     <QtMoc Include="VideoPreviewWindow.h" />
     <QtMoc Include="ConfigManager.h" />
     <ClInclude Include="ApplicationState.h" />
-    <QtMoc Include="DownloadCardModel.h" />
     <QtMoc Include="DownloadCard.h" />
     <QtMoc Include="ConfigModManager.h" />
     <QtMoc Include="ConfigVideoPlatform.h" />

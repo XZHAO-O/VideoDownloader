@@ -66,8 +66,20 @@ void SingleLevelComboBox::resetState()
 
 void SingleLevelComboBox::setCurrentText(const QString& text)
 {
-	if (m_text != text) {
+	if (m_text != text)
+	{
 		m_text = text;
+
+		// 在m_itemTextList中查找对应的索引
+		int index = m_itemTextList.indexOf(text);
+
+		// 如果找到对应的项，设置当前选中索引
+		if (index >= 0 && m_popup && m_popup->popup)
+		{
+			QModelIndex modelIndex = m_popup->popup->model()->index(index, 0);
+			m_popup->popup->setCurrentIndex(modelIndex);
+		}
+
 		update();
 		emit currentTextChanged(text);
 	}
