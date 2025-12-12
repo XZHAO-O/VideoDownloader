@@ -56,7 +56,7 @@ public slots:
 	void onDownloadStatusChanged(const QString& taskId);
 	void onDownloadCompleted(const QString& taskId);
 	void onDownloadFailed(const QString& taskId, const QString& error);
-	void onDownloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed);
+	void onDownloadProgress(const QString& taskId);
 
 	// 分页改变槽函数
 	void onPageChanged(int page);

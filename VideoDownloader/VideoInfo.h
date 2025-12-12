@@ -20,7 +20,7 @@ struct StreamInfo
 	QString quality;
 	QString codec;
 	qint64 bitrate;
-	qint64 fileSize;
+	qint64 fileSize = 0;
 	int width;
 	int height;
 	double duration; // seconds

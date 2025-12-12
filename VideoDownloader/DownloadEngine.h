@@ -33,7 +33,7 @@ public:
 	void setMaxDownloadSpeed(int maxDownloadSpeed);
 
 signals:
-	void downloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed);
+	void downloadProgress(const QString& taskId);
 	void downloadFinished(const QString& taskId);
 	void downloadFailed(const QString& error);
 

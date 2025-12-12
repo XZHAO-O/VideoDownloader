@@ -58,6 +58,9 @@ signals:
 	void openUrlClicked();
 	void previewClicked();
 
+	void videoQualityChanged(const QString& quality);
+	void audioQualityChanged(const QString& quality);
+
 public slots:
 	void onDownloadProgress(const QString& progressInfo, int progress);
 
@@ -74,8 +77,6 @@ private slots:
 	void onModelChanged();
 	void onCoverClicked();
 	void onTitleClicked();
-	void onVideoQualityChanged(const QString& quality);
-	void onAudioQualityChanged(const QString& quality);
 
 private:
 	void initUI();

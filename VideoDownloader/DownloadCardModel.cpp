@@ -113,8 +113,15 @@ void DownloadCardModel::fromDownloadTaskInfo(QSharedPointer<DownloadTaskInfo> ta
 	m_duration = taskInfo->videoInfo.duration;
 	m_publishTime = StringUtil::formatDateTime(QDateTime::fromSecsSinceEpoch(taskInfo->videoInfo.publishTime.toLongLong()));
 	m_publisher = taskInfo->videoInfo.author;
-	m_progress = 0;
-	m_downloadSpeed = 0;
+
+	m_videoQuality = taskInfo->selectedVideoQuality;
+	m_audioQuality = taskInfo->selectedAudioQuality;
+	m_videoSize = taskInfo->videoStreamInfo[m_videoQuality].fileSize;
+	m_audioSize = taskInfo->audioStreamInfo[m_audioQuality].fileSize;
+
+	m_progress = taskInfo->progressInfo.progress;
+	m_progressInfo = taskInfo->progressInfo.text;
+	m_downloadSpeed = taskInfo->progressInfo.downloadSpeed;
 
 	// 根据状态设置卡片状态
 	switch (taskInfo->status)

@@ -22,6 +22,13 @@ enum class DownloadFormat
 	Merged,
 };
 
+struct ProgressInfo
+{
+	int progress = 0;
+	QString text;
+	QString downloadSpeed;
+};
+
 class DownloadTaskInfo
 {
 public:
@@ -36,6 +43,7 @@ public:
 	DownloadFormat downloadFormat;
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
+	ProgressInfo progressInfo;
 	bool partialDownloadSupport;
 	QString downloadFilePath;
 	QDateTime endTime;
@@ -174,7 +182,7 @@ public:
 		}
 	}
 
-	void formatDownloadInfo(int& progress, QString& progressInfo, QString& downloadSpeed)
+	void formatDownloadInfo()
 	{
 		DownloadContext* downloadContext = nullptr;
 		switch (downloadFormat)
@@ -204,8 +212,13 @@ public:
 		}
 		if (!downloadContext)
 			return;
+
+		int& progress = progressInfo.progress;
+		QString& progressText = progressInfo.text;
+		QString& downloadSpeed = progressInfo.downloadSpeed;
+
 		qint64 downloadedBytes = downloadContext->downloadedTotalSize;
-		progressInfo = StringUtil::formatDownloadProgress(downloadedBytes, downloadContext->fileSize);
+		progressText = StringUtil::formatDownloadProgress(downloadedBytes, downloadContext->fileSize);
 		progress = downloadedBytes * 100 / downloadContext->fileSize;
 		downloadSpeed = StringUtil::formatDownloadSpeed(2 * (downloadedBytes - downloadContext->progressedSize));
 		downloadContext->progressedSize = downloadedBytes;

@@ -322,27 +322,32 @@ void ConfigVideoPlatform::getDownloadInfo(QSharedPointer<DownloadTaskInfo> taskI
 
 	auto keys = taskInfo->videoStreamInfo.keys();
 
-	auto& streamInfo = taskInfo->videoStreamInfo[keys[0]];
-
-	NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(streamInfo.url, headers, cancelToken);
-	if (!replyHeader.success)
+	for (const auto& key : keys)
 	{
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
-		return;
+		auto& streamInfo = taskInfo->videoStreamInfo[key];
+
+		NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(streamInfo.url, headers, cancelToken);
+		if (!replyHeader.success)
+		{
+			AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
+			return;
+		}
+		streamInfo.fileSize = replyHeader.getContentLength();
 	}
-	streamInfo.fileSize = replyHeader.getContentLength();
 
 	auto audioKeys = taskInfo->audioStreamInfo.keys();
-
-	auto& audioStreamInfo = taskInfo->audioStreamInfo[audioKeys[0]];
-
-	replyHeader = m_networkManager->getReplyHeaderWithLoop(audioStreamInfo.url, headers, cancelToken);
-	if (!replyHeader.success)
+	for (const auto& key : audioKeys)
 	{
-		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
-		return;
+		auto& audioStreamInfo = taskInfo->audioStreamInfo[key];
+
+		NetworkReplyHeader replyHeader = m_networkManager->getReplyHeaderWithLoop(audioStreamInfo.url, headers, cancelToken);
+		if (!replyHeader.success)
+		{
+			AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, replyHeader.errorString);
+			return;
+		}
+		audioStreamInfo.fileSize = replyHeader.getContentLength();
 	}
-	audioStreamInfo.fileSize = replyHeader.getContentLength();
 
 	taskInfo->selectedVideoQuality = keys[0];
 	taskInfo->selectedAudioQuality = audioKeys[0];

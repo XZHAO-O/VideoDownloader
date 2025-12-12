@@ -247,6 +247,21 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 	switch (m_containerState)
 	{
 	case ContainerState::DownloadReady:
+
+		connect(card, &DownloadCard::videoQualityChanged, this, [this, taskInfo, card](const QString& quality) {
+			card->setCurrentVideoQuality(quality);
+			card->model()->setVideoSize(taskInfo->videoStreamInfo[quality].fileSize);
+			taskInfo->selectedVideoQuality = quality;
+			card->updateUI();
+			});
+
+		connect(card, &DownloadCard::audioQualityChanged, this, [this, taskInfo, card](const QString& quality) {
+			card->setCurrentAudioQuality(quality);
+			card->model()->setAudioSize(taskInfo->audioStreamInfo[quality].fileSize);
+			taskInfo->selectedAudioQuality = quality;
+			card->updateUI();
+			});
+
 		connect(card, &DownloadCard::downloadClicked, this, [this, taskInfo, card]() {
 			// 发出任务转移信号，让DownloadPage处理容器间的转移和开始下载
 			taskInfo->selectedVideoQuality = card->currentVideoQuality();
@@ -598,18 +613,22 @@ void DownloadCardContainerWidget::onDownloadFailed(const QString& taskId, const 
 	// emit taskStateChanged(taskId, ContainerState::DownloadReady);
 }
 
-void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId, const QString& progressInfo, int progress, const QString& downloadSpeed)
+void DownloadCardContainerWidget::onDownloadProgress(const QString& taskId)
 {
 	// 处理下载进度更新
 	auto it = m_downloadCards.find(taskId);
 	if (it != m_downloadCards.end())
 	{
 		auto card = *it;
-		card->model()->setProgressInfo(progressInfo);
-		card->model()->setProgress(progress);
-		card->model()->setDownloadSpeed(downloadSpeed);
-		card->updateUI();
-		//card->second->updateProgress(progress, downloadSpeed);
+		auto task = m_downloadTasks.find(taskId);
+		if (task != m_downloadTasks.end())
+		{
+			const auto& progressInfo = task.value()->progressInfo;
+			card->model()->setProgressInfo(progressInfo.text);
+			card->model()->setProgress(progressInfo.progress);
+			card->model()->setDownloadSpeed(progressInfo.downloadSpeed);
+			card->updateUI();
+		}
 	}
 }
 

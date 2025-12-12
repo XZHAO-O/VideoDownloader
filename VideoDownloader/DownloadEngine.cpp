@@ -281,11 +281,8 @@ void DownloadEngine::processDownloadingTasks()
 				continue;
 			}
 
-			QString progressInfo;
-			int progress;
-			QString downloadSpeed;
-			task->formatDownloadInfo(progress, progressInfo, downloadSpeed);
-			emit downloadProgress(task->taskId, progressInfo, progress, downloadSpeed);
+			task->formatDownloadInfo();
+			emit downloadProgress(task->taskId);
 		}
 	}
 

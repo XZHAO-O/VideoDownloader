@@ -111,7 +111,7 @@ void DownloadCard::setVideoQualityOptions(const QStringList& qualities)
 
 		// 重新连接信号
 		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged,
-			this, &DownloadCard::onVideoQualityChanged);
+			this, &DownloadCard::videoQualityChanged);
 	}
 }
 
@@ -127,7 +127,7 @@ void DownloadCard::setAudioQualityOptions(const QStringList& qualities)
 
 		// 重新连接信号
 		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged,
-			this, &DownloadCard::onAudioQualityChanged);
+			this, &DownloadCard::audioQualityChanged);
 	}
 }
 
@@ -144,7 +144,7 @@ void DownloadCard::setCurrentVideoQuality(const QString& quality)
 
 		// 重新连接信号
 		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged,
-			this, &DownloadCard::onVideoQualityChanged);
+			this, &DownloadCard::videoQualityChanged);
 	}
 }
 
@@ -161,7 +161,7 @@ void DownloadCard::setCurrentAudioQuality(const QString& quality)
 
 		// 重新连接信号
 		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged,
-			this, &DownloadCard::onAudioQualityChanged);
+			this, &DownloadCard::audioQualityChanged);
 	}
 }
 
@@ -259,22 +259,6 @@ void DownloadCard::onTitleClicked()
 	else
 	{
 		emit openUrlClicked();
-	}
-}
-
-void DownloadCard::onVideoQualityChanged(const QString& quality)
-{
-	if (m_model)
-	{
-		m_model->setVideoQuality(quality);
-	}
-}
-
-void DownloadCard::onAudioQualityChanged(const QString& quality)
-{
-	if (m_model)
-	{
-		m_model->setAudioQuality(quality);
 	}
 }
 
@@ -411,19 +395,35 @@ void DownloadCard::initPendingUI()
 	m_middleLayout->setSpacing(20);
 	m_middleLayout->setContentsMargins(0, 0, 0, 0);
 
-	m_sizeLabel = new QLabel("视频: 0 MB  音频: 0 MB", this);
+	// 创建一个容器来放置大小标签，并设置固定宽度
+	QWidget* sizeWidget = new QWidget(this);
+	QHBoxLayout* sizeLayout = new QHBoxLayout(sizeWidget);
+	sizeLayout->setContentsMargins(0, 0, 0, 0);
+	sizeLayout->setSpacing(0);
 
-	// 质量选择
+	m_sizeLabel = new QLabel("视频: 0 MB  音频: 0 MB", sizeWidget);
+
+	// 设置固定宽度，确保文本过长时不会影响布局
+	m_sizeLabel->setFixedWidth(200);
+	m_sizeLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+	// 设置文本过长时显示省略号
+	m_sizeLabel->setTextFormat(Qt::PlainText);
+	m_sizeLabel->setWordWrap(false);
+
+	sizeLayout->addWidget(m_sizeLabel);
+
+	// 质量选择容器
 	QWidget* qualityWidget = new QWidget(this);
 	QHBoxLayout* qualityLayout = new QHBoxLayout(qualityWidget);
 	qualityLayout->setSpacing(8);
 	qualityLayout->setContentsMargins(0, 0, 0, 0);
 
-	QStringList qualityList = { "480p", "720p", "1080p", "4K", "原画", "8K" };
+	QStringList qualityList = { "4K" };
 	m_videoQualityCombo = new SingleLevelComboBox(tr("画质"), qualityList, this);
 	m_videoQualityCombo->setFixedSize(170, 35);
 
-	QStringList audioQualityList = { "低音质", "中音质", "高音质", "无损" };
+	QStringList audioQualityList = { "无损" };
 	m_audioQualityCombo = new SingleLevelComboBox(tr("音质"), audioQualityList, this);
 	m_audioQualityCombo->setFixedSize(170, 35);
 
@@ -431,9 +431,10 @@ void DownloadCard::initPendingUI()
 	qualityLayout->addWidget(m_audioQualityCombo);
 	qualityLayout->addStretch();
 
-	m_middleLayout->addWidget(m_sizeLabel);
+	// 添加到中间布局
+	m_middleLayout->addWidget(sizeWidget);
 	m_middleLayout->addWidget(qualityWidget);
-	m_middleLayout->addStretch();
+	m_middleLayout->addStretch(); // 添加一个伸缩因子，让质量选择框靠左
 
 	// 底部布局
 	m_bottomLayout = new QVBoxLayout();
@@ -788,8 +789,8 @@ void DownloadCard::initConnections()
 	switch (m_currentState)
 	{
 	case DownloadCardState::Pending:
-		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onVideoQualityChanged);
-		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::onAudioQualityChanged);
+		connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::videoQualityChanged);
+		connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::audioQualityChanged);
 		connect(m_downloadBtn, &AntButton::clicked, this, &DownloadCard::downloadClicked);
 		connect(m_videoDownloadBtn, &AntButton::clicked, this, &DownloadCard::videoDownloadClicked);
 		connect(m_audioDownloadBtn, &AntButton::clicked, this, &DownloadCard::audioDownloadClicked);
