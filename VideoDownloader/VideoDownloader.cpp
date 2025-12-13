@@ -79,6 +79,8 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	QDir svgDir(":/Svgs/");
 	if (svgDir.exists()) {
 		QStringList svgFiles = svgDir.entryList(QStringList() << "*.svg", QDir::Files);
+		// 设置hash容量
+		DesignSystem::instance()->reserveSvgIcon(svgFiles.size());
 
 		// 定义渲染SVG的函数
 		auto renderSvgWithColor = [](const QString& svgPath, const QColor& color) -> QPixmap {

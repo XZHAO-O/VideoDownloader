@@ -515,6 +515,11 @@ QColor DesignSystem::disabledColor() const
 	return m_currentTheme.disabledColor;
 }
 
+void DesignSystem::reserveSvgIcon(int count)
+{
+	m_svgIconCache.reserve(count);
+}
+
 void DesignSystem::cacheSvgIcon(const QString& key, const std::array<QPixmap, 4>& pixmaps)
 {
 	m_svgIconCache[key] = pixmaps;

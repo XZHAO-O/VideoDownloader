@@ -148,6 +148,7 @@
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="SingleLevelComboBox.cpp" />
     <ClCompile Include="SvgButton.cpp" />
+    <ClCompile Include="SvgToggleButton.cpp" />
     <ClCompile Include="TrayManager.cpp" />
     <ClCompile Include="VideoPreviewWindow.cpp" />
     <QtRcc Include="QtAntDesign.qrc" />
@@ -406,6 +407,7 @@
     <ClInclude Include="RecordManager.h" />
     <ClInclude Include="StringUtil.h" />
     <QtMoc Include="SvgButton.h" />
+    <QtMoc Include="SvgToggleButton.h" />
     <ClInclude Include="VideoInfo.h" />
     <QtMoc Include="ModManagerPage.h" />
     <QtMoc Include="DownloadPage.h" />

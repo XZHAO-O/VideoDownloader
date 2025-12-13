@@ -2,10 +2,11 @@
 
 #include <QLabel>
 
-#include "SvgButton.h"
 #include "AntButton.h"
 #include "AntCellWidget.h"
 #include "DesignSystem.h"
+#include "SvgButton.h"
+#include "SvgToggleButton.h"
 #include "MaterialProgressBar.h"
 #include "SingleLevelComboBox.h"
 #include "StringUtil.h"
@@ -547,10 +548,11 @@ void DownloadCard::initDownloadingUI()
 	m_actionLayout->setSpacing(6);
 	m_actionLayout->setContentsMargins(0, 0, 0, 0);
 
-	m_pauseBtn_downloading = new SvgButton("pause-circle", this);
+	m_pauseBtn_downloading = new SvgToggleButton("play-circle", "pause-circle", this);
 	m_pauseBtn_downloading->setIconSize(SvgButton::Medium);
 	m_pauseBtn_downloading->setFixedSize(32, 32);
-	m_pauseBtn_downloading->setToolTip(tr("暂停"));
+	m_pauseBtn_downloading->setNormalToolTip(tr("继续下载"));
+	m_pauseBtn_downloading->setActiveToolTip(tr("暂停下载"));
 
 	m_openFolderBtn_downloading = new SvgButton("folder2", this);
 	m_openFolderBtn_downloading->setIconSize(SvgButton::Medium);

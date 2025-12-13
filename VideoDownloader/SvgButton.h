@@ -62,6 +62,12 @@ protected:
 	// 大小调整事件
 	void resizeEvent(QResizeEvent* event) override;
 
+	// 显示tooltip
+	void showCustomTooltip();
+
+	// 隐藏tooltip
+	void hideCustomTooltip();
+
 private:
 	// 根据当前主题和悬停状态获取pixmap
 	QPixmap getCurrentPixmap() const;
@@ -71,12 +77,6 @@ private:
 
 	// 更新按钮大小
 	void updateButtonSize();
-
-	// 显示tooltip
-	void showCustomTooltip();
-
-	// 隐藏tooltip
-	void hideCustomTooltip();
 
 	// 图标键值
 	QString m_iconKey;

@@ -133,6 +133,8 @@ public:
 	QColor borderColorHover() const;
 	QColor disabledColor() const;
 
+	void reserveSvgIcon(int count);
+
 	// 添加快捷获取新颜色的方法
 	QColor cardBackgroundColor() const { return m_currentTheme.cardBackgroundColor; }
 	QColor primaryTextColor() const { return m_currentTheme.primaryTextColor; }

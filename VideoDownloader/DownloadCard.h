@@ -14,6 +14,7 @@ class AntCellWidget;
 class MaterialProgressBar;
 class SingleLevelComboBox;
 class SvgButton;
+class SvgToggleButton;
 
 enum class DownloadCardState
 {
@@ -146,7 +147,7 @@ private:
 	MaterialProgressBar* m_progressBar = nullptr;
 	QLabel* m_speedLabel = nullptr;
 	QLabel* m_progressInfoLabel = nullptr;
-	SvgButton* m_pauseBtn_downloading = nullptr;
+	SvgToggleButton* m_pauseBtn_downloading = nullptr;
 	SvgButton* m_openFolderBtn_downloading = nullptr;
 	SvgButton* m_deleteBtn_downloading = nullptr;
 

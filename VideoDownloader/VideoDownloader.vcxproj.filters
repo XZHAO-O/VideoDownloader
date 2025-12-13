@@ -439,6 +439,9 @@
     <ClCompile Include="SvgButton.cpp">
       <Filter>Ui\Components</Filter>
     </ClCompile>
+    <ClCompile Include="SvgToggleButton.cpp">
+      <Filter>Ui\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -754,6 +757,9 @@
       <Filter>database\service</Filter>
     </QtMoc>
     <QtMoc Include="SvgButton.h">
+      <Filter>Ui\Components</Filter>
+    </QtMoc>
+    <QtMoc Include="SvgToggleButton.h">
       <Filter>Ui\Components</Filter>
     </QtMoc>
   </ItemGroup>
