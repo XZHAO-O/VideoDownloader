@@ -25,12 +25,10 @@ DownloadCard::DownloadCard(DownloadCardState downloadCardState, QWidget* parent)
 
 	initUI();
 	initConnections();
-	updateTextColors();
 	refreshUI();
 	// 添加主题变化监听
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]() {
-		updateTextColors();
-		update();
+		refreshUI();
 		});
 }
 
@@ -87,6 +85,7 @@ void DownloadCard::updateFromTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 
 	// 更新封面
 	updateCover(taskInfo->videoInfo.cover);
+	refreshUI();
 }
 
 void DownloadCard::updateProgress(const ProgressInfo& progress)
@@ -408,7 +407,7 @@ void DownloadCard::initPendingUI()
 
 	m_closeBtn = new SvgButton("x", this);
 	m_closeBtn->setIconSize(SvgButton::Medium);
-	m_closeBtn->setFixedSize(32, 32);
+	//m_closeBtn->setFixedSize(32, 32);
 
 	m_actionLayout->addWidget(m_downloadBtn);
 	m_actionLayout->addWidget(m_videoDownloadBtn);
@@ -550,18 +549,18 @@ void DownloadCard::initDownloadingUI()
 
 	m_pauseBtn_downloading = new SvgToggleButton("play-circle", "pause-circle", this);
 	m_pauseBtn_downloading->setIconSize(SvgButton::Medium);
-	m_pauseBtn_downloading->setFixedSize(32, 32);
+	//m_pauseBtn_downloading->setFixedSize(32, 32);
 	m_pauseBtn_downloading->setNormalToolTip(tr("继续下载"));
 	m_pauseBtn_downloading->setActiveToolTip(tr("暂停下载"));
 
 	m_openFolderBtn_downloading = new SvgButton("folder2", this);
 	m_openFolderBtn_downloading->setIconSize(SvgButton::Medium);
-	m_openFolderBtn_downloading->setFixedSize(32, 32);
+	//m_openFolderBtn_downloading->setFixedSize(32, 32);
 	m_openFolderBtn_downloading->setToolTip(tr("打开文件夹"));
 
 	m_deleteBtn_downloading = new SvgButton("trash", this);
 	m_deleteBtn_downloading->setIconSize(SvgButton::Medium);
-	m_deleteBtn_downloading->setFixedSize(32, 32);
+	//m_deleteBtn_downloading->setFixedSize(32, 32);
 	m_deleteBtn_downloading->setToolTip(tr("删除"));
 
 	m_actionLayout->addWidget(m_pauseBtn_downloading);
@@ -676,17 +675,17 @@ void DownloadCard::initDownloadedUI()
 
 	m_openUrlBtn_downloaded = new SvgButton("link-45deg", this);
 	m_openUrlBtn_downloaded->setIconSize(SvgButton::Medium);
-	m_openUrlBtn_downloaded->setFixedSize(32, 32);
+	//m_openUrlBtn_downloaded->setFixedSize(32, 32);
 	m_openUrlBtn_downloaded->setToolTip(tr("打开链接"));
 
 	m_openFolderBtn_downloaded = new SvgButton("folder2", this);
 	m_openFolderBtn_downloaded->setIconSize(SvgButton::Medium);
-	m_openFolderBtn_downloaded->setFixedSize(32, 32);
+	//m_openFolderBtn_downloaded->setFixedSize(32, 32);
 	m_openFolderBtn_downloaded->setToolTip(tr("打开文件夹"));
 
 	m_deleteBtn_downloaded = new SvgButton("trash", this);
 	m_deleteBtn_downloaded->setIconSize(SvgButton::Medium);
-	m_deleteBtn_downloaded->setFixedSize(32, 32);
+	//m_deleteBtn_downloaded->setFixedSize(32, 32);
 	m_deleteBtn_downloaded->setToolTip(tr("删除"));
 
 	m_actionLayout->addWidget(m_openUrlBtn_downloaded);
@@ -829,12 +828,12 @@ void DownloadCard::initConnections()
 	// 公共连接
 	if (m_coverLabel)
 	{
-		connect(m_coverLabel, &QLabel::linkActivated, this, &DownloadCard::onCoverClicked);
+		connect(m_coverLabel, &QLabel::linkActivated, this, &DownloadCard::onCoverClicked, Qt::DirectConnection);
 	}
 
 	if (m_titleCell && m_titleCell->getBtn())
 	{
-		connect(m_titleCell->getBtn(), &QPushButton::clicked, this, &DownloadCard::onTitleClicked);
+		connect(m_titleCell->getBtn(), &QPushButton::clicked, this, &DownloadCard::onTitleClicked, Qt::DirectConnection);
 	}
 
 	// 根据状态初始化特定连接
@@ -843,78 +842,79 @@ void DownloadCard::initConnections()
 	case DownloadCardState::Pending:
 		if (m_videoQualityCombo)
 		{
-			connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::videoQualityChanged);
+			connect(m_videoQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::videoQualityChanged, Qt::DirectConnection);
 		}
 
 		if (m_audioQualityCombo)
 		{
-			connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::audioQualityChanged);
+			connect(m_audioQualityCombo, &SingleLevelComboBox::currentTextChanged, this, &DownloadCard::audioQualityChanged, Qt::DirectConnection);
 		}
 
 		if (m_downloadBtn)
 		{
-			connect(m_downloadBtn, &AntButton::clicked, this, &DownloadCard::downloadClicked);
+			connect(m_downloadBtn, &AntButton::clicked, this, &DownloadCard::downloadClicked, Qt::DirectConnection);
 		}
 
 		if (m_videoDownloadBtn)
 		{
-			connect(m_videoDownloadBtn, &AntButton::clicked, this, &DownloadCard::videoDownloadClicked);
+			connect(m_videoDownloadBtn, &AntButton::clicked, this, &DownloadCard::videoDownloadClicked, Qt::DirectConnection);
 		}
 
 		if (m_audioDownloadBtn)
 		{
-			connect(m_audioDownloadBtn, &AntButton::clicked, this, &DownloadCard::audioDownloadClicked);
+			connect(m_audioDownloadBtn, &AntButton::clicked, this, &DownloadCard::audioDownloadClicked, Qt::DirectConnection);
 		}
 
 		if (m_closeBtn)
 		{
-			connect(m_closeBtn, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
+			connect(m_closeBtn, &SvgButton::clicked, this, &DownloadCard::deleteClicked, Qt::DirectConnection);
 		}
 		break;
 
 	case DownloadCardState::Downloading:
 		if (m_pauseBtn_downloading)
 		{
-			connect(m_pauseBtn_downloading, &SvgButton::clicked, this, &DownloadCard::pauseClicked);
+			connect(m_pauseBtn_downloading, &SvgToggleButton::normalized, this, &DownloadCard::pauseClicked, Qt::DirectConnection);
+			connect(m_pauseBtn_downloading, &SvgToggleButton::actived, this, &DownloadCard::resumeClicked, Qt::DirectConnection);
 		}
 
 		if (m_openFolderBtn_downloading)
 		{
-			connect(m_openFolderBtn_downloading, &SvgButton::clicked, this, &DownloadCard::openFolderClicked);
+			connect(m_openFolderBtn_downloading, &SvgButton::clicked, this, &DownloadCard::openFolderClicked, Qt::DirectConnection);
 		}
 
 		if (m_deleteBtn_downloading)
 		{
-			connect(m_deleteBtn_downloading, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
+			connect(m_deleteBtn_downloading, &SvgButton::clicked, this, &DownloadCard::deleteClicked, Qt::DirectConnection);
 		}
 		break;
 
 	case DownloadCardState::Downloaded:
 		if (m_openUrlBtn_downloaded)
 		{
-			connect(m_openUrlBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openUrlClicked);
+			connect(m_openUrlBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openUrlClicked, Qt::DirectConnection);
 		}
 
 		if (m_openFolderBtn_downloaded)
 		{
-			connect(m_openFolderBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openFolderClicked);
+			connect(m_openFolderBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::openFolderClicked, Qt::DirectConnection);
 		}
 
 		if (m_deleteBtn_downloaded)
 		{
-			connect(m_deleteBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
+			connect(m_deleteBtn_downloaded, &SvgButton::clicked, this, &DownloadCard::deleteClicked, Qt::DirectConnection);
 		}
 		break;
 
 	case DownloadCardState::Error:
 		if (m_retryBtn)
 		{
-			connect(m_retryBtn, &SvgButton::clicked, this, &DownloadCard::retryClicked);
+			connect(m_retryBtn, &SvgButton::clicked, this, &DownloadCard::retryClicked, Qt::DirectConnection);
 		}
 
 		if (m_closeBtn_error)
 		{
-			connect(m_closeBtn_error, &SvgButton::clicked, this, &DownloadCard::deleteClicked);
+			connect(m_closeBtn_error, &SvgButton::clicked, this, &DownloadCard::deleteClicked, Qt::DirectConnection);
 		}
 		break;
 	}

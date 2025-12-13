@@ -182,7 +182,6 @@ void SvgButton::mouseReleaseEvent(QMouseEvent* event)
 void SvgButton::enterEvent(QEnterEvent* event)
 {
 	m_hovered = true;
-	update();
 
 	// 如果启用了tooltip且有tooltip文本，显示tooltip
 	if (m_toolTipEnabled && !m_toolTipText.isEmpty())
@@ -190,6 +189,7 @@ void SvgButton::enterEvent(QEnterEvent* event)
 		showCustomTooltip();
 	}
 
+	update();
 	QPushButton::enterEvent(event);
 }
 

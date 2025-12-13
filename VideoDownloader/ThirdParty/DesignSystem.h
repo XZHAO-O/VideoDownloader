@@ -105,6 +105,8 @@ public:
 
 	// 当前主题访问
 	const Theme& currentTheme() const;
+	const Theme& lightTheme() const;
+	const Theme& darkTheme() const;
 
 	// 获取主窗口指针
 	void setMainWindow(QWidget* mainWindow) { m_mainWindow = mainWindow; }

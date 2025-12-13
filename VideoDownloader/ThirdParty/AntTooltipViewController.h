@@ -15,12 +15,20 @@ class AntTooltipViewController : public QGraphicsView
 public:
 	AntTooltipViewController(QString text, AntTooltip::ArrowDir dir, QWidget* parent);
 	~AntTooltipViewController();
+
 	void showAnimated(QPoint globalPos);
 	void hideAnimated();
+
+signals:
+	// 隐藏完成信号
+	void hidden();
+
 private:
 	void updateTransformOrigin();
+
 public:
 	AntTooltip* tooltip = nullptr;
+
 private:
 	QGraphicsScene* scene = nullptr;
 	QGraphicsProxyWidget* proxy = nullptr;

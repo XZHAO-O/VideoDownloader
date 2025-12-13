@@ -157,11 +157,11 @@ void SvgToggleButton::mouseReleaseEvent(QMouseEvent* event)
 
 void SvgToggleButton::enterEvent(QEnterEvent* event)
 {
-	// 先调用基类的enterEvent
-	SvgButton::enterEvent(event);
-
 	// 在进入事件中强制更新tooltip
 	updateToolTip();
+
+	// 调用基类的enterEvent
+	SvgButton::enterEvent(event);
 }
 
 void SvgToggleButton::updateIconKey()
@@ -179,6 +179,8 @@ void SvgToggleButton::updateIconKey()
 
 void SvgToggleButton::updateToolTip()
 {
+	if (m_activeToolTip.isEmpty() || m_normalToolTip.isEmpty())
+		return;
 	// 根据当前状态设置对应的tooltip
 	QString currentToolTip;
 	if (m_active)
@@ -194,7 +196,7 @@ void SvgToggleButton::updateToolTip()
 	SvgButton::setToolTip(currentToolTip);
 
 	// 如果当前鼠标在按钮上，需要立即更新tooltip显示
-	if (underMouse())
+	if (underMouse() && isToolTipEnabled())
 	{
 		// 隐藏当前tooltip（如果正在显示）
 		hideCustomTooltip();

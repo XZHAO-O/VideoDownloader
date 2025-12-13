@@ -475,6 +475,16 @@ const Theme& DesignSystem::currentTheme() const
 	return m_currentTheme;
 }
 
+const Theme& DesignSystem::lightTheme() const
+{
+	return m_lightTheme;
+}
+
+const Theme& DesignSystem::darkTheme() const
+{
+	return m_darkTheme;
+}
+
 QColor DesignSystem::primaryColor() const
 {
 	return m_currentTheme.primaryColor;

@@ -2,6 +2,7 @@
 
 #include <QPainterPath>
 #include <QTextDocument>
+#include <QAbstractTextDocumentLayout>
 
 #include "DesignSystem.h"
 
@@ -11,19 +12,28 @@ AntTooltip::AntTooltip(QString text, ArrowDir dir, QWidget* parent)
 	setAttribute(Qt::WA_TranslucentBackground);
 	setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
 
-	// 设置更小的字体
+	// 设置字体
 	QFont font;
-	font.setPointSize(9);  // 缩小字体大小
+	font.setPointSize(9);
 	m_font = font;
-	QFontMetrics metrics(m_font);
 
-	// 使用 QTextDocument 计算文本尺寸
+	// 重新计算尺寸
+	updateSize();
+}
+
+AntTooltip::~AntTooltip()
+{
+}
+
+void AntTooltip::updateSize()
+{
 	QTextDocument doc;
 	doc.setDefaultFont(m_font);
 	doc.setPlainText(m_text);
+	doc.setDocumentMargin(0);  // 清除文档边距
 
-	// 设置文本宽度，-1表示不限制（计算单行宽度）
-	doc.setTextWidth(-1);
+	// 设置文本宽度
+	doc.setTextWidth(-1);  // 先不限制宽度，计算理想宽度
 	qreal idealWidth = doc.idealWidth();
 
 	// 限制最大宽度为300像素
@@ -31,25 +41,34 @@ AntTooltip::AntTooltip(QString text, ArrowDir dir, QWidget* parent)
 	if (idealWidth > maxTextWidth) {
 		doc.setTextWidth(maxTextWidth);
 	}
+	else {
+		// 如果是单行文本，使用理想宽度
+		doc.setTextWidth(idealWidth);
+	}
 
-	// 获取文档大小
-	QSizeF docSize = doc.size();
+	// 获取文档大小（这是准确的多行文本尺寸）
+	QSizeF docSize = doc.documentLayout()->documentSize();
 
-	// 内边距
-	const int Padding = 10;
-	int paddedTextWidth = qCeil(docSize.width()) + Padding * 2;
-	int paddedTextHeight = qCeil(docSize.height()) + Padding * 2;
+	// 计算内边距
+	int padding = 8;  // 文本内边距
+	int totalHorizontalPadding = (margin + padding) * 2;
+	int totalVerticalPadding = (margin + padding) * 2;
+
+	// 计算控件大小
+	int width = qCeil(docSize.width()) + totalHorizontalPadding;
+	int height = qCeil(docSize.height()) + totalVerticalPadding;
 
 	// 最小尺寸
-	if (paddedTextWidth < 80) paddedTextWidth = 80;
-	if (paddedTextHeight < 40) paddedTextHeight = 40;
+	const int minWidth = 80;
+	const int minHeight = 40;
+	if (width < minWidth) width = minWidth;
+	if (height < minHeight) height = minHeight;
 
 	// 设置控件尺寸
-	resize(paddedTextWidth, paddedTextHeight);
-}
+	resize(width, height);
 
-AntTooltip::~AntTooltip()
-{
+	// 发出尺寸变化信号
+	emit resized(width, height);
 }
 
 QPoint AntTooltip::arrowTipOffset() const
@@ -102,15 +121,16 @@ void AntTooltip::paintEvent(QPaintEvent*)
 	p.setFont(m_font);
 	p.setPen(DesignSystem::instance()->currentTheme().toolTipTextColor);
 
-	// 计算文本区域（在 rectBubble 内部减去 margin）
+	// 计算文本区域（在 rectBubble 内部减去 margin 和 padding）
 	int padding = 8;  // 内边距
-	QRect textRect = rectBubble.adjusted(margin + padding, margin + padding, -margin - padding, -margin - padding);
+	QRect textRect = rectBubble.adjusted(margin + padding, margin + padding,
+		-margin - padding, -margin - padding);
 
-	// 使用QTextOption确保文本居中
+	// 简单方法：使用QPainter的drawText，配合QTextOption实现自动换行
 	QTextOption textOption;
-	textOption.setAlignment(Qt::AlignCenter);
 	textOption.setWrapMode(QTextOption::WordWrap);
+	textOption.setAlignment(Qt::AlignCenter);  // 如果你想要文本居中
 
-	// 绘制文本，支持自动换行并居中
+	// 绘制文本
 	p.drawText(textRect, m_text, textOption);
 }

@@ -43,28 +43,55 @@ AntTooltipViewController::AntTooltipViewController(QString text, AntTooltip::Arr
 	groupAnim->addAnimation(scaleAnim);
 	groupAnim->addAnimation(opacityAnim);
 
+	connect(tooltip, &AntTooltip::resized, this, [this](int width, int height) {
+		setFixedSize(width, height);
+		setSceneRect(QRectF(0, 0, width, height));
+		proxy->setGeometry(QRectF(0, 0, width, height));
+		updateTransformOrigin();
+		});
+
 	// 信号槽
 	connect(groupAnim, &QParallelAnimationGroup::finished, this, [this]()
 		{
 			if (isHide)
 			{
 				hide();
+				emit hidden();
 			}
 		});
 }
 
 AntTooltipViewController::~AntTooltipViewController()
 {
+	// 停止所有动画
+	if (groupAnim) {
+		groupAnim->stop();
+	}
+
+	// 清理场景和代理
+	if (scene) {
+		scene->clear();
+		delete scene;
+	}
 }
 
 void AntTooltipViewController::showAnimated(QPoint globalPos)
 {
 	isHide = false;
 
+	// 如果正在隐藏，停止动画
+	if (groupAnim && groupAnim->state() == QAbstractAnimation::Running) {
+		groupAnim->stop();
+	}
+
 	// 设置视图场景尺寸
 	proxy->update();
 	show();
 	move(globalPos.x(), globalPos.y());
+
+	// 确保在显示前重置缩放和透明度
+	proxy->setScale(0.8);
+	proxy->setOpacity(0.0);
 
 	groupAnim->stop();
 	groupAnim->setDirection(QAbstractAnimation::Forward);

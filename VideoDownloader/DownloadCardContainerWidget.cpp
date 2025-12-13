@@ -170,9 +170,9 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 		}
 		else
 		{
+			card->disconnect(); // 断开连接
 			// 隐藏多余的卡片
 			card->setVisible(false);
-			card->disconnect(); // 断开连接
 		}
 	}
 
@@ -183,7 +183,8 @@ void DownloadCardContainerWidget::clearCurrentCards()
 {
 	BENCHMARKING_FUNCTION();
 	// 断开所有连接并隐藏卡片
-	for (auto card : m_precreatedCards) {
+	for (auto card : m_precreatedCards)
+	{
 		card->disconnect();
 		card->setVisible(false);
 	}
@@ -249,12 +250,13 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
+			card->disconnect();
+
 			m_downloadTasks.remove(taskInfo->taskId);
 			m_downloadCards.remove(taskInfo->taskId);
 
 			// 隐藏卡片
 			card->setVisible(false);
-			card->disconnect();
 
 			// 更新分页器总页数
 			int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
@@ -301,6 +303,9 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
+
+			card->disconnect();
+
 			auto downloadEngine = m_downloadEngine.get();
 			QMetaObject::invokeMethod(downloadEngine, [this, downloadEngine, taskInfo]() {
 				downloadEngine->cancelDownload(taskInfo->taskId);
@@ -311,7 +316,6 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 			// 隐藏卡片
 			card->setVisible(false);
-			card->disconnect();
 
 			// 更新分页和显示
 			updateCurrentPageCards();
@@ -350,12 +354,13 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
+			card->disconnect();
+
 			m_downloadTasks.remove(taskInfo->taskId);
 			m_downloadCards.remove(taskInfo->taskId);
 
 			// 隐藏卡片
 			card->setVisible(false);
-			card->disconnect();
 
 			// 更新分页和显示
 			updateCurrentPageCards();

@@ -16,11 +16,12 @@ public:
 	};
 	AntTooltip(QString text, ArrowDir dir, QWidget* parent);
 	~AntTooltip();
+	void updateSize();
 	QPoint arrowTipOffset() const;
 	void setText(QString text)
 	{
 		m_text = text;
-		update();
+		updateSize();
 	}
 	ArrowDir getArrowDirection() const { return m_arrowDirection; }
 protected:

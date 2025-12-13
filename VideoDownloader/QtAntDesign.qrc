@@ -69,20 +69,13 @@
         <file>Imgs/github.png</file>
         <file>Imgs/goTo.svg</file>
         <file>Imgs/play.png</file>
-        <file>Svgs/chat.svg</file>
-        <file>Svgs/check2.svg</file>
-        <file>Svgs/check-circle.svg</file>
-        <file>Svgs/check-circle-fill.svg</file>
-        <file>Svgs/copy.svg</file>
-        <file>Svgs/database.svg</file>
-        <file>Svgs/database-gear.svg</file>
+        <file>Imgs/download-squar.svg</file>
+        <file>Imgs/download-squar-active.svg</file>
+        <file>Imgs/download-squar-dark.svg</file>
+        <file>Imgs/download-squar-dark-active.svg</file>
         <file>Svgs/delete.svg</file>
         <file>Svgs/download.svg</file>
-        <file>Svgs/exclamation-circle.svg</file>
-        <file>Svgs/exclamation-circle-fill.svg</file>
         <file>Svgs/exit.svg</file>
-        <file>Svgs/files.svg</file>
-        <file>Svgs/floppy.svg</file>
         <file>Svgs/folder2.svg</file>
         <file>Svgs/fullscreen.svg</file>
         <file>Svgs/fullscreen-exit.svg</file>
@@ -90,29 +83,11 @@
         <file>Svgs/globe.svg</file>
         <file>Svgs/info-circle.svg</file>
         <file>Svgs/link-45deg.svg</file>
-        <file>Svgs/list.svg</file>
-        <file>Svgs/mic.svg</file>
-        <file>Svgs/mic-fill.svg</file>
-        <file>Svgs/mic-mute.svg</file>
-        <file>Svgs/mic-mute-fill.svg</file>
-        <file>Svgs/opencollective.svg</file>
         <file>Svgs/pause-circle.svg</file>
+        <file>Svgs/play_music.svg</file>
         <file>Svgs/play-circle.svg</file>
-        <file>Svgs/puzzle.svg</file>
-        <file>Svgs/puzzle-fill.svg</file>
-        <file>Svgs/qr-code.svg</file>
-        <file>Svgs/qr-code-scan.svg</file>
-        <file>Svgs/telephone.svg</file>
-        <file>Svgs/three-dots.svg</file>
-        <file>Svgs/three-dots-vertical.svg</file>
         <file>Svgs/trash.svg</file>
-        <file>Svgs/unity.svg</file>
-        <file>Svgs/volume-mute-fill.svg</file>
-        <file>Svgs/x-circle.svg</file>
         <file>Svgs/x.svg</file>
-        <file>Imgs/download-squar.svg</file>
-        <file>Imgs/download-squar-active.svg</file>
-        <file>Imgs/download-squar-dark.svg</file>
-        <file>Imgs/download-squar-dark-active.svg</file>
+        <file>Svgs/x-circle.svg</file>
     </qresource>
 </RCC>

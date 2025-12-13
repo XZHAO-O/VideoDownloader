@@ -111,7 +111,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 			// 设置Pixmap大小
 			QSize defaultSize = renderer.defaultSize();
 			if (!defaultSize.isValid()) {
-				defaultSize = QSize(64, 64); // 默认大小
+				defaultSize = QSize(32, 32); // 默认大小
 			}
 
 			QPixmap pixmap(defaultSize);
@@ -139,18 +139,16 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 			std::array<QPixmap, 4> pixmaps;
 
 			// Light普通
-			ds->setThemeMode(DesignSystem::Light);
-			pixmaps[0] = renderSvgWithColor(svgPath, ds->currentTheme().secondaryTextColor.lighter());
+			pixmaps[0] = renderSvgWithColor(svgPath, ds->lightTheme().secondaryTextColor.lighter());
 
 			// Light激活
-			pixmaps[1] = renderSvgWithColor(svgPath, ds->primaryColor());
+			pixmaps[1] = renderSvgWithColor(svgPath, ds->lightTheme().primaryColor);
 
 			// Dark普通
-			ds->setThemeMode(DesignSystem::Dark);
-			pixmaps[2] = renderSvgWithColor(svgPath, ds->currentTheme().secondaryTextColor);
+			pixmaps[2] = renderSvgWithColor(svgPath, ds->darkTheme().secondaryTextColor);
 
 			// Dark激活
-			pixmaps[3] = renderSvgWithColor(svgPath, ds->primaryColor());
+			pixmaps[3] = renderSvgWithColor(svgPath, ds->darkTheme().primaryColor);
 
 			// 将文件名作为键，pixmap数组作为值插入QHash
 			ds->cacheSvgIcon(fileName, pixmaps);
