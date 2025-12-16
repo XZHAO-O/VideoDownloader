@@ -45,6 +45,7 @@ public:
 	void updateFileSizes(qint64 videoSize, qint64 audioSize);
 	void updateTimeInfo(const QString& timeInfo);
 	void updatePublisher(const QString& publisher);
+	void updatePauseButton(DownloadStatus downloadStatus);
 
 	// 设置质量选项
 	void setVideoQualityOptions(const QStringList& qualities);

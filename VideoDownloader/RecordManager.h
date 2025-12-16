@@ -1,10 +1,20 @@
 #pragma once
 
-#include "DownloadRecord.h"
+#include "DownloadRecordService.h"
+#include "DownloadVideoCoverService.h"
 
 class RecordManager
 {
 public:
+	RecordManager();
+	~RecordManager();
+
+	bool insertRecord(const DownloadTaskInfo& taskInfo);
+
+	QSharedPointer<DownloadTaskInfo> getDownloadTaskInfo(const DownloadTaskInfo& taskInfo);
+
+	QByteArray getVideoCover(const QString& videoId);
+
 	// 查找重复记录（基于视频ID）
 	QList<QList<DownloadRecord>> findDuplicateRecords();
 

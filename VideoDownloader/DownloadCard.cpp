@@ -60,7 +60,7 @@ void DownloadCard::updateFromTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 	switch (m_currentState) {
 	case DownloadCardState::Pending:
 		updateTimeInfo(QString("%1 · %2")
-			.arg(StringUtil::formatDateTime(QDateTime::fromSecsSinceEpoch(taskInfo->videoInfo.publishTime.toLongLong())))
+			.arg(taskInfo->videoInfo.publishTime)
 			.arg(taskInfo->videoInfo.duration));
 		updatePublisher(taskInfo->videoInfo.author);
 
@@ -71,6 +71,7 @@ void DownloadCard::updateFromTaskInfo(QSharedPointer<DownloadTaskInfo> taskInfo)
 
 	case DownloadCardState::Downloading:
 		updateProgress(taskInfo->progressInfo);
+		updatePauseButton(taskInfo->status);
 		break;
 
 	case DownloadCardState::Downloaded:
@@ -163,6 +164,18 @@ void DownloadCard::updatePublisher(const QString& publisher)
 {
 	if (m_publisherLabel) {
 		m_publisherLabel->setText(publisher);
+	}
+}
+
+void DownloadCard::updatePauseButton(DownloadStatus downloadStatus)
+{
+	if (downloadStatus == DownloadStatus::Paused || downloadStatus == DownloadStatus::Failed)
+	{
+		m_pauseBtn_downloading->setActive(false);
+	}
+	else
+	{
+		m_pauseBtn_downloading->setActive(true);
 	}
 }
 

@@ -669,6 +669,7 @@ QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject
 	}
 
 	// 创建VideoInfo对象
+	videoInfoList.reserve(itemCount);
 	for (int i = 0; i < itemCount; ++i)
 	{
 		VideoInfo info;

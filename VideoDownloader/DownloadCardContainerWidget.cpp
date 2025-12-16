@@ -177,6 +177,7 @@ void DownloadCardContainerWidget::updateCurrentPageCards()
 	}
 
 	updateVisibility();
+	update();
 }
 
 void DownloadCardContainerWidget::clearCurrentCards()
