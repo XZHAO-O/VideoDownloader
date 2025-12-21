@@ -13,6 +13,7 @@
 #include "Instrumentor.h"
 #include "AntMessageManager.h"
 #include "CancelManager.h"
+#include "MaterialSpinner.h"
 
 DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationController, QWidget* parent)
 	: QWidget(parent)
@@ -153,12 +154,15 @@ DownloadPage::DownloadPage(QSharedPointer<ApplicationController> applicationCont
 	DownloadCard* downloadCard5 = new DownloadCard(cardState, this);
 	downloadCard5->updateFromTaskInfo(pendingTask2);
 
+	MaterialSpinner* spinner = new MaterialSpinner(QSize(40, 40), 4, DesignSystem::instance()->primaryColor(), this);
+
 	// 添加到布局中
 	row8Layout->addWidget(downloadCard1);
 	row8Layout->addWidget(downloadCard2);
 	row8Layout->addWidget(downloadCard3);
 	row8Layout->addWidget(downloadCard4);
 	row8Layout->addWidget(downloadCard5);
+	row8Layout->addWidget(spinner);
 
 	// 添加到页面布局
 	pageLay->addLayout(row8Layout);
