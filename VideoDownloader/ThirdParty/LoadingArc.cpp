@@ -1,66 +1,102 @@
 ﻿#include "LoadingArc.h"
+
 #include <QPainter>
+#include <QTimer>
+#include <QResizeEvent>
 #include "DesignSystem.h"
 
 LoadingArc::LoadingArc(QWidget* parent)
-	: QWidget(parent), arcColor(DesignSystem::instance()->primaryColor())
+	: QWidget(parent)
+	, m_arcColor(DesignSystem::instance()->primaryColor())
 {
 	setAttribute(Qt::WA_TranslucentBackground);
 	setAttribute(Qt::WA_TransparentForMouseEvents);
+	setAttribute(Qt::WA_OpaquePaintEvent, false);
+	setAutoFillBackground(false);
+	setFixedSize(38, 38);
 
-	m_animation = new QPropertyAnimation(this, "rotationAngle");
-	m_animation->setStartValue(0);
-	m_animation->setEndValue(360);
-	m_animation->setDuration(1500); // 1.5秒一圈
-	m_animation->setLoopCount(-1);  // 无限循环
+	m_timer = new QTimer(this);
+	m_timer->setTimerType(Qt::PreciseTimer);
+	m_timer->setInterval(50);  // 每帧间隔（毫秒），可调
 
-	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]()
-		{
-			arcColor = DesignSystem::instance()->primaryColor();
-			update();
+	connect(m_timer, &QTimer::timeout, this, &LoadingArc::updateArc, Qt::DirectConnection);
+
+	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]() {
+		m_arcColor = DesignSystem::instance()->primaryColor();
+		m_needUpdatePen = true;
+		update();
 		});
+
+	updateCachedObjects();
+}
+
+LoadingArc::~LoadingArc() {
+	stop();
 }
 
 void LoadingArc::start() {
-	if (m_animation && m_animation->state() != QAbstractAnimation::Running) {
-		m_animation->start();
+	if (m_timer && !m_timer->isActive()) {
+		m_currentFrame = 0;
+		m_timer->start();
 	}
 }
 
 void LoadingArc::stop() {
-	if (m_animation) {
-		m_animation->stop();
-		m_rotationAngle = 0;
-		update();
+	if (m_timer) {
+		m_timer->stop();
 	}
-}
-
-void LoadingArc::setRotationAngle(qreal angle) {
-	m_rotationAngle = angle;
+	m_currentFrame = 0;
 	update();
 }
 
-void LoadingArc::paintEvent(QPaintEvent*) {
-	QPainter p(this);
-	p.setRenderHint(QPainter::Antialiasing);
+void LoadingArc::setUpdateInterval(int ms) {
+	if (m_timer) {
+		m_timer->setInterval(ms);
+	}
+}
 
-	int w = width();
-	int h = height();
-	int size = qMin(w, h);
-	int thickness = size / 8;
+void LoadingArc::resizeEvent(QResizeEvent* event) {
+	QWidget::resizeEvent(event);
+	updateCachedObjects();
+}
 
-	QRectF rect((w - size) / 2 + thickness / 2, (h - size) / 2 + thickness / 2,
-		size - thickness, size - thickness);
+void LoadingArc::updateCachedObjects() {
+	const int size = qMin(width(), height());
+	m_cachedThickness = qMax(size / 8, 2);
 
-	p.translate(rect.center());
-	p.rotate(m_rotationAngle);
-	p.translate(-rect.center());
+	const qreal halfThickness = m_cachedThickness / 2.0;
+	m_cachedRect = QRectF(
+		halfThickness,
+		halfThickness,
+		size - m_cachedThickness,
+		size - m_cachedThickness
+	);
 
-	QPen pen(arcColor);
-	pen.setWidth(thickness);
-	pen.setCapStyle(Qt::RoundCap);
-	p.setPen(pen);
+	m_needUpdatePen = true;
+}
 
-	// 画一个固定角度的圆弧（比如90度）
-	p.drawArc(rect, 0, -90 * 16);  // Qt arc 单位是1/16°
+void LoadingArc::updateArc() {
+	m_currentFrame = (m_currentFrame + 1) % m_totalFrames;
+	repaint();
+}
+
+void LoadingArc::paintEvent(QPaintEvent* event) {
+	Q_UNUSED(event);
+
+	if (m_needUpdatePen) {
+		m_cachedPen = QPen(m_arcColor);
+		m_cachedPen.setWidth(m_cachedThickness);
+		m_cachedPen.setCapStyle(Qt::RoundCap);
+		m_needUpdatePen = false;
+	}
+
+	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter.setPen(m_cachedPen);
+
+	// 计算当前帧的起始角度
+	int startAngle = (m_currentFrame * m_angleStep) * 16;
+	int angleSpan = 120 * 16;  // 圆弧跨度，可调
+
+	painter.drawArc(m_cachedRect, startAngle, angleSpan);
 }

@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QToolButton>
 
+class SvgButton;
+
 class NotificationWidget : public QWidget
 {
 	Q_OBJECT
@@ -26,5 +28,5 @@ private:
 	QString m_text;
 	QLabel* m_descLab;
 	QWidget* bg;
-	QToolButton* closeBtn;
+	SvgButton* m_closeBtn;
 };

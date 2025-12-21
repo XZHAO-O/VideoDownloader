@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-	const QString serverName = "VideoDownloader_XZHAO_O";
+	const QString serverName = "VideoDownloader_Ver1.0.0";
 	AppInstanceManager appInstanceManager;
 	if (appInstanceManager.isAnotherInstanceRunning(serverName))
 		return 0;

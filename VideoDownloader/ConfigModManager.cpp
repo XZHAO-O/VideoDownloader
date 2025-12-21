@@ -257,6 +257,7 @@ bool ConfigModManager::disableMod(const QString& modId)
 	return true;
 }
 
+//刷新有问题，可能是没有断开连接，在模组更新时会点击一次弹出任务数加2
 bool ConfigModManager::refreshMod(const QString& modId)
 {
 	if (!m_mods.contains(modId)) {

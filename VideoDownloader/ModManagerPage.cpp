@@ -197,12 +197,12 @@ void ModManagerPage::onUpdateClicked()
 
 	// TODO: 实现模组更新逻辑
 	// 这里可以添加实际的模组更新代码
-	if (m_modManager->refreshMod(modId)) {
+	/*if (m_modManager->refreshMod(modId)) {
 		NotificationManager::instance()->showNotification("模组更新成功: " + senderWidget->model()->name());
 	}
 	else {
 		NotificationManager::instance()->showNotification("模组更新失败");
-	}
+	}*/
 }
 
 void ModManagerPage::onUninstallClicked()

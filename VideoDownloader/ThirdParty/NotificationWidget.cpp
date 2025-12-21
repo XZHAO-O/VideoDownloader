@@ -9,6 +9,7 @@
 #include "AntButton.h"
 #include "LoadingArc.h"
 #include "DesignSystem.h"
+#include "SvgButton.h"
 
 int NotificationWidget::taskCount = 0;
 
@@ -42,14 +43,13 @@ NotificationWidget::NotificationWidget(const QString& title, QSize size, QWidget
 	font.setBold(true);
 	// 标题
 	QHBoxLayout* titleLay = new QHBoxLayout();
-	closeBtn = new QToolButton(bg);
-	closeBtn->setIcon(QIcon(":/Imgs/Shut down-2.svg"));
-	closeBtn->setStyleSheet(StyleSheet::toolBtnQss());
+	m_closeBtn = new SvgButton("x", this);
+	m_closeBtn->setIconSize(SvgButton::Medium);
 	QLabel* titleLab = new QLabel(title, bg);
 	titleLab->setFont(font);
 	titleLay->addWidget(titleLab);
 	titleLay->addStretch();
-	titleLay->addWidget(closeBtn);
+	titleLay->addWidget(m_closeBtn);
 
 	// 内容描述
 	m_text = QString("当前有%1个任务正在后台执行中").arg(QString::number(taskCount));
@@ -82,7 +82,7 @@ NotificationWidget::NotificationWidget(const QString& title, QSize size, QWidget
 			emit exitAnim();
 		});
 
-	connect(closeBtn, &QToolButton::clicked, this, [this]()
+	connect(m_closeBtn, &QToolButton::clicked, this, [this]()
 		{
 			emit exitAnim();
 		});
@@ -90,7 +90,6 @@ NotificationWidget::NotificationWidget(const QString& title, QSize size, QWidget
 	connect(DesignSystem::instance(), &DesignSystem::themeChanged, this, [this]()
 		{
 			bg->setStyleSheet(StyleSheet::notificationQss(DesignSystem::instance()->currentTheme().notifBgColor));
-			closeBtn->setStyleSheet(StyleSheet::toolBtnQss());
 		});
 }
 
