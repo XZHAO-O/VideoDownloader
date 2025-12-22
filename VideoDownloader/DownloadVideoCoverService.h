@@ -1,8 +1,5 @@
 #pragma once
 
-#include <QObject>
-#include <QSharedPointer>
-
 #include "DownloadVideoCover.h"
 
 class DatabaseManager;
@@ -12,13 +9,10 @@ class DownloadTaskInfo;
 
 typedef DownloadTaskInfo DownloadVideoCoverReq;
 
-class DownloadVideoCoverService : public QObject
+class DownloadVideoCoverService
 {
-	Q_OBJECT
-
 public:
-	explicit DownloadVideoCoverService(QSharedPointer<DatabaseManager> dbManager,
-		QObject* parent = nullptr);
+	explicit DownloadVideoCoverService(QSharedPointer<DatabaseManager> dbManager);
 	~DownloadVideoCoverService();
 
 	DownloadVideoCover generateFromReq(const DownloadVideoCoverReq& req);
@@ -38,5 +32,5 @@ public:
 	bool exportToJson(const QString& filePath) const;
 
 private:
-	QSharedPointer<DownloadVideoCoverDAO> m_dao;
+	DownloadVideoCoverDAO* m_dao;
 };

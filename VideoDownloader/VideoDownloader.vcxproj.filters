@@ -750,12 +750,6 @@
     <QtMoc Include="DatabaseManager.h">
       <Filter>database</Filter>
     </QtMoc>
-    <QtMoc Include="DownloadRecordService.h">
-      <Filter>database\service</Filter>
-    </QtMoc>
-    <QtMoc Include="DownloadVideoCoverService.h">
-      <Filter>database\service</Filter>
-    </QtMoc>
     <QtMoc Include="SvgButton.h">
       <Filter>Ui\Components</Filter>
     </QtMoc>
@@ -820,6 +814,12 @@
     </ClInclude>
     <ClInclude Include="DownloadVideoCover.h">
       <Filter>database\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadRecordService.h">
+      <Filter>database\service</Filter>
+    </ClInclude>
+    <ClInclude Include="DownloadVideoCoverService.h">
+      <Filter>database\service</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

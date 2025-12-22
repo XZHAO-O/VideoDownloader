@@ -9,15 +9,14 @@
 #include "DownloadRecordDAO.h"
 #include "DownloadTaskInfo.h"
 
-DownloadRecordService::DownloadRecordService(QSharedPointer<DatabaseManager> dbManager,
-	QObject* parent)
-	: QObject(parent)
-	, m_dao(QSharedPointer<DownloadRecordDAO>::create(dbManager))
+DownloadRecordService::DownloadRecordService(QSharedPointer<DatabaseManager> dbManager)
+	: m_dao(new DownloadRecordDAO(dbManager))
 {
 }
 
 DownloadRecordService::~DownloadRecordService()
 {
+	delete m_dao;
 }
 
 DownloadRecord DownloadRecordService::generateFromReq(const DownloadRecordReq& req)

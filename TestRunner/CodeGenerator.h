@@ -975,8 +975,6 @@ private:
 		QString classNameLower = toCamelCase(tableDef.className, false);
 
 		out << "#pragma once\n\n";
-		out << "#include <QObject>\n";
-		out << "#include <QSharedPointer>\n\n";
 
 		// 包含DAO头文件
 		out << "#include \"" << tableDef.className << ".h\"\n\n";
@@ -987,12 +985,10 @@ private:
 		out << "class " << tableDef.className << "DAO;\n";
 		out << "class " << tableDef.className << "Req;\n\n";
 
-		out << "class " << tableDef.className << "Service : public QObject\n";
+		out << "class " << tableDef.className << "Service\n";
 		out << "{\n";
-		out << "    Q_OBJECT\n\n";
 		out << "public:\n";
-		out << "    explicit " << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager,\n";
-		out << "        QObject* parent = nullptr);\n";
+		out << "    explicit " << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager);\n";
 		out << "    ~" << tableDef.className << "Service();\n\n";
 
 		// 生成generateFromReq函数
@@ -1016,7 +1012,7 @@ private:
 		out << "    bool exportToJson(const QString& filePath) const;\n\n";
 
 		out << "private:\n";
-		out << "    QSharedPointer<" << tableDef.className << "DAO> m_dao;\n";
+		out << "    " << tableDef.className << "DAO* m_dao;\n";
 		out << "};";
 
 		serviceFile.close();
@@ -1072,16 +1068,15 @@ private:
 		out << "#include \"" << tableDef.className << "Req.h\"\n\n";
 
 		// 构造函数
-		out << tableDef.className << "Service::" << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager,\n";
-		out << "    QObject* parent)\n";
-		out << "    : QObject(parent)\n";
-		out << "    , m_dao(QSharedPointer<" << tableDef.className << "DAO>::create(dbManager))\n";
+		out << tableDef.className << "Service::" << tableDef.className << "Service(QSharedPointer<DatabaseManager> dbManager)\n";
+		out << "    : m_dao(new " << tableDef.className << "DAO(dbManager))\n";
 		out << "{\n";
 		out << "}\n\n";
 
 		// 析构函数
 		out << tableDef.className << "Service::~" << tableDef.className << "Service()\n";
 		out << "{\n";
+		out << "    delete m_dao;\n";
 		out << "}\n\n";
 
 		// generateFromReq函数 - 实体类和Req类字段相同，直接赋值

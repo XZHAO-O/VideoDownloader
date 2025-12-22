@@ -9,15 +9,14 @@
 #include "DownloadVideoCoverDAO.h"
 #include "DownloadTaskInfo.h"
 
-DownloadVideoCoverService::DownloadVideoCoverService(QSharedPointer<DatabaseManager> dbManager,
-	QObject* parent)
-	: QObject(parent)
-	, m_dao(QSharedPointer<DownloadVideoCoverDAO>::create(dbManager))
+DownloadVideoCoverService::DownloadVideoCoverService(QSharedPointer<DatabaseManager> dbManager)
+	: m_dao(new DownloadVideoCoverDAO(dbManager))
 {
 }
 
 DownloadVideoCoverService::~DownloadVideoCoverService()
 {
+	delete m_dao;
 }
 
 DownloadVideoCover DownloadVideoCoverService::generateFromReq(const DownloadVideoCoverReq& req)

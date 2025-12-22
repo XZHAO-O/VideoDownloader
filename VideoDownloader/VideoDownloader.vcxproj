@@ -375,7 +375,7 @@
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
-    <QtMoc Include="DownloadRecordService.h" />
+    <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
     <QtMoc Include="DatabaseManager.h" />
     <QtMoc Include="DownloadEngine.h" />
@@ -388,7 +388,7 @@
     <QtMoc Include="LoginManager.h" />
     <ClInclude Include="DownloadVideoCover.h" />
     <ClInclude Include="DownloadVideoCoverDAO.h" />
-    <QtMoc Include="DownloadVideoCoverService.h" />
+    <ClInclude Include="DownloadVideoCoverService.h" />
     <ClInclude Include="Instrumentor.h" />
     <QtMoc Include="LanguageManager.h" />
     <ClInclude Include="MediaInfo.h" />

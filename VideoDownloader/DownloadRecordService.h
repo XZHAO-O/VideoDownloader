@@ -1,8 +1,5 @@
 #pragma once
 
-#include <QObject>
-#include <QSharedPointer>
-
 #include "DownloadRecord.h"
 
 class DatabaseManager;
@@ -12,13 +9,10 @@ class DownloadTaskInfo;
 
 typedef DownloadTaskInfo DownloadRecordReq;
 
-class DownloadRecordService : public QObject
+class DownloadRecordService
 {
-	Q_OBJECT
-
 public:
-	explicit DownloadRecordService(QSharedPointer<DatabaseManager> dbManager,
-		QObject* parent = nullptr);
+	explicit DownloadRecordService(QSharedPointer<DatabaseManager> dbManager);
 	~DownloadRecordService();
 
 	DownloadRecord generateFromReq(const DownloadRecordReq& req);
@@ -38,5 +32,5 @@ public:
 	bool exportToJson(const QString& filePath) const;
 
 private:
-	QSharedPointer<DownloadRecordDAO> m_dao;
+	DownloadRecordDAO* m_dao;
 };
