@@ -134,6 +134,7 @@ public:
 	QColor borderColor() const;
 	QColor borderColorHover() const;
 	QColor disabledColor() const;
+	QColor dangerColor() const;
 
 	void reserveSvgIcon(int count);
 

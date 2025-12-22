@@ -1,6 +1,7 @@
 #include "AntButton.h"
 
 #include <QPainterPath>
+#include <QFontMetrics>
 
 #include "DesignSystem.h"
 
@@ -12,7 +13,8 @@ AntButton::AntButton(QString btnText, qreal textSize, QWidget* parent)
 	m_pressed(false),
 	m_toolTipEnabled(true),  // 默认启用tooltip
 	m_toolTipText(""),
-	m_toolTipPosition(AntTooltipManager::Position::Top)  // 默认顶部显示
+	m_toolTipPosition(AntTooltipManager::Position::Top),  // 默认顶部显示
+	m_iconSize(16, 16)  // 默认图标大小
 {
 	setCursor(Qt::PointingHandCursor);
 	QFont font;
@@ -93,11 +95,20 @@ void AntButton::setTextColor(const QColor& color)
 	}
 }
 
-void AntButton::setIconScale(qreal scale)
+void AntButton::setIconSize(int width, int height)
 {
-	if (scale > 0 && scale <= 1.0)
+	if (width > 0 && height > 0)
 	{
-		m_scaleFactor = scale;
+		m_iconSize = QSize(width, height);
+		update();
+	}
+}
+
+void AntButton::setIconSize(const QSize& size)
+{
+	if (size.width() > 0 && size.height() > 0)
+	{
+		m_iconSize = size;
 		update();
 	}
 }
@@ -107,6 +118,15 @@ void AntButton::setHoverIconEnabled(bool enabled)
 	if (m_hoverIconEnabled != enabled)
 	{
 		m_hoverIconEnabled = enabled;
+		update();
+	}
+}
+
+void AntButton::setIconTextSpacing(int spacing)
+{
+	if (spacing >= 0 && m_iconTextSpacing != spacing)
+	{
+		m_iconTextSpacing = spacing;
 		update();
 	}
 }
@@ -240,10 +260,13 @@ void AntButton::paintEvent(QPaintEvent* event)
 	painter.setRenderHint(QPainter::SmoothPixmapTransform);
 
 	// 1. 定义按钮矩形区域
-	QRectF buttonRect;
+	QRectF buttonRect = QRectF(m_margin, m_margin,
+		width() - 2 * m_margin,
+		height() - 2 * m_margin);
 
 	// 2. 判断是否设置了图标
 	bool hasIcon = !m_iconKey.isEmpty();
+	bool hasText = !text().isEmpty();
 
 	// 3. 获取当前主题
 	const Theme& theme = DesignSystem::instance()->currentTheme();
@@ -267,143 +290,173 @@ void AntButton::paintEvent(QPaintEvent* event)
 			borderColor = theme.borderColorHover;
 	}
 
-	if (hasIcon)
-	{
-		// 5.1 圆形按钮
-		int diameter = qMin(width(), height());
-		buttonRect = QRectF(m_margin, m_margin, diameter - 2 * m_margin, diameter - 2 * m_margin);
+	// 6. 计算统一的图标和文字颜色
+	QColor iconTextColor = currentTextColor;
 
-		if (m_buttonMode == Filled)
-		{
-			// 填充模式
-			QColor fillColor = currentButtonColor;
-			if (m_pressed)
-				fillColor = fillColor.darker(120);
-			else if (m_hovered)
-				fillColor = fillColor.lighter(110);
-
-			painter.setBrush(fillColor);
-			painter.setPen(Qt::NoPen);
-			painter.drawEllipse(buttonRect);
-		}
-		else // Outlined 模式
-		{
-			// 描边模式：Ant Design 的图标按钮描边模式
-			// 背景保持透明
-			painter.setBrush(Qt::transparent);
-			painter.setPen(QPen(borderColor, m_strokeWidth));
-			painter.drawEllipse(buttonRect);
-		}
-	}
-	else
-	{
-		// 5.2 圆角矩形按钮
-		buttonRect = QRectF(m_margin, m_margin, width() - 2 * m_margin, height() - 2 * m_margin);
-
-		if (m_buttonMode == Filled)
-		{
-			// 填充模式：Ant Design 的主要按钮
-			QColor fillColor = currentButtonColor;
-			if (m_pressed)
-				fillColor = fillColor.darker(120);
-			else if (m_hovered)
-				fillColor = fillColor.lighter(110);
-
-			painter.setBrush(fillColor);
-			painter.setPen(Qt::NoPen);
-			painter.drawRoundedRect(buttonRect, m_radius, m_radius);
-		}
-		else // Outlined 模式
-		{
-			// 描边模式：Ant Design 的默认按钮（取消按钮）
-			// 背景保持透明
-			painter.setBrush(Qt::transparent);
-			painter.setPen(QPen(borderColor, m_strokeWidth));
-			painter.drawRoundedRect(buttonRect, m_radius, m_radius);
-		}
-	}
-
-	// 6. 绘制图标或文字
-	if (hasIcon)
-	{
-		// 获取当前状态下的图标
-		QPixmap iconPixmap = getCurrentIcon();
-		if (!iconPixmap.isNull())
-		{
-			// 计算图标矩形
-			QSizeF iconSize = buttonRect.size() * m_scaleFactor;
-			QRectF iconRect = buttonRect;
-			iconRect.setSize(iconSize);
-			iconRect.moveCenter(buttonRect.center());
-
-			// 绘制图标，保持宽高比
-			QRectF targetRect = iconRect;
-			QRectF sourceRect = iconPixmap.rect();
-
-			qreal scale = qMin(targetRect.width() / sourceRect.width(),
-				targetRect.height() / sourceRect.height());
-
-			QRectF scaledRect;
-			scaledRect.setWidth(sourceRect.width() * scale);
-			scaledRect.setHeight(sourceRect.height() * scale);
-			scaledRect.moveCenter(targetRect.center());
-
-			painter.drawPixmap(scaledRect, iconPixmap, sourceRect);
-		}
-	}
-	else
-	{
-		// 绘制文本
-		QColor textColor = currentTextColor;
-
+	if (m_buttonMode == Outlined) {
 		// 描边模式下，正常状态文字颜色为主题主文字色
-		// 悬停和按下时的文字颜色变化
-		if (m_buttonMode == Outlined) {
-			// 正常状态：使用主题主文字色
-			textColor = currentTextColor;
+		iconTextColor = currentTextColor;
 
-			// 悬停时文字颜色变化
-			if (m_hovered) {
-				// 如果悬停，文字颜色使用主题色
-				textColor = currentButtonColor;
-				// 根据按下状态调整
-				if (m_pressed)
-					textColor = textColor.darker(120);
-				else
-					textColor = textColor.lighter(110);
-			}
-			// 按下状态（但鼠标未悬停，这种情况很少见）
-			else if (m_pressed) {
-				textColor = currentButtonColor.darker(120);
-			}
-		}
-		else {
-			// 填充模式下的文字颜色变化
+		// 悬停时文字颜色变化
+		if (m_hovered) {
+			// 如果悬停，文字颜色使用主题色
+			iconTextColor = currentButtonColor;
+			// 根据按下状态调整
 			if (m_pressed)
-				textColor = textColor.darker(120);
-			else if (m_hovered)
-				textColor = textColor.lighter(110);
+				iconTextColor = iconTextColor.darker(120);
+			else
+				iconTextColor = iconTextColor.lighter(110);
 		}
-
-		painter.setPen(textColor);
-		painter.setFont(font());
-		painter.drawText(buttonRect, Qt::AlignCenter, text());
+		// 按下状态（但鼠标未悬停，这种情况很少见）
+		else if (m_pressed) {
+			iconTextColor = currentButtonColor.darker(120);
+		}
+	}
+	else {
+		// 填充模式下的文字颜色变化
+		iconTextColor = currentTextColor;
+		if (m_pressed)
+			iconTextColor = iconTextColor.darker(120);
+		else if (m_hovered)
+			iconTextColor = iconTextColor.lighter(110);
 	}
 
-	// 7. 如果正在播放波纹动画，绘制涟漪效果（改回最初的样子）
+	// 7. 绘制按钮背景（统一使用圆角矩形）
+	if (m_buttonMode == Filled)
+	{
+		// 填充模式：Ant Design 的主要按钮
+		QColor fillColor = currentButtonColor;
+		if (m_pressed)
+			fillColor = fillColor.darker(120);
+		else if (m_hovered)
+			fillColor = fillColor.lighter(110);
+
+		painter.setBrush(fillColor);
+		painter.setPen(Qt::NoPen);
+		painter.drawRoundedRect(buttonRect, m_radius, m_radius);
+	}
+	else // Outlined 模式
+	{
+		// 描边模式：Ant Design 的默认按钮（取消按钮）
+		// 背景保持透明
+		painter.setBrush(Qt::transparent);
+		painter.setPen(QPen(borderColor, m_strokeWidth));
+		painter.drawRoundedRect(buttonRect, m_radius, m_radius);
+	}
+
+	// 8. 绘制图标和文字
+	if (hasIcon || hasText)
+	{
+		// 计算内容区域大小
+		QSize contentSize = calculateContentSize();
+
+		// 计算内容区域的起始位置（居中）
+		qreal contentX = buttonRect.center().x() - contentSize.width() / 2.0;
+		qreal contentY = buttonRect.center().y() - contentSize.height() / 2.0;
+
+		// 绘制图标（如果有）
+		if (hasIcon)
+		{
+			// 获取当前状态下的图标
+			QPixmap iconPixmap = getCurrentIcon();
+			if (!iconPixmap.isNull())
+			{
+				// 计算图标矩形（使用设置的图标大小）
+				QRectF iconRect(contentX, contentY,
+					m_iconSize.width(), m_iconSize.height());
+
+				// 垂直居中调整
+				if (contentSize.height() > m_iconSize.height())
+				{
+					iconRect.moveTop(contentY + (contentSize.height() - m_iconSize.height()) / 2.0);
+				}
+
+				// 绘制图标，保持宽高比
+				QRectF targetRect = iconRect;
+				QRectF sourceRect = iconPixmap.rect();
+
+				qreal scale = qMin(targetRect.width() / sourceRect.width(),
+					targetRect.height() / sourceRect.height());
+
+				QRectF scaledRect;
+				scaledRect.setWidth(sourceRect.width() * scale);
+				scaledRect.setHeight(sourceRect.height() * scale);
+				scaledRect.moveCenter(targetRect.center());
+
+				// 根据模式决定是否对图标进行着色
+				if (m_buttonMode == Filled) {
+					// Filled模式下：始终使用文字颜色对图标进行着色
+					// 创建一个临时QPixmap并填充图标
+					QPixmap tintedIcon(iconPixmap.size());
+					tintedIcon.fill(Qt::transparent);
+
+					QPainter iconPainter(&tintedIcon);
+					iconPainter.setCompositionMode(QPainter::CompositionMode_Source);
+					iconPainter.drawPixmap(0, 0, iconPixmap);
+					iconPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+					iconPainter.fillRect(tintedIcon.rect(), iconTextColor);
+					iconPainter.end();
+
+					painter.drawPixmap(scaledRect, tintedIcon, sourceRect);
+				}
+				else {
+					// Outlined模式下：根据状态决定是否着色
+					if (m_hovered || m_pressed) {
+						// 在悬停或按下时，使用文字颜色对图标进行着色
+						QPixmap tintedIcon(iconPixmap.size());
+						tintedIcon.fill(Qt::transparent);
+
+						QPainter iconPainter(&tintedIcon);
+						iconPainter.setCompositionMode(QPainter::CompositionMode_Source);
+						iconPainter.drawPixmap(0, 0, iconPixmap);
+						iconPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+						iconPainter.fillRect(tintedIcon.rect(), iconTextColor);
+						iconPainter.end();
+
+						painter.drawPixmap(scaledRect, tintedIcon, sourceRect);
+					}
+					else {
+						// 正常状态：使用图标原始颜色
+						painter.drawPixmap(scaledRect, iconPixmap, sourceRect);
+					}
+				}
+
+				// 更新下一个内容的位置
+				contentX += m_iconSize.width() + m_iconTextSpacing;
+			}
+		}
+
+		// 绘制文字（如果有）
+		if (hasText)
+		{
+			painter.setPen(iconTextColor);
+			painter.setFont(font());
+
+			// 计算文字矩形
+			QFontMetrics fm(font());
+			int textWidth = fm.horizontalAdvance(text());
+			QRectF textRect(contentX, contentY,
+				textWidth, contentSize.height());
+
+			// 垂直居中绘制文字
+			painter.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text());
+		}
+	}
+
+	// 9. 如果正在播放波纹动画，绘制涟漪效果
 	if (!m_ripples.isEmpty())
 	{
-		// 改回最初的样子：统一使用按钮颜色作为涟漪颜色
+		// 统一使用按钮颜色作为涟漪颜色
 		QColor rippleColor = currentButtonColor;
 		painter.setPen(Qt::NoPen);
 
 		for (Ripple* ripple : m_ripples)
 		{
-			// 改回最初的样子：涟漪颜色透明度由ripple->opacity()控制
+			// 涟漪颜色透明度由ripple->opacity()控制
 			rippleColor.setAlphaF(ripple->opacity());
 			painter.setBrush(rippleColor);
 
-			// 7.1 绘制涟漪"环形"路径
+			// 9.1 绘制涟漪"环形"路径
 			int rippleOffset = ripple->offset();
 			QRectF outerRect = buttonRect.adjusted(
 				-rippleOffset, -rippleOffset,
@@ -412,22 +465,16 @@ void AntButton::paintEvent(QPaintEvent* event)
 
 			QRectF innerRect = buttonRect;
 
-			// 7.2 计算外环与内环路径
+			// 9.2 计算外环与内环路径
 			QPainterPath outerPath;
-			if (hasIcon)
-				outerPath.addEllipse(outerRect);
-			else
-				outerPath.addRoundedRect(outerRect, m_radius, m_radius);
+			outerPath.addRoundedRect(outerRect, m_radius, m_radius);
 
 			QPainterPath innerPath;
-			if (hasIcon)
-				innerPath.addEllipse(innerRect);
-			else
-				innerPath.addRoundedRect(innerRect, m_radius, m_radius);
+			innerPath.addRoundedRect(innerRect, m_radius, m_radius);
 
 			QPainterPath ringPath = outerPath.subtracted(innerPath);
 
-			// 7.3 填充涟漪环形路径
+			// 9.3 填充涟漪环形路径
 			painter.drawPath(ringPath);
 		}
 	}
@@ -460,6 +507,35 @@ void AntButton::updateButtonSize()
 {
 	// 注意：AntButton的大小通常由布局控制，这里不设置固定大小
 	// 如果需要固定大小，可以在外部调用setFixedSize
+}
+
+QSize AntButton::calculateContentSize() const
+{
+	bool hasIcon = !m_iconKey.isEmpty();
+	bool hasText = !text().isEmpty();
+
+	int totalWidth = 0;
+	int maxHeight = 0;
+
+	if (hasIcon)
+	{
+		totalWidth += m_iconSize.width();
+		maxHeight = qMax(maxHeight, m_iconSize.height());
+	}
+
+	if (hasText && hasIcon)
+	{
+		totalWidth += m_iconTextSpacing;
+	}
+
+	if (hasText)
+	{
+		QFontMetrics fm(font());
+		totalWidth += fm.horizontalAdvance(text());
+		maxHeight = qMax(maxHeight, fm.height());
+	}
+
+	return QSize(totalWidth, maxHeight);
 }
 
 void AntButton::showCustomTooltip()

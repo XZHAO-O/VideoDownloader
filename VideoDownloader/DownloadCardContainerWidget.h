@@ -5,6 +5,7 @@
 #include "OrderedQHash.h"
 
 class QVBoxLayout;
+class QHBoxLayout;
 class NoDataWidget;
 class AntScrollArea;
 class PaginationWidget;
@@ -12,6 +13,7 @@ class MaterialSpinner;
 class DownloadTaskInfo;
 class DownloadCard;
 class DownloadEngine;
+class AntButton;
 
 // 容器状态枚举
 enum class ContainerState
@@ -61,10 +63,18 @@ public slots:
 	// 分页改变槽函数
 	void onPageChanged(int page);
 
+	void onBatchDownloadClicked();
+	void onBatchDeleteClicked();
+	void onBatchPauseClicked();
+	void onBatchResumeClicked();
+
 private:
 	// 初始化UI
 	void initUI();
 	void updateVisibility();
+
+	// 初始化按钮行
+	void initButtonBar();
 
 	// 根据状态设置卡片连接
 	void setupCardConnections(DownloadCard* card, QSharedPointer<DownloadTaskInfo> taskInfo);
@@ -94,4 +104,12 @@ private:
 
 	// 预创建的卡片列表
 	QList<DownloadCard*> m_precreatedCards;
+
+	// 按钮行
+	QWidget* m_buttonBar;
+	QHBoxLayout* m_buttonLayout;
+	AntButton* m_batchDownloadBtn;
+	AntButton* m_batchDeleteBtn;
+	AntButton* m_batchPauseBtn;
+	AntButton* m_batchResumeBtn;
 };

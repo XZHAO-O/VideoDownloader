@@ -404,7 +404,6 @@
     <QtMoc Include="TrayManager.h" />
     <ClInclude Include="OrderedQHash.h" />
     <ClInclude Include="QueryWrapper.h" />
-    <ClInclude Include="RecordManager.h" />
     <ClInclude Include="StringUtil.h" />
     <QtMoc Include="SvgButton.h" />
     <QtMoc Include="SvgToggleButton.h" />

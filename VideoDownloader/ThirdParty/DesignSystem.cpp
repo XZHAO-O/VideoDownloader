@@ -525,6 +525,11 @@ QColor DesignSystem::disabledColor() const
 	return m_currentTheme.disabledColor;
 }
 
+QColor DesignSystem::dangerColor() const
+{
+	return m_currentTheme.dangerColor;
+}
+
 void DesignSystem::reserveSvgIcon(int count)
 {
 	m_svgIconCache.reserve(count);

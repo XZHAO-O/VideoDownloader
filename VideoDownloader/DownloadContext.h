@@ -290,7 +290,7 @@ private:
 		if (fileSize > 0)
 		{
 			if (fileSize < 50 * StringUtil::MB)
-				totalPart = 5;
+				totalPart = 1;
 			else
 			{
 				if (fileSize < 100 * StringUtil::MB)

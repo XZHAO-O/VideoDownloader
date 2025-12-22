@@ -40,13 +40,18 @@ public:
 	void setTextColor(const QColor& color);
 	QColor textColor() const { return m_textColor; }
 
-	// 设置图标缩放比例
-	void setIconScale(qreal scale);
-	qreal iconScale() const { return m_scaleFactor; }
+	// 设置图标大小（新增函数）
+	void setIconSize(int width, int height);
+	void setIconSize(const QSize& size);
+	QSize iconSize() const { return m_iconSize; }
 
 	// 设置是否启用悬停图标
 	void setHoverIconEnabled(bool enabled);
 	bool isHoverIconEnabled() const { return m_hoverIconEnabled; }
+
+	// 设置图标和文字间距
+	void setIconTextSpacing(int spacing);
+	int iconTextSpacing() const { return m_iconTextSpacing; }
 
 	// 重写setToolTip，保存tooltip文本
 	void setToolTip(const QString& text);
@@ -71,6 +76,9 @@ private:
 
 	// 更新按钮大小
 	void updateButtonSize();
+
+	// 计算内容（图标+文字）的整体大小
+	QSize calculateContentSize() const;
 
 	// 显示tooltip
 	void showCustomTooltip();
@@ -100,7 +108,8 @@ private:
 	// 图标相关
 	QString m_iconKey;  // 图标键值
 	bool m_hoverIconEnabled = true;  // 是否启用悬停图标
-	qreal m_scaleFactor = 0.65;  // 图标缩放比例
+	QSize m_iconSize;  // 图标大小（新增）
+	int m_iconTextSpacing = 8;  // 图标和文字间距（新增）
 
 	// Tooltip相关
 	bool m_toolTipEnabled = true;  // 是否启用自定义tooltip

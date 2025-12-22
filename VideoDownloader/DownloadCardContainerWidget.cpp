@@ -10,6 +10,7 @@
 #include "AntScrollArea.h"
 #include "NoDataWidget.h"
 #include "DesignSystem.h"
+#include "AntButton.h"
 
 #include "DownloadTaskInfo.h"
 #include "DownloadCard.h"
@@ -29,6 +30,12 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 	, m_noDataWidget(nullptr)
 	, m_paginationWidget(nullptr)
 	, m_spinner(nullptr)
+	, m_buttonBar(nullptr)
+	, m_buttonLayout(nullptr)
+	, m_batchDownloadBtn(nullptr)
+	, m_batchDeleteBtn(nullptr)
+	, m_batchPauseBtn(nullptr)
+	, m_batchResumeBtn(nullptr)
 {
 	BENCHMARKING_FUNCTION();
 
@@ -46,10 +53,6 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 		// 连接下载管理器信号
 		connect(m_downloadEngine.get(), &DownloadEngine::downloadProgress, this, &DownloadCardContainerWidget::onDownloadProgress);
 		connect(m_downloadEngine.get(), &DownloadEngine::downloadFinished, this, &DownloadCardContainerWidget::onDownloadCompleted);
-		//connect(m_downloadEngine.get(), &DownloadEngine::downloadFailed, this, &DownloadCardContainerWidget::onDownloadFailed);
-		//connect(m_downloadEngine.get(), &DownloadEngine::downloadPaused, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		//connect(m_downloadManager.get(), &DownloadManager::downloadResumed, this, &DownloadCardContainerWidget::onDownloadStatusChanged);
-		//connect(m_downloadManager.get(), &DownloadManager::downloadStarted, this, &DownloadCardContainerWidget::onDownloadStarted);
 		break;
 	case ContainerState::Downloaded:
 		m_noDataText = tr("暂无已下载任务");
@@ -72,6 +75,14 @@ DownloadCardContainerWidget::~DownloadCardContainerWidget()
 {
 	// 清理所有卡片
 	clearAllCards();
+
+	// 清理按钮
+	delete m_batchDownloadBtn;
+	delete m_batchDeleteBtn;
+	delete m_batchPauseBtn;
+	delete m_batchResumeBtn;
+	delete m_buttonLayout;
+	delete m_buttonBar;
 }
 
 void DownloadCardContainerWidget::initUI()
@@ -80,6 +91,9 @@ void DownloadCardContainerWidget::initUI()
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setContentsMargins(0, 4, 0, 0);
 	m_mainLayout->setSpacing(0);
+
+	// 初始化按钮行
+	initButtonBar();
 
 	// 创建加载指示器
 	m_spinner = new MaterialSpinner(QSize(40, 40), 4, DesignSystem::instance()->primaryColor(), this);
@@ -119,11 +133,83 @@ void DownloadCardContainerWidget::initUI()
 
 	// 连接分页信号
 	connect(m_paginationWidget, &PaginationWidget::currentPageChanged,
-		this, &DownloadCardContainerWidget::onPageChanged);
+		this, &DownloadCardContainerWidget::onPageChanged, Qt::DirectConnection);
 
 	m_mainLayout->addWidget(m_paginationWidget);
 
 	updateVisibility();
+}
+
+void DownloadCardContainerWidget::initButtonBar()
+{
+	// 创建按钮行容器
+	m_buttonBar = new QWidget(this);
+	m_buttonBar->setFixedHeight(50);
+	m_buttonLayout = new QHBoxLayout(m_buttonBar);
+	m_buttonLayout->setContentsMargins(16, 8, 16, 8);
+	m_buttonLayout->setSpacing(12);
+
+	m_batchDeleteBtn = new AntButton(tr("全部删除"), 10, this);
+	m_batchDeleteBtn->setButtonColor(DesignSystem::instance()->dangerColor());
+	m_batchDeleteBtn->setFixedSize(120, 45);
+	m_batchDeleteBtn->setIconKey("trash");
+	connect(m_batchDeleteBtn, &AntButton::clicked, this, &DownloadCardContainerWidget::onBatchDeleteClicked, Qt::DirectConnection);
+
+	// 根据容器状态创建不同的按钮
+	switch (m_containerState)
+	{
+	case ContainerState::DownloadReady:
+		// 批量下载按钮
+		m_batchDownloadBtn = new AntButton(tr("批量下载"), 10, this);
+		m_batchDownloadBtn->setFixedSize(120, 45);
+		m_batchDownloadBtn->setIconKey("download");
+		m_batchDownloadBtn->setToolTip(tr("自定义批量下载任务"));
+		connect(m_batchDownloadBtn, &AntButton::clicked, this, &DownloadCardContainerWidget::onBatchDownloadClicked, Qt::DirectConnection);
+
+		// 全部删除按钮
+		m_batchDeleteBtn->setToolTip(tr("删除当前待下载任务"));
+
+		m_buttonLayout->addWidget(m_batchDownloadBtn);
+		m_buttonLayout->addWidget(m_batchDeleteBtn);
+		break;
+
+	case ContainerState::Downloading:
+		// 全部开始按钮
+		m_batchResumeBtn = new AntButton(tr("全部开始"), 10, this);
+		m_batchResumeBtn->setFixedSize(120, 45);
+		m_batchResumeBtn->setIconKey("play-fill");
+		m_batchResumeBtn->setToolTip(tr("开始当前下载任务"));
+		connect(m_batchResumeBtn, &AntButton::clicked, this, &DownloadCardContainerWidget::onBatchResumeClicked, Qt::DirectConnection);
+
+		// 全部暂停按钮
+		m_batchPauseBtn = new AntButton(tr("全部暂停"), 10, this);
+		m_batchPauseBtn->setFixedSize(120, 45);
+		m_batchPauseBtn->setIconKey("pause-fill");
+		m_batchPauseBtn->setToolTip(tr("暂停当前下载任务"));
+		connect(m_batchPauseBtn, &AntButton::clicked, this, &DownloadCardContainerWidget::onBatchPauseClicked, Qt::DirectConnection);
+
+		// 全部删除按钮
+		m_batchDeleteBtn->setToolTip(tr("删除当前下载任务"));
+
+		m_buttonLayout->addWidget(m_batchResumeBtn);
+		m_buttonLayout->addWidget(m_batchPauseBtn);
+		m_buttonLayout->addWidget(m_batchDeleteBtn);
+		break;
+
+	case ContainerState::Downloaded:
+		// 全部删除按钮
+		m_batchDeleteBtn->setToolTip(tr("删除当前下载记录"));
+
+		m_buttonLayout->addWidget(m_batchDeleteBtn);
+		break;
+	}
+
+	// 添加弹簧，让按钮靠左对齐
+	m_buttonLayout->addStretch();
+
+	// 将按钮行添加到主布局的最上方
+	m_mainLayout->insertWidget(0, m_buttonBar);
+	m_buttonBar->setVisible(false);  // 初始隐藏
 }
 
 void DownloadCardContainerWidget::onPageChanged(int page)
@@ -218,7 +304,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 				taskInfo->selectedVideoQuality = quality;
 				card->setCurrentVideoQuality(quality);
 				card->updateFileSizes(taskInfo->videoStreamInfo[quality].fileSize, taskInfo->audioStreamInfo[taskInfo->selectedAudioQuality].fileSize);
-			});
+			}, Qt::DirectConnection);
 
 		// 音频质量改变
 		connect(card, &DownloadCard::audioQualityChanged,
@@ -226,28 +312,28 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 				taskInfo->selectedAudioQuality = quality;
 				card->setCurrentAudioQuality(quality);
 				card->updateFileSizes(taskInfo->videoStreamInfo[taskInfo->selectedVideoQuality].fileSize, taskInfo->audioStreamInfo[quality].fileSize);
-			});
+			}, Qt::DirectConnection);
 
 		// 下载按钮点击
 		connect(card, &DownloadCard::downloadClicked,
 			this, [this, taskInfo]() {
 				taskInfo->downloadFormat = DownloadFormat::Separated;
 				emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
-			});
+			}, Qt::DirectConnection);
 
 		// 仅下载视频
 		connect(card, &DownloadCard::videoDownloadClicked,
 			this, [this, taskInfo]() {
 				taskInfo->downloadFormat = DownloadFormat::VideoOnly;
 				emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
-			});
+			}, Qt::DirectConnection);
 
 		// 仅下载音频
 		connect(card, &DownloadCard::audioDownloadClicked,
 			this, [this, taskInfo]() {
 				taskInfo->downloadFormat = DownloadFormat::AudioOnly;
 				emit taskStateChanged(taskInfo->taskId, ContainerState::Downloading);
-			});
+			}, Qt::DirectConnection);
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
@@ -273,18 +359,18 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 				// 更新当前页显示
 				updateCurrentPageCards();
 			}
-			});
+			}, Qt::DirectConnection);
 
 		// 打开链接
 		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
 			QDesktopServices::openUrl(taskInfo->videoInfo.url);
-			});
+			}, Qt::DirectConnection);
 
 		// 预览点击
 		connect(card, &DownloadCard::previewClicked, this, [this, taskInfo]() {
 			// 预览逻辑（如果需要容器处理）
 			Q_UNUSED(taskInfo);
-			});
+			}, Qt::DirectConnection);
 		break;
 
 	case ContainerState::Downloading:
@@ -294,13 +380,13 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			QMetaObject::invokeMethod(downloadEngine, [this, downloadEngine, taskInfo]() {
 				downloadEngine->pauseDownload(taskInfo->taskId);
 				}, Qt::QueuedConnection);
-			});
+			}, Qt::DirectConnection);
 
 		// 继续按钮点击
 		connect(card, &DownloadCard::resumeClicked, this, [this, taskInfo]() {
 			// 恢复下载逻辑（如果需要容器处理）
 			Q_UNUSED(taskInfo);
-			});
+			}, Qt::DirectConnection);
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
@@ -323,7 +409,7 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			// 更新分页器总页数
 			int totalPages = qMax(1, (static_cast<int>(m_downloadTasks.size()) + m_pageSize - 1) / m_pageSize);
 			m_paginationWidget->setTotalPages(totalPages);
-			});
+			}, Qt::DirectConnection);
 
 		// 打开文件夹
 		connect(card, &DownloadCard::openFolderClicked, this, [this, taskInfo]() {
@@ -333,12 +419,12 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 				dir.mkpath(".");
 			}
 			QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
-			});
+			}, Qt::DirectConnection);
 
 		// 打开链接
 		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
 			QDesktopServices::openUrl(taskInfo->videoInfo.url);
-			});
+			}, Qt::DirectConnection);
 		break;
 
 	case ContainerState::Downloaded:
@@ -346,12 +432,12 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 		connect(card, &DownloadCard::openFolderClicked, this, [this, taskInfo]() {
 			QFileInfo fileInfo(taskInfo->downloadFilePath);
 			QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absolutePath()));
-			});
+			}, Qt::DirectConnection);
 
 		// 打开链接
 		connect(card, &DownloadCard::openUrlClicked, this, [this, taskInfo]() {
 			QDesktopServices::openUrl(taskInfo->videoInfo.url);
-			});
+			}, Qt::DirectConnection);
 
 		// 删除按钮点击
 		connect(card, &DownloadCard::deleteClicked, this, [this, taskInfo, card]() {
@@ -374,13 +460,13 @@ void DownloadCardContainerWidget::setupCardConnections(DownloadCard* card, QShar
 			{
 				QFile::remove(taskInfo->downloadFilePath);
 			}
-			});
+			}, Qt::DirectConnection);
 
 		// 预览点击
 		connect(card, &DownloadCard::previewClicked, this, [this, taskInfo]() {
 			// 预览逻辑（如果需要容器处理）
 			Q_UNUSED(taskInfo);
-			});
+			}, Qt::DirectConnection);
 		break;
 	}
 }
@@ -426,6 +512,12 @@ void DownloadCardContainerWidget::showLoading()
 		(height() - m_spinner->height()) / 2);
 }
 
+void DownloadCardContainerWidget::hideLoading()
+{
+	BENCHMARKING_FUNCTION();
+	m_spinner->setVisible(false);
+}
+
 // 添加一个批量添加任务的方法，用于优化大量任务添加时的性能
 void DownloadCardContainerWidget::addDownloadCards(QList<QSharedPointer<DownloadTaskInfo>> tasks)
 {
@@ -460,11 +552,13 @@ void DownloadCardContainerWidget::updateVisibility()
 	BENCHMARKING_FUNCTION();
 	if (m_downloadCards.isEmpty())
 	{
+		m_buttonBar->setVisible(false);
 		m_scrollArea->setVisible(false);
 		m_noDataWidget->setVisible(true);
 	}
 	else
 	{
+		m_buttonBar->setVisible(true);
 		m_scrollArea->setVisible(true);
 		m_noDataWidget->setVisible(false);
 	}
@@ -604,4 +698,66 @@ QSharedPointer<DownloadTaskInfo> DownloadCardContainerWidget::getTaskInfo(const 
 	}
 
 	return QSharedPointer<DownloadTaskInfo>::create();
+}
+
+void DownloadCardContainerWidget::onBatchDownloadClicked()
+{
+	if (m_downloadTasks.isEmpty()) return;
+
+	QStringList taskIds;
+	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
+	{
+		taskIds.append(it.key());
+	}
+
+}
+
+void DownloadCardContainerWidget::onBatchDeleteClicked()
+{
+	if (m_downloadTasks.isEmpty()) return;
+
+	QString message;
+
+	switch (m_containerState)
+	{
+	case ContainerState::DownloadReady:
+		message = tr("确定要删除所有待下载任务吗？");
+		break;
+	case ContainerState::Downloading:
+		message = tr("确定要删除所有下载中的任务吗？");
+		break;
+	case ContainerState::Downloaded:
+		message = tr("确定要删除所有已下载任务吗？这将会同时删除本地文件。");
+		break;
+	}
+
+	QStringList taskIds;
+	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
+	{
+		taskIds.append(it.key());
+	}
+}
+
+void DownloadCardContainerWidget::onBatchPauseClicked()
+{
+	if (m_downloadTasks.isEmpty()) return;
+
+	QStringList taskIds;
+	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
+	{
+		taskIds.append(it.key());
+	}
+
+}
+
+void DownloadCardContainerWidget::onBatchResumeClicked()
+{
+	if (m_downloadTasks.isEmpty()) return;
+
+	QStringList taskIds;
+	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
+	{
+		taskIds.append(it.key());
+	}
+
 }

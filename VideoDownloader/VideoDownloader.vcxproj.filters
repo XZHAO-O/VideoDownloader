@@ -821,9 +821,6 @@
     <ClInclude Include="DownloadVideoCover.h">
       <Filter>database\entity</Filter>
     </ClInclude>
-    <ClInclude Include="RecordManager.h">
-      <Filter>database</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="all.sql">

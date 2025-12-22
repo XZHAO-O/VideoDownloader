@@ -89,5 +89,7 @@
         <file>Svgs/trash.svg</file>
         <file>Svgs/x.svg</file>
         <file>Svgs/x-circle.svg</file>
+        <file>Svgs/pause-fill.svg</file>
+        <file>Svgs/play-fill.svg</file>
     </qresource>
 </RCC>
