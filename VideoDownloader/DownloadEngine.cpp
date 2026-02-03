@@ -8,16 +8,12 @@
 
 #include "ConfigManager.h"
 #include "NetworkManager.h"
-#include "DownloadRecordService.h"
-#include "DownloadVideoCoverService.h"
 #include "StringUtil.h"
 
-DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QSharedPointer<DownloadRecordService> downloadRecordService, QSharedPointer<DownloadVideoCoverService> downloadVideoCoverService, QWidget* parent)
+DownloadEngine::DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QWidget* parent)
 	: QWidget(parent)
 	, m_configManager(configManager)
 	, m_networkManager(networkManager)
-	, m_downloadRecordService(downloadRecordService)
-	, m_downloadVideoCoverService(downloadVideoCoverService)
 	, m_maxCurrentDownloads(5)
 	, m_maxThreadsPerDownload(3)
 	, m_maxDownloadSpeed(10)
@@ -38,8 +34,8 @@ DownloadEngine::~DownloadEngine()
 			if (task->isCompleted() && task->downloadFormat != DownloadFormat::Merged)
 			{
 				//保存下载记录
-				m_downloadRecordService->insert(*task);
-				m_downloadVideoCoverService->insert(*task);
+				//m_downloadRecordService->insert(*task);
+				//m_downloadVideoCoverService->insert(*task);
 			}
 			task->pauseDownload(Qt::BlockingQueuedConnection);
 			//保存下载任务
@@ -57,8 +53,7 @@ void DownloadEngine::addDownloadTask(QSharedPointer<DownloadTaskInfo> task)
 
 void DownloadEngine::pauseDownload(const QString& taskId)
 {
-	auto downloadingTask = m_downloadingTasks.find(taskId);
-	if (downloadingTask != m_downloadingTasks.end())
+	if (auto downloadingTask = m_downloadingTasks.find(taskId); downloadingTask != m_downloadingTasks.end())
 	{
 		auto task = *downloadingTask;
 		if (task->status != DownloadStatus::Downloading)
@@ -71,14 +66,14 @@ void DownloadEngine::pauseDownload(const QString& taskId)
 		m_pausedTasks.insert(task->taskId, task);  // 放入暂停队列
 
 		endDownloadContext(task);
+		//todo:????
 		task->save();
 		startDownload();
 	}
 	else
 	{
-		auto queuedTask = m_queuedTasks.find(taskId);
 		// 如果任务在等待队列中，也移到暂停队列
-		if (queuedTask != m_queuedTasks.end())
+		if (auto queuedTask = m_queuedTasks.find(taskId); queuedTask != m_queuedTasks.end())
 		{
 			auto task = queuedTask.value();
 			if (task->status != DownloadStatus::Downloading)
@@ -321,8 +316,8 @@ void DownloadEngine::processCompletedTasks(QSharedPointer<DownloadTaskInfo> task
 	if (task->downloadFormat != DownloadFormat::Merged)
 	{
 		//保存下载记录
-		m_downloadRecordService->insert(*task);
-		m_downloadVideoCoverService->insert(*task);
+		//m_downloadRecordService->insert(*task);
+		//m_downloadVideoCoverService->insert(*task);
 		emit downloadFinished(task->taskId);
 		return;
 	}

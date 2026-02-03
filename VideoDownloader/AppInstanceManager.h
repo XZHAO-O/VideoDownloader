@@ -17,6 +17,8 @@ public:
 	// 向已运行的实例发送消息
 	void sendToServer(const QString& serverName, const QString& message);
 
+	// 待添加函数，启动新程序后像就程序发送消息使其将应用提升到最上层
+
 signals:
 	void messageReceived(const QString& message);
 

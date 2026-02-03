@@ -25,10 +25,10 @@ public:
 
 	// 视频信息获取
 	QList<VideoInfo> getVideoInfo(const QUrl& videoUrl);
-	QFuture<QList<StreamInfo>> getVideoStreams(const QString& videoId, const QString& platformId,
-		const VideoQuality& quality);
-	QFuture<QList<StreamInfo>> getAudioStreams(const QString& videoId, const QString& platformId,
-		const AudioQuality& quality);
+	//QFuture<QList<StreamInfo>> getVideoStreams(const QString& videoId, const QString& platformId,
+		//const VideoQuality& quality);
+	//QFuture<QList<StreamInfo>> getAudioStreams(const QString& videoId, const QString& platformId,
+		//const AudioQuality& quality);
 
 	// 搜索功能
 	//QFuture<SearchResult> searchVideos(const QString& query, const QString& platformId = "",

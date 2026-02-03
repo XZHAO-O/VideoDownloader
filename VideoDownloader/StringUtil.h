@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QUuid>
 #include <QRandomGenerator>
+#include <QDateTime>
 
 class StringUtil
 {

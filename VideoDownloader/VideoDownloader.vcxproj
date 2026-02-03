@@ -121,7 +121,7 @@
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
     <ClCompile Include="CookieManageUtil.cpp" />
-    <ClCompile Include="DatabaseManager.cpp" />
+    <ClCompile Include="DatabaseExecutor.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
@@ -131,7 +131,8 @@
     <ClCompile Include="DownloadVideoCoverService.cpp" />
     <ClCompile Include="LanguageManager.cpp" />
     <ClCompile Include="LoginManager.cpp" />
-    <ClCompile Include="LogSystem.cpp" />
+    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="log_buffer.cpp" />
     <ClCompile Include="ModCardModel.cpp" />
     <ClCompile Include="ModCardWidget.cpp" />
     <ClCompile Include="ModInfo.cpp" />
@@ -377,12 +378,12 @@
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
-    <QtMoc Include="DatabaseManager.h" />
+    <QtMoc Include="DatabaseExecutor.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadContext.h" />
     <ClInclude Include="DownloadRecord.h" />
     <ClInclude Include="DownloadTaskInfo.h" />
-    <QtMoc Include="LogSystem.h" />
+    <QtMoc Include="logger.h" />
     <QtMoc Include="IMediaProcessor.h" />
     <QtMoc Include="NetworkManager.h" />
     <QtMoc Include="LoginManager.h" />
@@ -391,6 +392,8 @@
     <ClInclude Include="DownloadVideoCoverService.h" />
     <ClInclude Include="Instrumentor.h" />
     <QtMoc Include="LanguageManager.h" />
+    <ClInclude Include="log_buffer.h" />
+    <ClInclude Include="log_level.h" />
     <ClInclude Include="MediaInfo.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
     <QtMoc Include="ModCardModel.h" />

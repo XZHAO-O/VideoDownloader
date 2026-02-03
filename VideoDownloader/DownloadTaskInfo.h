@@ -44,7 +44,6 @@ public:
 	DownloadStatus status;
 	DownloadPeriod downloadPeriod;
 	ProgressInfo progressInfo;
-	bool partialDownloadSupport;
 	QString downloadFilePath;
 	QDateTime endTime;
 

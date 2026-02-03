@@ -19,15 +19,13 @@
 #include <thread>
 #include <mutex>
 #include <queue>
-#include <condition_variable>
 #include <atomic>
-#include <memory>
 
 struct ProfileResult
 {
 	std::string Name;
-	long long Start, End;
-	uint32_t ThreadID;
+	long long Start = 0, End = 0;
+	uint32_t ThreadID = 0;
 };
 
 struct InstrumentationSession
@@ -51,7 +49,8 @@ private:
 
 	void WorkerThread()
 	{
-		while (m_Running || !m_Queue.empty()) {
+		while (m_Running || !m_Queue.empty())
+		{
 			ProfileResult result;
 			bool hasWork = false;
 
@@ -61,14 +60,16 @@ private:
 					return !m_Queue.empty() || !m_Running;
 					});
 
-				if (!m_Queue.empty()) {
+				if (!m_Queue.empty())
+				{
 					result = m_Queue.front();
 					m_Queue.pop();
 					hasWork = true;
 				}
 			}
 
-			if (hasWork) {
+			if (hasWork)
+			{
 				WriteProfileToFile(result);
 			}
 		}
@@ -105,7 +106,8 @@ public:
 
 	~Instrumentor()
 	{
-		if (m_Running) {
+		if (m_Running)
+		{
 			EndSession();
 		}
 	}
@@ -113,14 +115,16 @@ public:
 	void BeginSession(const std::string& name, const std::string& filepath = "results.json")
 	{
 		// Stop previous session if any
-		if (m_Running) {
+		if (m_Running)
+		{
 			EndSession();
 		}
 
 		std::lock_guard<std::mutex> lock(m_QueueMutex);
 
 		m_OutputStream.open(filepath);
-		if (!m_OutputStream.is_open()) {
+		if (!m_OutputStream.is_open())
+		{
 			// Handle error - cannot open file
 			return;
 		}
@@ -141,14 +145,16 @@ public:
 		m_Running = false;
 		m_QueueCondition.notify_all();
 
-		if (m_WorkerThread.joinable()) {
+		if (m_WorkerThread.joinable())
+		{
 			m_WorkerThread.join();
 		}
 
 		{
 			std::lock_guard<std::mutex> lock(m_QueueMutex);
 			WriteFooter();
-			if (m_OutputStream.is_open()) {
+			if (m_OutputStream.is_open())
+			{
 				m_OutputStream.close();
 			}
 			delete m_CurrentSession;

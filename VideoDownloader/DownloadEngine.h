@@ -12,15 +12,13 @@
 class QTimer;
 class ConfigManager;
 class NetworkManager;
-class DownloadRecordService;
-class DownloadVideoCoverService;
 
 class DownloadEngine : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QSharedPointer<DownloadRecordService> downloadRecordService, QSharedPointer<DownloadVideoCoverService> downloadVideoCoverService, QWidget* parent = nullptr);
+	explicit DownloadEngine(QSharedPointer<ConfigManager> configManager, QSharedPointer<NetworkManager> networkManager, QWidget* parent = nullptr);
 	~DownloadEngine();
 
 	void addDownloadTask(QSharedPointer<DownloadTaskInfo> task);
@@ -54,8 +52,6 @@ private:
 
 	QSharedPointer<ConfigManager> m_configManager;
 	QSharedPointer<NetworkManager> m_networkManager;
-	QSharedPointer<DownloadRecordService> m_downloadRecordService;
-	QSharedPointer<DownloadVideoCoverService> m_downloadVideoCoverService;
 
 	DownloadThreadPool<DownloadContext*> m_downloadThreadPool;
 	OrderedQHash<const QString, QSharedPointer<DownloadTaskInfo>> m_queuedTasks;    // 等待队列

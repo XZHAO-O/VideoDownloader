@@ -2,7 +2,7 @@
 
 #include <QtConcurrent/QtConcurrent>
 
-#include "LogSystem.h"
+#include "logger.h"
 #include "ConfigManager.h"
 #include "NetworkManager.h"
 #include "DownloadTaskInfo.h"
@@ -73,7 +73,7 @@ QJsonObject ConfigVideoPlatform::fetchVideoInfoApiResponse(const QUrl& url, cons
 {
 	if (url.isEmpty())
 	{
-		LOG_WARN("ConfigVideoPlatform", QString("Empty API URL: %1").arg(url.toString().toUtf8().constData()));
+		LOG_WARN(QString("Empty API URL: %1").arg(url.toString().toUtf8().constData()));
 		return QJsonObject();
 	}
 
@@ -93,14 +93,14 @@ QJsonObject ConfigVideoPlatform::fetchVideoInfoApiResponse(const QUrl& url, cons
 
 	if (!response.success)
 	{
-		LOG_WARN("ConfigVideoPlatform", QString("Failed to get video info for: %1").arg(response.errorString));
+		LOG_WARN(QString("Failed to get video info for: %1").arg(response.errorString));
 		return QJsonObject();
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
 	if (doc.isNull())
 	{
-		LOG_WARN("ConfigVideoPlatform", QString("Invalid JSON response for: %1").arg(url.toString().toUtf8().constData()));
+		LOG_WARN(QString("Invalid JSON response for: %1").arg(url.toString().toUtf8().constData()));
 		return QJsonObject();
 	}
 
@@ -109,14 +109,14 @@ QJsonObject ConfigVideoPlatform::fetchVideoInfoApiResponse(const QUrl& url, cons
 
 QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 {
-	LOG_INFO("ConfigVideoPlatform", QString("Getting video info for: %1").arg(url.toUtf8().constData()));
+	LOG_INFO(QString("Getting video info for: %1").arg(url.toUtf8().constData()));
 
 	QString videoId = extractVideoId(url);
 	QVariantList apiEndpoints = m_modInfo.getConfigValue("apiEndpoints.videoInfo").toList();
 
 	if (apiEndpoints.isEmpty())
 	{
-		LOG_ERROR("ConfigVideoPlatform", QString("Failed to get video info: %1").arg("视频信息API未设置"));
+		LOG_ERROR(QString("Failed to get video info: %1").arg("视频信息API未设置"));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "视频信息API未设置");
 		return {};
 	}
@@ -165,7 +165,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 		int index = parser.value("index", 0).toInt();
 		if (index >= apiEndpoints.size())
 		{
-			LOG_ERROR("ConfigVideoPlatform", QString("API endpoint index %1 out of range").arg(index));
+			LOG_ERROR(QString("API endpoint index %1 out of range").arg(index));
 			return {};
 		}
 		// 如果responseMap中没有这个index的响应，则发送请求
@@ -199,7 +199,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 
 	if (selectedParser.isEmpty())
 	{
-		LOG_ERROR("ConfigVideoPlatform", QString("Failed to get video info: %1").arg("没有找到合适的解析器"));
+		LOG_ERROR(QString("Failed to get video info: %1").arg("没有找到合适的解析器"));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "没有找到合适的解析器");
 		return {};
 	}
@@ -219,7 +219,7 @@ QList<VideoInfo> ConfigVideoPlatform::getVideoInfo(const QString& url)
 				int index = indexIt.value().toInt();
 				if (index >= apiEndpoints.size())
 				{
-					LOG_ERROR("ConfigVideoPlatform", QString("API endpoint index %1 out of range").arg(index));
+					LOG_ERROR(QString("API endpoint index %1 out of range").arg(index));
 					return {};
 				}
 				getResponse(index);
@@ -537,7 +537,7 @@ void ConfigVideoPlatform::parseVideoPlayUrl(QSharedPointer<DownloadTaskInfo> tas
 		task->audioStreamInfo.insert(key, std::move(streamInfo));
 	}
 
-	LOG_INFO("ConfigVideoPlatform", QString("Successfully parsed video URL: %1"));
+	LOG_INFO(QString("Successfully parsed video URL: %1"));
 }
 
 QList<VideoInfo> ConfigVideoPlatform::parseVideoInfo(const QMap<int, QJsonObject>& responseMap, const QVariantMap& parser)

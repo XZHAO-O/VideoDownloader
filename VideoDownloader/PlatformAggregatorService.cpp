@@ -3,7 +3,7 @@
 #include <QtConcurrent\QtConcurrent>
 
 #include "ModInfo.h"
-#include "LogSystem.h"
+#include "logger.h"
 #include "ConfigModManager.h"
 #include "ConfigVideoPlatform.h"
 #include "AntMessageManager.h"
@@ -35,7 +35,7 @@ QList<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 	auto platform = getPlatformForUrl(videoUrl);
 	if (!platform)
 	{
-		LOG_WARN("PlatformAggregator", QString("No platform found for URL: %1").arg(videoUrl.toString()));
+		LOG_WARN(QString("No platform found for URL: %1").arg(videoUrl.toString()));
 		AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, "无法解析视频链接");
 		return QList<VideoInfo>();
 	}
@@ -43,79 +43,45 @@ QList<VideoInfo> PlatformAggregatorService::getVideoInfo(const QUrl& videoUrl)
 	return platform->getVideoInfo(videoUrl.toString());
 }
 
-QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QString& videoId,
-	const QString& platformId,
-	const VideoQuality& quality)
-{
-	return QtConcurrent::run([this, videoId, platformId, quality]() -> QList<StreamInfo> {
-		auto platform = getPlatform(platformId);
-		if (!platform) {
-			LogSystem::instance().error(
-				QString("Platform not found: %1").arg(platformId),
-				"PlatformAggregator");
-			return QList<StreamInfo>();
-		}
+//QFuture<QList<StreamInfo>> PlatformAggregatorService::getVideoStreams(const QString& videoId,
+//	const QString& platformId,
+//	const VideoQuality& quality)
+//{
+//	return QtConcurrent::run([this, videoId, platformId, quality]() -> QList<StreamInfo> {
+//		auto platform = getPlatform(platformId);
+//		if (!platform) {
+//			LOG_ERROR(QString("Platform not found: %1").arg(platformId));
+//			return QList<StreamInfo>();
+//		}
+//
+//		try {
+//			// 创建StreamRequest - 使用正确的结构
+//			StreamRequest request;
+//			request.quality = quality.id;
+//			//request.type = StreamType::Video;
+//
+//			// 需要先获取VideoInfo
+//			VideoInfo videoInfo;
+//			videoInfo.videoId = videoId;
+//			//videoInfo.platformId = platformId;
+//
+//			auto future = platform->getVideoStreams(videoInfo, request);
+//			future.waitForFinished();
+//			return future.result();
+//		}
+//		catch (const std::exception& e) {
+//			LOG_ERROR(QString("Failed to get video streams: %1").arg(e.what()));
+//			return QList<StreamInfo>();
+//		}
+//		});
+//}
 
-		try {
-			// 创建StreamRequest - 使用正确的结构
-			StreamRequest request;
-			request.quality = quality.id;
-			//request.type = StreamType::Video;
-
-			// 需要先获取VideoInfo
-			VideoInfo videoInfo;
-			videoInfo.videoId = videoId;
-			//videoInfo.platformId = platformId;
-
-			auto future = platform->getVideoStreams(videoInfo, request);
-			future.waitForFinished();
-			return future.result();
-		}
-		catch (const std::exception& e) {
-			LogSystem::instance().error(
-				QString("Failed to get video streams: %1").arg(e.what()),
-				"PlatformAggregator");
-			return QList<StreamInfo>();
-		}
-		});
-}
-
-QFuture<QList<StreamInfo>> PlatformAggregatorService::getAudioStreams(const QString& videoId,
-	const QString& platformId,
-	const AudioQuality& quality)
-{
-	return QtConcurrent::run([this, videoId, platformId, quality]() -> QList<StreamInfo> {
-		auto platform = getPlatform(platformId);
-		if (!platform) {
-			LogSystem::instance().error(
-				QString("Platform not found: %1").arg(platformId),
-				"PlatformAggregator");
-			return QList<StreamInfo>();
-		}
-
-		try {
-			// 创建StreamRequest - 使用正确的结构
-			StreamRequest request;
-			request.quality = quality.id;
-			//request.type = StreamType::Audio;
-
-			// 需要先获取VideoInfo
-			VideoInfo videoInfo;
-			videoInfo.videoId = videoId;
-			//videoInfo.platformId = platformId;
-
-			auto future = platform->getAudioStreams(videoInfo, request);
-			future.waitForFinished();
-			return future.result();
-		}
-		catch (const std::exception& e) {
-			LogSystem::instance().error(
-				QString("Failed to get audio streams: %1").arg(e.what()),
-				"PlatformAggregator");
-			return QList<StreamInfo>();
-		}
-		});
-}
+//QFuture<QList<StreamInfo>> PlatformAggregatorService::getAudioStreams(const QString& videoId,
+//	const QString& platformId,
+//	const AudioQuality& quality)
+//{
+//	return QFuture<QList<StreamInfo>>();
+//}
 
 //QFuture<SearchResult> PlatformAggregatorService::searchVideos(const QString& query,
 //	const QString& platformId,

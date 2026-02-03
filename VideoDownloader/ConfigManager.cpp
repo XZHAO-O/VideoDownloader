@@ -72,24 +72,15 @@ void ConfigManager::ensureConfigFileExists()
 			QJsonObject defaultConfig = getDefaultConfig();
 
 			// 下载路径
-			QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-			if (defaultDownloadPath.isEmpty()) {
-				defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-				QDir dir(defaultDownloadPath);
-				if (!dir.exists()) {
-					dir.mkpath(".");
-				}
+			QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+			QDir dir(defaultDownloadPath);
+			if (!dir.exists()) {
+				dir.mkpath(".");
 			}
 			defaultConfig["download/defaultSavePath"] = defaultDownloadPath;
 
 			// 日志路径
-			QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-			if (defaultLogPath.isEmpty()) {
-				defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-			}
-			else {
-				defaultLogPath += "/logs";
-			}
+			QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 			// 确保日志目录存在
 			QDir logDir(defaultLogPath);
 			if (!logDir.exists()) {
@@ -142,25 +133,16 @@ QVariant ConfigManager::getDefaultValue(const QString& key) const
 
 	// 特殊处理路径相关的默认值
 	if (key == "download/defaultSavePath") {
-		QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-		if (defaultDownloadPath.isEmpty()) {
-			defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-			QDir dir(defaultDownloadPath);
-			if (!dir.exists()) {
-				dir.mkpath(".");
-			}
+		QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+		QDir dir(defaultDownloadPath);
+		if (!dir.exists()) {
+			dir.mkpath(".");
 		}
 		return defaultDownloadPath;
 	}
 
 	if (key == "log/path") {
-		QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		if (defaultLogPath.isEmpty()) {
-			defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-		}
-		else {
-			defaultLogPath += "/logs";
-		}
+		QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 		// 确保日志目录存在
 		QDir logDir(defaultLogPath);
 		if (!logDir.exists()) {
@@ -184,21 +166,12 @@ void ConfigManager::save()
 
 	// 确保动态路径配置存在
 	if (!m_config.contains("download/defaultSavePath")) {
-		QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-		if (defaultDownloadPath.isEmpty()) {
-			defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-		}
+		QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
 		m_config.insert("download/defaultSavePath", defaultDownloadPath);
 	}
 
 	if (!m_config.contains("log/path")) {
-		QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		if (defaultLogPath.isEmpty()) {
-			defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-		}
-		else {
-			defaultLogPath += "/logs";
-		}
+		QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 		m_config.insert("log/path", defaultLogPath);
 	}
 
@@ -237,26 +210,17 @@ void ConfigManager::load()
 
 		// 确保动态路径配置存在
 		if (!m_config.contains("download/defaultSavePath")) {
-			QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-			if (defaultDownloadPath.isEmpty()) {
-				defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-				QDir dir(defaultDownloadPath);
-				if (!dir.exists()) {
-					dir.mkpath(".");
-				}
+			QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+			QDir dir(defaultDownloadPath);
+			if (!dir.exists()) {
+				dir.mkpath(".");
 			}
 			m_config.insert("download/defaultSavePath", defaultDownloadPath);
 			configUpdated = true;
 		}
 
 		if (!m_config.contains("log/path")) {
-			QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-			if (defaultLogPath.isEmpty()) {
-				defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-			}
-			else {
-				defaultLogPath += "/logs";
-			}
+			QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 			// 确保日志目录存在
 			QDir logDir(defaultLogPath);
 			if (!logDir.exists()) {
@@ -278,23 +242,14 @@ void ConfigManager::load()
 		m_config = getDefaultConfig();
 
 		// 添加动态路径
-		QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-		if (defaultDownloadPath.isEmpty()) {
-			defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-			QDir dir(defaultDownloadPath);
-			if (!dir.exists()) {
-				dir.mkpath(".");
-			}
+		QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+		QDir dir(defaultDownloadPath);
+		if (!dir.exists()) {
+			dir.mkpath(".");
 		}
 		m_config.insert("download/defaultSavePath", defaultDownloadPath);
 
-		QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		if (defaultLogPath.isEmpty()) {
-			defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-		}
-		else {
-			defaultLogPath += "/logs";
-		}
+		QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 		QDir logDir(defaultLogPath);
 		if (!logDir.exists()) {
 			logDir.mkpath(".");

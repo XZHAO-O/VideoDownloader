@@ -704,11 +704,11 @@ void DownloadCardContainerWidget::onBatchDownloadClicked()
 {
 	if (m_downloadTasks.isEmpty()) return;
 
-	QStringList taskIds;
-	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
-	{
-		taskIds.append(it.key());
-	}
+	QStringList taskIds = m_downloadTasks.keys();
+
+
+
+	m_downloadTasks.clear();
 
 }
 
@@ -716,48 +716,47 @@ void DownloadCardContainerWidget::onBatchDeleteClicked()
 {
 	if (m_downloadTasks.isEmpty()) return;
 
+	DownloadTaskInfo taskInfo;
+
 	QString message;
 
 	switch (m_containerState)
 	{
 	case ContainerState::DownloadReady:
+		taskInfo.status = DownloadStatus::Queued;
 		message = tr("确定要删除所有待下载任务吗？");
 		break;
 	case ContainerState::Downloading:
+		taskInfo.status = DownloadStatus::Downloading;
 		message = tr("确定要删除所有下载中的任务吗？");
 		break;
 	case ContainerState::Downloaded:
+		taskInfo.status = DownloadStatus::Completed;
 		message = tr("确定要删除所有已下载任务吗？这将会同时删除本地文件。");
 		break;
 	}
 
-	QStringList taskIds;
-	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
+	m_downloadTasks.clear();
+
+	// 更新分页器总页数
+	m_paginationWidget->setTotalPages(1);
+
+	if (m_currentPage > 1)
 	{
-		taskIds.append(it.key());
+		m_currentPage = 1;
+		m_paginationWidget->setCurrentPage(m_currentPage);
 	}
+	updateCurrentPageCards();
 }
 
 void DownloadCardContainerWidget::onBatchPauseClicked()
 {
 	if (m_downloadTasks.isEmpty()) return;
 
-	QStringList taskIds;
-	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
-	{
-		taskIds.append(it.key());
-	}
-
 }
 
 void DownloadCardContainerWidget::onBatchResumeClicked()
 {
 	if (m_downloadTasks.isEmpty()) return;
-
-	QStringList taskIds;
-	for (auto it = m_downloadTasks.begin(); it != m_downloadTasks.end(); ++it)
-	{
-		taskIds.append(it.key());
-	}
 
 }

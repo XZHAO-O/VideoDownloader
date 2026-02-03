@@ -12,7 +12,7 @@
 #include "AntRadioButton.h"
 #include "AntComboBox.h"
 #include "MaterialTabWidget.h"
-#include "LogSystem.h"
+#include "logger.h"
 #include "ApplicationController.h"
 #include "ConfigManager.h"
 #include "Instrumentor.h"
@@ -518,15 +518,10 @@ void SettingsPage::loadCurrentSettings()
 	// 下载设置 - 修复路径问题
 	QString defaultDownloadPath = m_configManager->getValue("download/defaultSavePath").toString();
 	if (defaultDownloadPath.isEmpty()) {
-		// 如果配置中没有值，使用系统下载目录
-		defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-		// 如果系统目录也为空，使用应用程序目录下的 Downloads 文件夹
-		if (defaultDownloadPath.isEmpty()) {
-			defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-			QDir dir(defaultDownloadPath);
-			if (!dir.exists()) {
-				dir.mkpath(".");
-			}
+		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+		QDir dir(defaultDownloadPath);
+		if (!dir.exists()) {
+			dir.mkpath(".");
 		}
 	}
 	m_downloadPathInput->setText(defaultDownloadPath);
@@ -578,14 +573,8 @@ void SettingsPage::loadCurrentSettings()
 	QString defaultLogPath = m_configManager->getValue("log/path").toString();
 	if (defaultLogPath.isEmpty()) {
 		// 如果配置中没有值，使用应用程序数据目录
-		defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		if (defaultLogPath.isEmpty()) {
-			// 如果系统目录为空，使用应用程序目录下的 logs 文件夹
-			defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-		}
-		else {
-			defaultLogPath += "/logs";
-		}
+		defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
+
 		// 确保日志目录存在
 		QDir logDir(defaultLogPath);
 		if (!logDir.exists()) {
@@ -775,19 +764,12 @@ QVariantMap SettingsPage::getDefaultSettings() const
 	}
 
 	// 动态设置路径（不能硬编码）
-	QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-	if (defaultDownloadPath.isEmpty()) {
-		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-	}
+	QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
+
 	defaultSettings["download/defaultSavePath"] = defaultDownloadPath;
 
-	QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	if (defaultLogPath.isEmpty()) {
-		defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-	}
-	else {
-		defaultLogPath += "/logs";
-	}
+	QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
+
 	defaultSettings["log/path"] = defaultLogPath;
 
 	return defaultSettings;
@@ -807,7 +789,7 @@ void SettingsPage::applyDefaultSettings()
 	m_configManager->save();
 
 	// 记录日志
-	LOG_INFO("Settings", "All settings have been reset to default values");
+	LOG_INFO("All settings have been reset to default values");
 }
 
 // 重置常规设置
@@ -823,7 +805,7 @@ void SettingsPage::resetGeneralSettings()
 	m_configManager->setValue("ui/language", defaultConfig["ui/language"].toVariant());
 	m_configManager->setValue("ui/theme", defaultConfig["ui/theme"].toVariant());
 
-	LOG_INFO("Settings", "General settings have been reset to defaults");
+	LOG_INFO("General settings have been reset to defaults");
 }
 
 // 重置下载设置
@@ -831,10 +813,7 @@ void SettingsPage::resetDownloadSettings()
 {
 	BENCHMARKING_FUNCTION();
 	// 设置默认下载路径
-	QString defaultDownloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-	if (defaultDownloadPath.isEmpty()) {
-		defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
-	}
+	QString defaultDownloadPath = QCoreApplication::applicationDirPath() + "/Downloads";
 
 	// 使用ConfigManager的静态方法获取默认配置
 	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
@@ -847,7 +826,7 @@ void SettingsPage::resetDownloadSettings()
 	m_configManager->setValue("download/autoMerge", defaultConfig["download/autoMerge"].toVariant());
 	m_configManager->setValue("download/autoDeleteTempFiles", defaultConfig["download/autoDeleteTempFiles"].toVariant());
 
-	LOG_INFO("Settings", "Download settings have been reset to defaults");
+	LOG_INFO("Download settings have been reset to defaults");
 }
 
 // 重置网络设置
@@ -871,7 +850,7 @@ void SettingsPage::resetNetworkSettings()
 	proxyConfig["password"] = defaultConfig["network/proxy/password"].toVariant();
 	m_configManager->setValue("network/proxy", proxyConfig);
 
-	LOG_INFO("Settings", "Network settings have been reset to defaults");
+	LOG_INFO("Network settings have been reset to defaults");
 }
 
 // 重置高级设置
@@ -879,13 +858,7 @@ void SettingsPage::resetAdvancedSettings()
 {
 	BENCHMARKING_FUNCTION();
 	// 设置默认日志路径
-	QString defaultLogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-	if (defaultLogPath.isEmpty()) {
-		defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
-	}
-	else {
-		defaultLogPath += "/logs";
-	}
+	QString defaultLogPath = QCoreApplication::applicationDirPath() + "/logs";
 
 	// 使用ConfigManager的静态方法获取默认配置
 	QJsonObject defaultConfig = ConfigManager::getDefaultConfig();
@@ -895,7 +868,7 @@ void SettingsPage::resetAdvancedSettings()
 	m_configManager->setValue("log/maxSize", defaultConfig["log/maxSize"].toVariant());
 	m_configManager->setValue("log/maxFiles", defaultConfig["log/maxFiles"].toVariant());
 
-	LOG_INFO("Settings", "Advanced settings have been reset to defaults");
+	LOG_INFO("Advanced settings have been reset to defaults");
 }
 
 // 完整的重置设置实现
@@ -907,7 +880,7 @@ void SettingsPage::resetSettings()
 	// 重新加载界面显示新设置
 	loadCurrentSettings();
 
-	LOG_INFO("Settings", "All settings have been reset to default values by user");
+	LOG_INFO("All settings have been reset to default values by user");
 }
 
 void SettingsPage::onDownloadPathBrowse()
@@ -923,7 +896,7 @@ void SettingsPage::onDownloadPathBrowse()
 void SettingsPage::onExitBehaviorChanged()
 {
 	// 退出行为改变的处理
-	LOG_INFO("Settings", QString(tr("退出行为更改为: %1"))
+	LOG_INFO(QString(tr("退出行为更改为: %1"))
 		.arg(m_minimizeToTrayRadio->isChecked() ? tr("最小化到系统托盘") : tr("退出程序")));
 }
 

@@ -9,7 +9,7 @@
 #include <QAuthenticator>
 
 #include "ConfigManager.h"
-#include "LogSystem.h"
+#include "logger.h"
 #include "DownloadContext.h"
 #include "Instrumentor.h"
 #include "CancelManager.h"
@@ -46,7 +46,7 @@ NetworkManager::NetworkManager(QSharedPointer<ConfigManager> configManager, QObj
 	connect(m_networkManager, &QNetworkAccessManager::proxyAuthenticationRequired,
 		this, &NetworkManager::onProxyAuthenticationRequired);
 
-	LOG_INFO("Network", "Network manager initialized");
+	LOG_INFO("Network manager initialized");
 }
 
 NetworkManager::~NetworkManager()
@@ -107,7 +107,7 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 
 	QNetworkRequest request = setRequest(url, headers);
 
-	LOG_DEBUG("Network", QString("GET request started: %1").arg(url.toString().toUtf8().constData()));
+	LOG_DEBUG(QString("GET request started: %1").arg(url.toString().toUtf8().constData()));
 
 	QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 	QNetworkReply* reply = networkManager->get(request);
@@ -160,7 +160,7 @@ NetworkResponse NetworkManager::getWithLoop(const QUrl& url, const QVariantMap& 
 	{
 		networkResponse.success = false;
 		networkResponse.errorString = getErrorString(reply);
-		LOG_ERROR("NetworkManager", QString("错误代码: %1：%2 ")
+		LOG_ERROR(QString("错误代码: %1：%2 ")
 			.arg(reply->error())
 			.arg(networkResponse.errorString));
 		networkManager->deleteLater();
@@ -330,24 +330,24 @@ void NetworkManager::setProxy(const NetworkProxy& proxy)
 		}
 
 		m_networkManager->setProxy(networkProxy);
-		LOG_INFO("Network", QString("Proxy set: %1:%2").arg(proxy.host).arg(proxy.port));
+		LOG_INFO(QString("Proxy set: %1:%2").arg(proxy.host).arg(proxy.port));
 	}
 	else {
 		m_networkManager->setProxy(QNetworkProxy::NoProxy);
-		LOG_INFO("Network", "Proxy disabled");
+		LOG_INFO("Proxy disabled");
 	}
 }
 
 void NetworkManager::setTimeout(int milliseconds)
 {
 	m_timeoutMs = milliseconds;
-	LOG_DEBUG("Network", QString("Timeout set to: %1 ms").arg(milliseconds));
+	LOG_DEBUG(QString("Timeout set to: %1 ms").arg(milliseconds));
 }
 
 void NetworkManager::setRetryCount(int count)
 {
 	m_defaultRetryCount = count;
-	LOG_DEBUG("Network", QString("Retry count set to: %1").arg(count));
+	LOG_DEBUG(QString("Retry count set to: %1").arg(count));
 }
 
 void NetworkManager::setCookies(const QString& domain, const QList<QNetworkCookie>& cookies)
@@ -356,7 +356,7 @@ void NetworkManager::setCookies(const QString& domain, const QList<QNetworkCooki
 	for (const QNetworkCookie& cookie : cookies) {
 		m_cookieJar->insertCookie(cookie);
 	}
-	LOG_DEBUG("Network", QString("Cookies set for domain: %1, count: %2").arg(domain).arg(cookies.size()));
+	LOG_DEBUG(QString("Cookies set for domain: %1, count: %2").arg(domain).arg(cookies.size()));
 }
 
 QList<QNetworkCookie> NetworkManager::getCookies(const QString& domain) const
@@ -371,13 +371,13 @@ void NetworkManager::clearCookies()
 	m_networkManager->setCookieJar(newCookieJar);
 	delete m_cookieJar;
 	m_cookieJar = newCookieJar;
-	LOG_INFO("Network", "All cookies cleared");
+	LOG_INFO("All cookies cleared");
 }
 
 void NetworkManager::setUserAgent(const QString& userAgent)
 {
 	m_userAgent = userAgent;
-	LOG_DEBUG("Network", QString("User agent set: %1").arg(userAgent));
+	LOG_DEBUG(QString("User agent set: %1").arg(userAgent));
 }
 
 QString NetworkManager::userAgent() const
@@ -389,7 +389,7 @@ void NetworkManager::onAuthenticationRequired(QNetworkReply* reply, QAuthenticat
 {
 	Q_UNUSED(reply)
 		Q_UNUSED(authenticator)
-		LOG_WARN("Network", "Authentication required");
+		LOG_WARN("Authentication required");
 }
 
 void NetworkManager::onProxyAuthenticationRequired(const QNetworkProxy& proxy, QAuthenticator* authenticator)
@@ -397,10 +397,10 @@ void NetworkManager::onProxyAuthenticationRequired(const QNetworkProxy& proxy, Q
 	if (!m_proxy.username.isEmpty()) {
 		authenticator->setUser(m_proxy.username);
 		authenticator->setPassword(m_proxy.password);
-		LOG_DEBUG("Network", "Proxy authentication provided");
+		LOG_DEBUG("Proxy authentication provided");
 	}
 	else {
-		LOG_WARN("Network", "Proxy authentication required but no credentials provided");
+		LOG_WARN("Proxy authentication required but no credentials provided");
 	}
 }
 
@@ -411,7 +411,7 @@ void NetworkManager::onSslErrors(QNetworkReply* reply, const QList<QSslError>& e
 		errorStrings << error.errorString();
 	}
 
-	LOG_ERROR("Network", QString("SSL errors: %1").arg(errorStrings.join("; ")));
+	LOG_ERROR(QString("SSL errors: %1").arg(errorStrings.join("; ")));
 	reply->ignoreSslErrors(); // 忽略SSL错误（在生产环境中应该更谨慎）
 }
 
@@ -523,7 +523,7 @@ NetworkReplyHeader NetworkManager::getReplyHeaderWithLoop(const QUrl& url, const
 	// 检查错误
 	if (!networkReplyHeader.success)
 	{
-		LOG_ERROR("NetworkManager", QString("错误代码: %1")
+		LOG_ERROR(QString("错误代码: %1")
 			.arg(networkReplyHeader.errorString));
 	}
 
@@ -548,12 +548,12 @@ bool NetworkManager::checkPartialDownloadSupport(QNetworkReply* reply)
 		QString contentLength = reply->rawHeader("Content-Length");
 
 		supportsPartial = (acceptRanges == "bytes" && !contentLength.isEmpty());
-		LOG_DEBUG("Network", QString("Partial download support: %1, Content-Length: %2")
+		LOG_DEBUG(QString("Partial download support: %1, Content-Length: %2")
 			.arg(supportsPartial ? "yes" : "no").arg(contentLength));
 	}
 	else
 	{
-		LOG_WARN("Network", QString("Failed to check partial download support: %1").arg(reply->errorString()));
+		LOG_WARN(QString("Failed to check partial download support: %1").arg(reply->errorString()));
 	}
 	return supportsPartial;
 }

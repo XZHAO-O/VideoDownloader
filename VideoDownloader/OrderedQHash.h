@@ -9,7 +9,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// 概念定义放在命名空间范围
 template<typename K, typename Key>
 concept CompatibleKey = std::convertible_to<K, Key>;
 
@@ -20,10 +19,10 @@ template<typename Container, typename Key>
 concept KeyCompatibleContainer = std::ranges::range<Container> && CompatibleKey<std::ranges::range_value_t<Container>, Key>;
 
 template<typename It, typename Key, typename T>
-concept InputIteratorToPair = std::input_iterator<It> &&
-	requires(It it) {
-		{ it->first } -> CompatibleKey<Key>;
-		{ it->second } -> CompatibleValue<T>;
+concept InputIteratorToPair = std::input_iterator<It> && requires(It it)
+{
+	{ it->first } -> CompatibleKey<Key>;
+	{ it->second } -> CompatibleValue<T>;
 };
 
 template<typename F, typename Key, typename T>
@@ -52,7 +51,6 @@ public:
 	using size_type = typename ListType::size_type;
 	using difference_type = typename ListType::difference_type;
 
-	// 自定义迭代器类
 	class iterator
 	{
 	public:

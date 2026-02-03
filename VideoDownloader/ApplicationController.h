@@ -5,11 +5,13 @@
 
 #include "ApplicationState.h"
 
+#include "logger.h"
+
 class DatabaseManager;
 class DownloadRecordService;
 class DownloadVideoCoverService;
 
-class LogSystem;
+//class Logger;
 class NetworkManager;
 class DownloadEngine;
 class ConfigManager;
@@ -58,7 +60,7 @@ private:
 
 	// 核心系统
 	QSharedPointer<ConfigManager> m_configManager;
-	QSharedPointer<LogSystem> m_logSystem;
+	QSharedPointer<nexusdl::log::Logger> m_logSystem;
 
 	QSharedPointer<DatabaseManager> m_databaseManager;
 	QSharedPointer<DownloadRecordService> m_downloadRecordService;

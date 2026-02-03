@@ -4,14 +4,13 @@
 #include <QStandardPaths>
 #include <QCoreApplication>
 
-#include "DatabaseManager.h"
+//#include "DatabaseManager.h"
 #include "DownloadRecordService.h"
 #include "DownloadVideoCoverService.h"
 
 #include "DownloadEngine.h"
 #include "ConfigManager.h"
 #include "ConfigModManager.h"
-#include "LogSystem.h"
 #include "EventBus.h"
 #include "NetworkManager.h"
 #include "PlatformAggregatorService.h"
@@ -48,7 +47,7 @@ bool ApplicationController::initialize()
 		m_state = Running;
 		m_initialized = true;
 
-		LogSystem::instance().info("ApplicationController initialized successfully", "Application");
+		LOG_INFO("ApplicationController initialized successfully");
 		emit initializationComplete();
 
 		return true;
@@ -57,7 +56,7 @@ bool ApplicationController::initialize()
 	catch (const std::exception& e) {
 		m_state = Error;
 		QString error = QString("Initialization failed: %1").arg(e.what());
-		LogSystem::instance().error(error, "Application");
+		LOG_ERROR(error);
 		emit errorOccurred(error);
 		return false;
 	}
@@ -70,7 +69,7 @@ void ApplicationController::shutdown()
 	}
 
 	m_state = ShuttingDown;
-	LogSystem::instance().info("ApplicationController shuttingdown", "Application");
+	LOG_INFO("ApplicationController shuttingdown");
 
 	cleanup();
 
@@ -85,18 +84,20 @@ void ApplicationController::initializeCoreSystems()
 	const QString appDataPath = QCoreApplication::applicationDirPath();
 
 	// 初始化日志系统
-	LogSystem::instance().initialize(appDataPath + "/logs", LogSystem::Info);
+	nexusdl::log::Logger::instance();
 
 	// 初始化配置管理器
 	m_configManager = QSharedPointer<ConfigManager>::create(appDataPath + "/config");
 
-	m_databaseManager = QSharedPointer<DatabaseManager>::create();
+	//设置日志等级
+
+	/*m_databaseManager = QSharedPointer<DatabaseManager>::create();
 	m_databaseManager->initialize(appDataPath + "/database/download.db");
 
 	m_downloadRecordService = QSharedPointer<DownloadRecordService>::create(m_databaseManager);
-	m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);
+	m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);*/
 
-	LogSystem::instance().info("Core systems initialized", "Application");
+	LOG_INFO("Core systems initialized");
 }
 
 void ApplicationController::initializeServices()
@@ -111,9 +112,9 @@ void ApplicationController::initializeServices()
 	m_platformService = QSharedPointer<PlatformAggregatorService>::create(m_modManager);
 
 	// 初始化下载管理器
-	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager, m_downloadRecordService, m_downloadVideoCoverService);
+	m_downloadEngine = QSharedPointer<DownloadEngine>::create(m_configManager, m_networkManager);
 
-	LogSystem::instance().info("All services initialized", "Application");
+	LOG_INFO("All services initialized");
 }
 
 void ApplicationController::initializeMods()
@@ -123,7 +124,7 @@ void ApplicationController::initializeMods()
 	}
 
 	int modCount = m_modManager->getAllMods().size();
-	LogSystem::instance().info(QString("Loaded %1 mods").arg(modCount), "Application");
+	LOG_INFO(QString("Loaded %1 mods").arg(modCount));
 }
 
 void ApplicationController::cleanup()
@@ -134,11 +135,9 @@ void ApplicationController::cleanup()
 	m_modManager.clear();
 	m_networkManager.clear();
 
-	m_downloadVideoCoverService.clear();
-	m_downloadRecordService.clear();
-	m_databaseManager.clear();
+	//m_downloadVideoCoverService.clear();
+	//m_downloadRecordService.clear();
+	//m_databaseManager.clear();
 
 	m_configManager.clear();
-
-	LogSystem::instance().shutdown();
 }

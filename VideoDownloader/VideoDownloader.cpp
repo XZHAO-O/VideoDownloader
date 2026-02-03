@@ -173,7 +173,7 @@ VideoDownloader::VideoDownloader(QWidget* parent)
 	QFont font;
 	font.setPointSizeF(16);
 	font.setBold(true);
-	QLabel* title = new QLabel(tr("视频下载器"), ui.titleBar);
+	QLabel* title = new QLabel(tr("NexusDL"), ui.titleBar);
 	title->setFont(font);
 	// 创建按钮
 	btnMin = new QToolButton(ui.titleBar);

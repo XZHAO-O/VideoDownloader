@@ -6,7 +6,7 @@
 #include <QTimer>
 
 #include "NetworkManager.h"
-#include "LogSystem.h"
+#include "logger.h"
 #include "CookieManageUtil.h"
 
 LoginManager::LoginManager(const ModInfo& modInfo, QString modPath, QSharedPointer<NetworkManager> networkManager, QObject* parent)
@@ -31,21 +31,21 @@ QUrl LoginManager::startQRCodeLogin()
 	QVariantMap qrConfig = getQRCodeConfig();
 	if (!qrConfig.value("enabled", false).toBool())
 	{
-		LOG_WARN("LoginManager", "QR code login is not enabled in configuration");
+		LOG_WARN("QR code login is not enabled in configuration");
 		emit loginFailed("二维码登录功能未启用");
 		return QUrl();
 	}
 
 	if (m_isQRCodeLoginActive)
 	{
-		LOG_WARN("LoginManager", "QR code login is already active");
+		LOG_WARN("QR code login is already active");
 		return QUrl();
 	}
 
 	m_isQRCodeLoginActive = true;
 	m_checkParams.clear();
 
-	LOG_INFO("LoginManager", "Starting QR code login");
+	LOG_INFO("Starting QR code login");
 	return generateQRCode();
 }
 
@@ -59,7 +59,7 @@ void LoginManager::stopQRCodeLogin()
 	m_isQRCodeLoginActive = false;
 	m_checkParams.clear();
 
-	LOG_INFO("LoginManager", "QR code login stopped");
+	LOG_INFO("QR code login stopped");
 }
 
 bool LoginManager::isQRCodeLoginActive() const
@@ -71,7 +71,7 @@ bool LoginManager::loadSavedCookies()
 {
 	if (CookieManageUtil::loadCookies(m_modInfo.modId, m_modPath, m_isLoggedIn, m_cookie))
 	{
-		LOG_INFO("LoginManager", QString("Loaded saved cookies, login status: %1").arg(m_isLoggedIn));
+		LOG_INFO(QString("Loaded saved cookies, login status: %1").arg(m_isLoggedIn));
 		emit loginStateChanged(m_isLoggedIn);
 		emit cookieUpdated(m_cookie);
 		return true;
@@ -84,7 +84,7 @@ void LoginManager::clearCookies()
 	if (CookieManageUtil::clearCookies(m_modInfo.modId, m_modPath)) {
 		m_isLoggedIn = false;
 		m_cookie.clear();
-		LOG_INFO("LoginManager", "Cookies cleared");
+		LOG_INFO("Cookies cleared");
 		emit loginStateChanged(false);
 		emit cookieUpdated(QVariantMap());
 	}
@@ -107,7 +107,7 @@ QUrl LoginManager::generateQRCode()
 
 	if (generateUrl.isEmpty())
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: QR code generate URL not configured");
+		LOG_ERROR("Failed to poll QR code status: QR code generate URL not configured");
 		emit loginFailed("生成二维码失败");
 		m_isQRCodeLoginActive = false;
 		return QUrl();
@@ -116,11 +116,11 @@ QUrl LoginManager::generateQRCode()
 	QVariantMap headers = m_modInfo.getRequestHeaders();
 
 	// 发送请求生成二维码
-	NetworkResponse response = m_networkManager->get(generateUrl, headers);
+	NetworkResponse response = m_networkManager->getWithLoop(generateUrl, headers);
 
 	if (!response.success)
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: " + response.errorString);
+		LOG_ERROR("Failed to poll QR code status: " + response.errorString);
 		emit loginFailed("生成二维码失败");
 		m_isQRCodeLoginActive = false;
 		return QUrl();
@@ -129,7 +129,7 @@ QUrl LoginManager::generateQRCode()
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
 	if (doc.isNull())
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: Invalid JSON response");
+		LOG_ERROR("Failed to poll QR code status: Invalid JSON response");
 		emit loginFailed("生成二维码失败");
 		m_isQRCodeLoginActive = false;
 		return QUrl();
@@ -138,7 +138,7 @@ QUrl LoginManager::generateQRCode()
 	QJsonObject rootObj = doc.object();
 	if (rootObj["code"].toInt() != 0)
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: API error: " + rootObj["message"].toString());
+		LOG_ERROR("Failed to poll QR code status: API error: " + rootObj["message"].toString());
 		emit loginFailed("生成二维码失败");
 		m_isQRCodeLoginActive = false;
 		return QUrl();
@@ -159,13 +159,13 @@ QUrl LoginManager::generateQRCode()
 
 	if (qrCodeUrl.isEmpty() || m_checkParams.isEmpty())
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: Failed to extract QR code data from response");
+		LOG_ERROR("Failed to poll QR code status: Failed to extract QR code data from response");
 		emit loginFailed("生成二维码失败");
 		m_isQRCodeLoginActive = false;
 		return QUrl();
 	}
 
-	LOG_INFO("LoginManager", "QR code generated");
+	LOG_INFO("QR code generated");
 
 	// 获取状态码配置
 	QVariantMap statusCodes = qrConfig.value("statusCode").toMap();
@@ -190,7 +190,7 @@ void LoginManager::pollQRCodeStatus()
 
 	if (checkUrl.isEmpty())
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: QR code check URL not configured");
+		LOG_ERROR("Failed to poll QR code status: QR code check URL not configured");
 		return;
 	}
 
@@ -207,25 +207,25 @@ void LoginManager::pollQRCodeStatus()
 
 	url.setQuery(query);
 
-	NetworkResponse response = m_networkManager->get(url.toString(), headers);
+	NetworkResponse response = m_networkManager->getWithLoop(url.toString(), headers);
 
 	if (!response.success)
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: response.errorString");
+		LOG_ERROR("Failed to poll QR code status: response.errorString");
 		return;
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(response.data);
 	if (doc.isNull())
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: %1Invalid JSON response");
+		LOG_ERROR("Failed to poll QR code status: %1Invalid JSON response");
 		return;
 	}
 
 	QJsonObject rootObj = doc.object();
 	if (rootObj["code"].toInt() != 0)
 	{
-		LOG_ERROR("LoginManager", "Failed to poll QR code status: API error: " + rootObj["message"].toString());
+		LOG_ERROR("Failed to poll QR code status: API error: " + rootObj["message"].toString());
 		return;
 	}
 
@@ -236,7 +236,7 @@ void LoginManager::pollQRCodeStatus()
 	int statusCode = extractJsonValue(rootObj, statusPath).toInt();
 	QString message = rootObj["message"].toString();
 
-	LOG_INFO("LoginManager", QString("QR code status: %1 - %2").arg(statusCode).arg(message.toUtf8().constData()));
+	LOG_INFO(QString("QR code status: %1 - %2").arg(statusCode).arg(message.toUtf8().constData()));
 
 	// 根据状态码处理不同情况
 	if (statusCode == statusCodes.value("success").toInt())
@@ -272,7 +272,7 @@ void LoginManager::handleQRCodeLoginSuccess(const QJsonObject& data)
 	QVariantMap cookieConfig = getQRCodeConfig().value("cookie").toMap();
 	QString url = extractJsonValue(data, cookieConfig.value("url").toString()).toString();
 
-	LOG_INFO("LoginManager", "QR code login success");
+	LOG_INFO("QR code login success");
 
 	// 解析URL获取cookies
 	QUrl loginUrl(url);
@@ -293,7 +293,7 @@ void LoginManager::handleQRCodeLoginSuccess(const QJsonObject& data)
 	// 保存登录状态和Cookie
 	if (CookieManageUtil::saveCookies(m_modInfo.modId, m_modPath, true, m_cookie)) {
 		m_isLoggedIn = true;
-		LOG_INFO("LoginManager", "Login status and cookies saved successfully");
+		LOG_INFO("Login status and cookies saved successfully");
 		emit loginStateChanged(true);
 		emit cookieUpdated(m_cookie);
 	}
@@ -302,7 +302,7 @@ void LoginManager::handleQRCodeLoginSuccess(const QJsonObject& data)
 	emit loginStatusChanged("登录成功", 0);
 	emit loginSuccess(m_cookie);
 
-	LOG_INFO("LoginManager", "QR code login completed successfully");
+	LOG_INFO("QR code login completed successfully");
 
 	//LOG_ERROR("LoginManager", QString("Failed to handle QR code login success: %1").arg(e.what()));
 	//emit loginFailed(QString("处理登录成功数据失败: %1").arg(e.what()));

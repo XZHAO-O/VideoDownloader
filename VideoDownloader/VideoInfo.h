@@ -19,11 +19,11 @@ struct StreamInfo
 	QUrl url;
 	QString quality;
 	QString codec;
-	qint64 bitrate;
+	qint64 bitrate = 0;
 	qint64 fileSize = 0;
-	int width;
-	int height;
-	double duration; // seconds
+	int width = 0;
+	int height = 0;
+	double duration = NAN;; // seconds
 	QVariantMap headers; // 请求头信息
 
 	bool isValid() const {
@@ -43,7 +43,7 @@ struct VideoInfo
 	QString publishTime;
 	QUrl coverUrl;
 	QByteArray cover;
-	StreamType streamType;
+	StreamType streamType = StreamType::AVMerged;
 	QSharedPointer<ConfigVideoPlatform> videoPlatform;
 
 	// 额外参数存储（如aid, cid等）

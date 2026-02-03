@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-	const QString serverName = "VideoDownloader_Ver1.0.0";
+	const QString serverName = "NexusDL_Ver1.0.0";
 	AppInstanceManager appInstanceManager;
 	if (appInstanceManager.isAnotherInstanceRunning(serverName))
 		return 0;
@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
 	// 设置当前工作目录为项目根目录
 	QDir::setCurrent(dir.absolutePath());
 
-	QApplication::setApplicationName("VideoDownloader");
-	QApplication::setApplicationDisplayName("VideoDownloader");
+	QApplication::setApplicationName("NexusDL");
+	QApplication::setApplicationDisplayName("NexusDL");
 	QApplication::setQuitOnLastWindowClosed(false);
 
 	// 加载google字体

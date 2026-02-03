@@ -93,6 +93,9 @@
     <Filter Include="database\entity">
       <UniqueIdentifier>{15b3cd6e-d73c-4386-83b5-734429f03e14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{68af69bc-0356-42e8-971e-78fef44c6222}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -352,7 +355,7 @@
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Core\Config</Filter>
     </ClCompile>
-    <ClCompile Include="LogSystem.cpp">
+    <ClCompile Include="logger.cpp">
       <Filter>Core\Log</Filter>
     </ClCompile>
     <ClCompile Include="NetworkManager.cpp">
@@ -418,7 +421,7 @@
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="DatabaseManager.cpp">
+    <ClCompile Include="DatabaseExecutor.cpp">
       <Filter>database</Filter>
     </ClCompile>
     <ClCompile Include="DownloadRecordDAO.cpp">
@@ -441,6 +444,9 @@
     </ClCompile>
     <ClCompile Include="SvgToggleButton.cpp">
       <Filter>Ui\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="log_buffer.cpp">
+      <Filter>Core\Log</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -678,7 +684,7 @@
     <QtMoc Include="ConfigManager.h">
       <Filter>Core\Config</Filter>
     </QtMoc>
-    <QtMoc Include="LogSystem.h">
+    <QtMoc Include="logger.h">
       <Filter>Core\Log</Filter>
     </QtMoc>
     <QtMoc Include="NetworkManager.h">
@@ -747,7 +753,7 @@
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
     </QtMoc>
-    <QtMoc Include="DatabaseManager.h">
+    <QtMoc Include="DatabaseExecutor.h">
       <Filter>database</Filter>
     </QtMoc>
     <QtMoc Include="SvgButton.h">
@@ -820,6 +826,12 @@
     </ClInclude>
     <ClInclude Include="DownloadVideoCoverService.h">
       <Filter>database\service</Filter>
+    </ClInclude>
+    <ClInclude Include="log_level.h">
+      <Filter>Core\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="log_buffer.h">
+      <Filter>Core\Log</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

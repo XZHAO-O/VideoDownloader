@@ -2,7 +2,7 @@
 
 #include <QtConcurrent/QtConcurrent>
 
-#include "LogSystem.h"
+#include "logger.h"
 #include "ConfigManager.h"
 #include "ConfigVideoPlatform.h"
 
@@ -13,7 +13,6 @@ ConfigModManager::ConfigModManager(QSharedPointer<ConfigManager> configManager,
 	, m_configManager(configManager)
 	, m_networkManager(networkManager)
 {
-	// 使用现有的LogSystem，不需要spdlog
 	initialize();
 }
 
@@ -24,25 +23,25 @@ bool ConfigModManager::initialize()
 	}
 
 	try {
-		LOG_INFO("ModManager", QString("Initializing ConfigModManager"));
+		LOG_INFO(QString("Initializing ConfigModManager"));
 
 		// 发现并加载所有Mod
 		discoverMods();
 
 		m_initialized = true;
-		LOG_INFO("ModManager", QString("ConfigModManager initialized successfully, loaded %1 mods").arg(m_mods.size()));
+		LOG_INFO(QString("ConfigModManager initialized successfully, loaded %1 mods").arg(m_mods.size()));
 		return true;
 
 	}
 	catch (const std::exception& e) {
-		LOG_ERROR("ModManager", QString("Failed to initialize ConfigModManager: %1").arg(e.what()));
+		LOG_ERROR(QString("Failed to initialize ConfigModManager: %1").arg(e.what()));
 		return false;
 	}
 }
 
 void ConfigModManager::shutdown()
 {
-	LOG_INFO("ModManager", QString("Shutting down ConfigModManager"));
+	LOG_INFO(QString("Shutting down ConfigModManager"));
 
 	// 清理所有平台实例
 	m_platforms.clear();
@@ -53,13 +52,13 @@ void ConfigModManager::shutdown()
 
 void ConfigModManager::discoverMods()
 {
-	LOG_INFO("ModManager", QString("Discovering mods"));
+	LOG_INFO(QString("Discovering mods"));
 
 	QString modsDir = m_configManager->getValue("mods/directory").toString();
 	QDir dir(modsDir);
 
 	if (!dir.exists()) {
-		LOG_INFO("ModManager", QString("Mods directory does not exist, creating: %1").arg(modsDir));
+		LOG_INFO(QString("Mods directory does not exist, creating: %1").arg(modsDir));
 		dir.mkpath(".");
 		return;
 	}
@@ -76,7 +75,7 @@ void ConfigModManager::discoverMods()
 	}
 
 	buildUrlPatterns();
-	LOG_INFO("ModManager", QString("Discovered %1 mods").arg(m_mods.size()));
+	LOG_INFO(QString("Discovered %1 mods").arg(m_mods.size()));
 	emit modsChanged();
 }
 
@@ -87,25 +86,25 @@ bool ConfigModManager::loadMod(const QString& configPath)
 
 	QFile file(configPath);
 	if (!file.open(QIODevice::ReadOnly)) {
-		LOG_ERROR("ModManager", QString("Failed to open mod config: %1").arg(configPath));
+		LOG_ERROR(QString("Failed to open mod config: %1").arg(configPath));
 		return false;
 	}
 
 	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
 	if (doc.isNull()) {
-		LOG_ERROR("ModManager", QString("Invalid JSON in mod config: %1").arg(configPath));
+		LOG_ERROR(QString("Invalid JSON in mod config: %1").arg(configPath));
 		return false;
 	}
 
 	QJsonObject config = doc.object();
 	if (!validateModConfig(config)) {
-		LOG_ERROR("ModManager", QString("Invalid mod config: %1").arg(configPath));
+		LOG_ERROR(QString("Invalid mod config: %1").arg(configPath));
 		return false;
 	}
 
 	ModInfo modInfo = ModInfo::fromJson(config, modDir);
 	if (!modInfo.isValid()) {
-		LOG_ERROR("ModManager", QString("Invalid mod info: %1").arg(configPath));
+		LOG_ERROR(QString("Invalid mod info: %1").arg(configPath));
 		return false;
 	}
 
@@ -126,11 +125,11 @@ bool ConfigModManager::loadMod(const QString& configPath)
 	if (enabled) {
 		auto platform = QSharedPointer<ConfigVideoPlatform>::create(modInfo, m_configManager->getValue("mods/directory").toString(), m_networkManager);
 		m_platforms[modInfo.modId] = platform;
-		LOG_INFO("ModManager", QString("Loaded mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
+		LOG_INFO(QString("Loaded mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
 		emit modLoaded(modInfo);
 	}
 	else {
-		LOG_INFO("ModManager", QString("Loaded disabled mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
+		LOG_INFO(QString("Loaded disabled mod: %1 v%2").arg(modInfo.name).arg(modInfo.version));
 	}
 
 	return true;
@@ -179,10 +178,10 @@ void ConfigModManager::buildUrlPatterns()
 			if (regex.isValid()) {
 				// 使用 QPair 而不是直接使用 QRegularExpression 作为键
 				m_urlPatterns.insert(regex.pattern(), modInfo.modId);
-				LOG_DEBUG("ModManager", QString("Registered URL pattern: %1 -> %2").arg(pattern).arg(modInfo.modId));
+				LOG_DEBUG(QString("Registered URL pattern: %1 -> %2").arg(pattern).arg(modInfo.modId));
 			}
 			else {
-				LOG_ERROR("ModManager", QString("Invalid URL pattern: %1 for mod %2").arg(pattern).arg(modInfo.modId));
+				LOG_ERROR(QString("Invalid URL pattern: %1 for mod %2").arg(pattern).arg(modInfo.modId));
 			}
 		}
 	}
@@ -221,7 +220,7 @@ bool ConfigModManager::enableMod(const QString& modId)
 
 	buildUrlPatterns();
 
-	LOG_INFO("ModManager", QString("Enabled mod: %1").arg(modId));
+	LOG_INFO(QString("Enabled mod: %1").arg(modId));
 	emit modEnabled(modId);
 	emit modsChanged();
 
@@ -250,7 +249,7 @@ bool ConfigModManager::disableMod(const QString& modId)
 
 	buildUrlPatterns();
 
-	LOG_INFO("ModManager", QString("Disabled mod: %1").arg(modId));
+	LOG_INFO(QString("Disabled mod: %1").arg(modId));
 	emit modDisabled(modId);
 	emit modsChanged();
 
@@ -409,7 +408,7 @@ bool ConfigModManager::unloadMod(const QString& modId)
 	m_platforms.remove(modId);
 	m_mods.remove(modId);
 
-	LOG_INFO("ModManager", QString("Unloaded mod: %1").arg(modId));
+	LOG_INFO(QString("Unloaded mod: %1").arg(modId));
 	emit modUnloaded(modId);
 
 	// 重新构建 URL 模式

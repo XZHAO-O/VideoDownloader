@@ -9,7 +9,7 @@
 #include "ConfigVideoPlatform.h"
 #include "ConfigModManager.h"
 #include "SearchResultsWidget.h"
-#include "LogSystem.h"
+#include "logger.h"
 #include "Instrumentor.h"
 
 HomePage::HomePage(QSharedPointer<PlatformAggregatorService> platformService, QSharedPointer<ConfigModManager> configModManager, QWidget* parent)
@@ -157,7 +157,7 @@ void HomePage::getVideoList(const QString& searchText)
 		if (m_selectedPlatform)
 		{
 			AntMessageManager::instance()->showMessage(AntMessage::Info, AntMessage::Singleton, tr("链接解析中..."));
-			LOG_INFO("HomePage", QString(tr("strating to parse link: %1")).arg(searchText.toUtf8().constData()));
+			LOG_INFO(QString(tr("strating to parse link: %1")).arg(searchText.toUtf8().constData()));
 
 			// 启动搜索(搜索请求超时处理未添加)
 			videoInfoList = m_selectedPlatform->getVideoInfo(searchText);
@@ -177,7 +177,7 @@ void HomePage::getVideoList(const QString& searchText)
 		}
 	}
 
-	LOG_WARN("HomePage", "no matched video platforms");
+	LOG_WARN("no matched video platforms");
 	AntMessageManager::instance()->showMessage(AntMessage::Error, AntMessage::Singleton, tr("无对应的视频平台！"));
 	m_searchResultsWidget->hide();
 	searchChanged = true;
