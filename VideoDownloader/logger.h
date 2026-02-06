@@ -12,10 +12,13 @@
 #include <QDir>
 #include <QTimer>
 #include <QMutex>
+#include <QThread>
 
 // Project internal headers
 #include "log_level.h"
 #include "log_buffer.h"
+
+#include "macros.h"
 
 namespace nexusdl::log {
 
@@ -43,275 +46,13 @@ namespace nexusdl::log {
 
 		bool shouldLog(LogLevel level) const;
 
-		// 核心日志方法
+		// 核心日志方法 - 声明
 		template<typename StringType>
 			requires StringLiteralOrQString<StringType>
 		void log(LogLevel level, StringType&& message,
-			const std::source_location& location = std::source_location::current())
-		{
-			#ifdef QT_DEBUG
-			// 调试模式：同时输出到控制台和文件
+			const std::source_location& location = std::source_location::current());
 
-			// 获取时间和基本信息
-			auto now = std::chrono::system_clock::now();
-			auto since_epoch = now.time_since_epoch();
-			auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
-			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-				since_epoch - seconds);
-
-			auto time = std::chrono::system_clock::to_time_t(
-				std::chrono::system_clock::time_point(seconds));
-
-			std::tm tm;
-			#ifdef Q_OS_WIN
-			localtime_s(&tm, &time);
-			#else
-			localtime_r(&time, &tm);
-			#endif // Q_OS_WIN
-
-			// 获取文件名和行号
-			const char* file = location.file_name();
-			int line = location.line();
-
-			// 获取短文件名
-			const char* shortFile = file;
-			const char* lastSlash = std::max(std::strrchr(file, '/'), std::strrchr(file, '\\'));
-			if (lastSlash != nullptr)
-			{
-				shortFile = lastSlash + 1;
-			}
-
-			// 如果系统已初始化，则写入文件
-			if (m_initialized)
-			{
-				// thread_local 缓冲区
-				static thread_local QByteArray logData;
-				logData.clear();  // 清除之前的内容
-
-				if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
-				{
-					// QString版本 - 保持原来的多次追加方式
-					static thread_local char basePart[256];
-
-					auto [end, ec] = std::format_to_n(
-						basePart, sizeof(basePart) - 1,
-						"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
-						tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-						tm.tm_hour, tm.tm_min, tm.tm_sec,
-						static_cast<int>(ms.count()),
-						levelToString(level),
-						getCurrentProcessId(),
-						shortFile,
-						line
-					);
-
-					*end = '\0';
-
-					// 预分配空间（使用先前的大小或默认值）
-					if (logData.capacity() < 1024)
-					{
-						logData.reserve(1024);
-					}
-
-					logData.append(basePart, end - basePart);
-					logData.append(std::forward<StringType>(message).toUtf8());
-					logData.append('\n');
-				}
-				else
-				{
-					// 字符串字面量版本 - 一次性写入到QByteArray的缓冲区
-					const char* messagePtr = std::forward<StringType>(message);
-
-					// 使用std::formatted_size计算确切长度
-					size_t totalLength = std::formatted_size(
-						"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-						tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-						tm.tm_hour, tm.tm_min, tm.tm_sec,
-						static_cast<int>(ms.count()),
-						levelToString(level),
-						getCurrentProcessId(),
-						shortFile,
-						line,
-						messagePtr
-					);
-
-					if (logData.capacity() < static_cast<int>(totalLength + 1))
-					{
-						logData.reserve(totalLength + 1);
-					}
-
-					// 直接格式化到QByteArray的缓冲区
-					char* dataPtr = logData.data(); // 获取可写指针
-					auto [end, ec] = std::format_to_n(
-						dataPtr, totalLength + 1, // 使用计算的长度+1作为缓冲区大小
-						"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-						tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-						tm.tm_hour, tm.tm_min, tm.tm_sec,
-						static_cast<int>(ms.count()),
-						levelToString(level),
-						getCurrentProcessId(),
-						shortFile,
-						line,
-						messagePtr
-					);
-
-					// 设置QByteArray的实际大小
-					logData.resize(end - dataPtr);
-				}
-
-				// 写入缓冲区
-				writeToBuffer(std::move(logData));
-			}
-
-			// 使用qDebug输出到控制台（调试模式）
-			QString consoleOutput;
-
-			char timeBuffer[68];
-			size_t len = std::strftime(timeBuffer, sizeof(timeBuffer) - 4,
-				"%Y-%m-%d %H:%M:%S", &tm);
-			std::snprintf(timeBuffer + len, 5, ".%03d", static_cast<int>(ms.count()));
-			QString debugBasePart = QString("[%1] [%2] [%3]")
-				.arg(timeBuffer)
-				.arg(levelToString(level))
-				.arg(getCurrentProcessId());
-
-			#ifdef Q_OS_WIN
-			// Windows环境下：使用VS格式，方便双击跳转
-			consoleOutput = QString("%1\n%2(%3): %4\n")
-				.arg(debugBasePart)
-				.arg(QDir::toNativeSeparators(QString::fromUtf8(file)))
-				.arg(line)
-				.arg(std::forward<StringType>(message));//对于右值，文件部分只移动了通过toutf8临时构造的qbytearray
-			#else
-			// 非Windows平台：带颜色的控制台输出
-			QString color = levelToColor(level);
-			QString resetColor = "\033[0m";
-
-			consoleOutput = QString("%1%2 %3(%4): %5%6")
-				.arg(color)
-				.arg(debugBasePart)
-				.arg(shortFile)
-				.arg(line)
-				.arg(std::forward<StringType>(message))
-				.arg(resetColor);
-			#endif // Q_OS_WIN
-
-			qDebug().noquote() << consoleOutput;
-
-			#else
-			// 发布模式：只写入文件
-
-			// 获取时间和基本信息
-			auto now = std::chrono::system_clock::now();
-			auto since_epoch = now.time_since_epoch();
-			auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
-			auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-				since_epoch - seconds);
-
-			auto time = std::chrono::system_clock::to_time_t(
-				std::chrono::system_clock::time_point(seconds));
-
-			std::tm tm;
-			#ifdef Q_OS_WIN
-			localtime_s(&tm, &time);
-			#else
-			localtime_r(&time, &tm);
-			#endif // Q_OS_WIN
-
-			// 获取文件名和行号
-			const char* file = location.file_name();
-			int line = location.line();
-
-			// 获取短文件名
-			const char* shortFile = file;
-			const char* lastSlash = std::max(std::strrchr(file, '/'), std::strrchr(file, '\\'));
-			if (lastSlash != nullptr)
-			{
-				shortFile = lastSlash + 1;
-			}
-
-			// thread_local 缓冲区
-			static thread_local QByteArray logData;
-			logData.clear();  // 清除之前的内容
-
-			if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
-			{
-				// QString版本 - 保持原来的多次追加方式
-				static thread_local char basePart[256];
-
-				//静态部分最长42，行号不超过100w，6位，
-				auto [end, ec] = std::format_to_n(
-					basePart, sizeof(basePart) - 1,
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					static_cast<int>(ms.count()),
-					levelToString(level),
-					getCurrentProcessId(),
-					shortFile,
-					line
-				);
-
-				*end = '\0';
-
-				// 预分配空间（使用先前的大小或默认值）
-				if (logData.capacity() < 1024)
-				{
-					logData.reserve(1024);
-				}
-
-				logData.append(basePart, end - basePart);
-				logData.append(std::forward<StringType>(message).toUtf8());
-				logData.append('\n');
-			}
-			else
-			{
-				// 字符串字面量版本 - 一次性写入到QByteArray的缓冲区
-				const char* messagePtr = std::forward<StringType>(message);
-
-				// 使用std::formatted_size计算确切长度
-				size_t totalLength = std::formatted_size(
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					static_cast<int>(ms.count()),
-					levelToString(level),
-					getCurrentProcessId(),
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				if (logData.capacity() < static_cast<int>(totalLength + 1))
-				{
-					logData.reserve(totalLength + 1);
-				}
-
-				// 直接格式化到QByteArray的缓冲区
-				char* dataPtr = logData.data(); // 获取可写指针
-				auto [end, ec] = std::format_to_n(
-					dataPtr, totalLength + 1, // 使用计算的长度+1作为缓冲区大小
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					static_cast<int>(ms.count()),
-					levelToString(level),
-					getCurrentProcessId(),
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				// 设置QByteArray的实际大小
-				logData.resize(end - dataPtr);
-			}
-
-			// 写入缓冲区
-			writeToBuffer(std::move(logData));
-			#endif // QT_DEBUG
-		}
-
-		// 便捷日志方法 - 模板化以支持完美转发
+		// 日志方法
 		template<typename StringType>
 		void trace(StringType&& message,
 			const std::source_location& location = std::source_location::current())
@@ -385,6 +126,29 @@ namespace nexusdl::log {
 		QString getTimeStamp() const;
 		uint32_t getCurrentProcessId() const;
 		QString levelToColor(LogLevel level) const;
+		void getLogBasicInfo(const std::source_location& location,
+			std::tm& tm, int& milliseconds,
+			const char*& file, const char*& shortFile,
+			int& line, QString& threadName, bool& hasThreadName);
+
+		// 输出模式函数
+		template<typename StringType>
+		void writeToVSDebug(LogLevel level, StringType&& message,
+			const std::tm& tm, int milliseconds,
+			const char* file, int line,
+			const QString& threadName, bool hasThreadName);
+
+		template<typename StringType>
+		void writeToConsole(LogLevel level, StringType&& message,
+			const std::tm& tm, int milliseconds,
+			const char* shortFile, int line,
+			const QString& threadName, bool hasThreadName);
+
+		template<typename StringType>
+		void writeToFile(LogLevel level, StringType&& message,
+			const std::tm& tm, int milliseconds,
+			const char* shortFile, int line,
+			const QString& threadName, bool hasThreadName);
 
 		void initialize();
 		void shutdown();
@@ -417,6 +181,422 @@ namespace nexusdl::log {
 		qint64 m_lastFlushTime;
 		qint64 m_logsSinceLastFlush;
 	};
+
+	// =============== 私有输出函数的实现 ===============
+
+	template<typename StringType>
+	void Logger::writeToVSDebug(LogLevel level, StringType&& message,
+		const std::tm& tm, int milliseconds,
+		const char* file, int line,
+		const QString& threadName, bool hasThreadName)
+	{
+		QString consoleOutput;
+
+		char timeBuffer[68];
+		size_t len = std::strftime(timeBuffer, sizeof(timeBuffer) - 4,
+			"%Y-%m-%d %H:%M:%S", &tm);
+		std::snprintf(timeBuffer + len, 5, ".%03d", milliseconds);
+
+		QString debugBasePart;
+		if (hasThreadName)
+		{
+			debugBasePart = QString("[%1] [%2] [%3]")
+				.arg(timeBuffer)
+				.arg(levelToString(level))
+				.arg(threadName);
+		}
+		else
+		{
+			uint32_t pid = getCurrentProcessId();
+			debugBasePart = QString("[%1] [%2] [%3]")
+				.arg(timeBuffer)
+				.arg(levelToString(level))
+				.arg(pid);
+		}
+
+		// 使用VS格式，双击跳转
+		consoleOutput = QString("%1\n%2(%3): %4\n")
+			.arg(debugBasePart)
+			.arg(QDir::toNativeSeparators(QString::fromUtf8(file)))
+			.arg(line)
+			.arg(std::forward<StringType>(message));
+
+		qDebug().noquote() << consoleOutput;
+	}
+
+	template<typename StringType>
+	void Logger::writeToConsole(LogLevel level, StringType&& message,
+		const std::tm& tm, int milliseconds,
+		const char* shortFile, int line,
+		const QString& threadName, bool hasThreadName)
+	{
+		QString consoleOutput;
+
+		char timeBuffer[68];
+		size_t len = std::strftime(timeBuffer, sizeof(timeBuffer) - 4,
+			"%Y-%m-%d %H:%M:%S", &tm);
+		std::snprintf(timeBuffer + len, 5, ".%03d", milliseconds);
+
+		QString debugBasePart;
+		if (hasThreadName)
+		{
+			debugBasePart = QString("[%1] [%2] [%3]")
+				.arg(timeBuffer)
+				.arg(levelToString(level))
+				.arg(threadName);
+		}
+		else
+		{
+			uint32_t pid = getCurrentProcessId();
+			debugBasePart = QString("[%1] [%2] [%3]")
+				.arg(timeBuffer)
+				.arg(levelToString(level))
+				.arg(pid);
+		}
+
+		// 带颜色的控制台输出
+		QString color = levelToColor(level);
+		QString resetColor = "\033[0m";
+
+		consoleOutput = QString("%1%2 %3(%4): %5%6")
+			.arg(color)
+			.arg(debugBasePart)
+			.arg(shortFile)
+			.arg(line)
+			.arg(std::forward<StringType>(message))
+			.arg(resetColor);
+
+		qDebug().noquote() << consoleOutput;
+	}
+
+	template<typename StringType>
+	void Logger::writeToFile(LogLevel level, StringType&& message,
+		const std::tm& tm, int milliseconds,
+		const char* shortFile, int line,
+		const QString& threadName, bool hasThreadName)
+	{
+		// thread_local 缓冲区
+		static thread_local QByteArray logData;
+		logData.clear();  // 清除之前的内容
+
+		if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
+		{
+			// QString版本 - 保持原来的多次追加方式
+			static thread_local char basePart[256];
+
+			if (hasThreadName)
+			{
+				// 使用线程名
+				QByteArray threadIdentifier = threadName.toUtf8();
+				auto result = std::format_to_n(
+					basePart, sizeof(basePart) - 1,
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					threadIdentifier.constData(),
+					shortFile,
+					line
+				);
+				*(result.out) = '\0';
+
+				// 预分配空间
+				if (logData.capacity() < 1024)
+				{
+					logData.reserve(1024);
+				}
+
+				logData.append(basePart, result.out - basePart);
+				logData.append(std::forward<StringType>(message).toUtf8());
+				logData.append('\n');
+			}
+			else
+			{
+				// 使用进程ID - 直接格式化为整数
+				uint32_t pid = getCurrentProcessId();
+				auto result = std::format_to_n(
+					basePart, sizeof(basePart) - 1,
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					pid,
+					shortFile,
+					line
+				);
+				*(result.out) = '\0';
+
+				// 预分配空间
+				if (logData.capacity() < 1024)
+				{
+					logData.reserve(1024);
+				}
+
+				logData.append(basePart, result.out - basePart);
+				logData.append(std::forward<StringType>(message).toUtf8());
+				logData.append('\n');
+			}
+		}
+		else
+		{
+			// 字符串字面量版本
+			const char* messagePtr = std::forward<StringType>(message);
+
+			if (hasThreadName)
+			{
+				// 使用线程名
+				QByteArray threadIdentifier = threadName.toUtf8();
+
+				// 使用std::formatted_size计算确切长度
+				size_t totalLength = std::formatted_size(
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					threadIdentifier.constData(),
+					shortFile,
+					line,
+					messagePtr
+				);
+
+				if (logData.capacity() < static_cast<int>(totalLength + 1))
+				{
+					logData.reserve(totalLength + 1);
+				}
+
+				// 直接格式化到QByteArray的缓冲区
+				char* dataPtr = logData.data();
+				auto result = std::format_to_n(
+					dataPtr, totalLength + 1,
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					threadIdentifier.constData(),
+					shortFile,
+					line,
+					messagePtr
+				);
+
+				// 设置QByteArray的实际大小
+				logData.resize(result.out - dataPtr);
+			}
+			else
+			{
+				// 使用进程ID - 直接格式化为整数
+				uint32_t pid = getCurrentProcessId();
+
+				// 使用std::formatted_size计算确切长度
+				size_t totalLength = std::formatted_size(
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					pid,
+					shortFile,
+					line,
+					messagePtr
+				);
+
+				if (logData.capacity() < static_cast<int>(totalLength + 1))
+				{
+					logData.reserve(totalLength + 1);
+				}
+
+				// 直接格式化到QByteArray的缓冲区
+				char* dataPtr = logData.data();
+				auto result = std::format_to_n(
+					dataPtr, totalLength + 1,
+					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
+					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+					tm.tm_hour, tm.tm_min, tm.tm_sec,
+					milliseconds,
+					levelToString(level),
+					pid,
+					shortFile,
+					line,
+					messagePtr
+				);
+
+				// 设置QByteArray的实际大小
+				logData.resize(result.out - dataPtr);
+			}
+		}
+
+		// 写入缓冲区
+		writeToBuffer(std::move(logData));
+	}
+
+	// =============== 模式1: VSOUTPUT_MODE ===============
+	// 仅输出到VS调试控制台
+	#ifdef LOG_VSOUTPUT_MODE
+
+	template<typename StringType>
+		requires StringLiteralOrQString<StringType>
+	void Logger::log(LogLevel level, StringType&& message,
+		const std::source_location& location)
+	{
+		std::tm tm;
+		int milliseconds;
+		const char* file;
+		const char* shortFile;
+		int line;
+		QString threadName;
+		bool hasThreadName;
+
+		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
+
+		#ifdef QT_DEBUG
+		// 调试模式：输出到VS控制台
+		writeToVSDebug(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			file, line, threadName, hasThreadName);
+		#endif // QT_DEBUG
+	}
+
+	// =============== 模式2: CONSOLEOUTPUT_MODE ===============
+	// 仅输出到彩色控制台
+	#elif defined(LOG_CONSOLEOUTPUT_MODE)
+
+	template<typename StringType>
+		requires StringLiteralOrQString<StringType>
+	void Logger::log(LogLevel level, StringType&& message,
+		const std::source_location& location)
+	{
+		std::tm tm;
+		int milliseconds;
+		const char* file;
+		const char* shortFile;
+		int line;
+		QString threadName;
+		bool hasThreadName;
+
+		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
+
+		#ifdef QT_DEBUG
+		// 调试模式：输出到控制台
+		writeToConsole(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			shortFile, line, threadName, hasThreadName);
+		#endif // QT_DEBUG
+	}
+
+	// =============== 模式3: DEBUG_MODE ===============
+	// 调试模式：同时输出到控制台和文件
+	#elif defined(LOG_DEBUG_MODE)
+
+	template<typename StringType>
+		requires StringLiteralOrQString<StringType>
+	void Logger::log(LogLevel level, StringType&& message,
+		const std::source_location& location)
+	{
+		std::tm tm;
+		int milliseconds;
+		const char* file;
+		const char* shortFile;
+		int line;
+		QString threadName;
+		bool hasThreadName;
+
+		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
+
+		// 调试模式：同时输出到控制台和文件
+		#ifdef Q_OS_WIN
+		writeToVSDebug(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			file, line, threadName, hasThreadName);
+		#else
+		writeToConsole(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			shortFile, line, threadName, hasThreadName);
+		#endif // Q_OS_WIN
+
+		// 写入文件（如果已初始化）
+		if (m_initialized)
+		{
+			writeToFile(level, std::forward<StringType>(message),
+				tm, milliseconds,
+				shortFile, line, threadName, hasThreadName);
+		}
+	}
+
+	// =============== 模式4: RELEASE_MODE ===============
+	// 发布模式：只输出到文件
+	#elif defined(LOG_RELEASE_MODE)
+
+	template<typename StringType>
+		requires StringLiteralOrQString<StringType>
+	void Logger::log(LogLevel level, StringType&& message,
+		const std::source_location& location)
+	{
+		std::tm tm;
+		int milliseconds;
+		const char* file;
+		const char* shortFile;
+		int line;
+		QString threadName;
+		bool hasThreadName;
+
+		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
+
+		// 发布模式：只写入文件
+		writeToFile(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			shortFile, line, threadName, hasThreadName);
+	}
+
+	// =============== 模式5: 默认模式 ===============
+	// 根据QT_DEBUG和平台自动选择
+	#else
+
+	template<typename StringType>
+		requires StringLiteralOrQString<StringType>
+	void Logger::log(LogLevel level, StringType&& message,
+		const std::source_location& location)
+	{
+		std::tm tm;
+		int milliseconds;
+		const char* file;
+		const char* shortFile;
+		int line;
+		QString threadName;
+		bool hasThreadName;
+
+		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
+
+		#ifdef QT_DEBUG
+		// 调试模式：输出到控制台和文件
+		#ifdef Q_OS_WIN
+		writeToVSDebug(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			file, line, threadName, hasThreadName);
+		#else
+		writeToConsole(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			shortFile, line, threadName, hasThreadName);
+		#endif // Q_OS_WIN
+
+		// 写入文件（如果已初始化）
+		if (m_initialized)
+		{
+			writeToFile(level, std::forward<StringType>(message),
+				tm, milliseconds,
+				shortFile, line, threadName, hasThreadName);
+		}
+		#else
+		// 发布模式：只写入文件（如果已初始化）
+		writeToFile(level, std::forward<StringType>(message),
+			tm, milliseconds,
+			shortFile, line, threadName, hasThreadName);
+		#endif // QT_DEBUG
+	}
+
+	#endif // 模式选择
 
 }
 

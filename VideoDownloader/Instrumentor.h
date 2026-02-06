@@ -21,6 +21,8 @@
 #include <queue>
 #include <atomic>
 
+#include "macros.h"
+
 struct ProfileResult
 {
 	std::string Name;
@@ -227,9 +229,7 @@ private:
 	bool m_Stopped;
 };
 
-#define BENCHMARK
-
-#if defined(BENCHMARK)
+#if defined(INSTRUMENTOR_BENCHMARK)
 // 平台特定的函数签名宏
 #if defined(_WIN32)
 #define FUNC_SIG __FUNCSIG__
@@ -237,7 +237,7 @@ private:
 #define FUNC_SIG __PRETTY_FUNCTION__
 #else
 #define FUNC_SIG __func__
-#endif
+#endif // _WIN32
 
 // 使用宏重载技术
 #define BENCHMARKING_START_ARG_1(filePath) Instrumentor::Get().BeginSession(FUNC_SIG, filePath)
@@ -256,4 +256,4 @@ private:
 #define BENCHMARKING_SCOPE(name)
 #define BENCHMARKING_FUNCTION()
 #define FUNC_SIG ""
-#endif
+#endif // INSTRUMENTOR_BENCHMARK

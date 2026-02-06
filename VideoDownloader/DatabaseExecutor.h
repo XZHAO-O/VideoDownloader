@@ -1,3 +1,6 @@
+// Copyright 2026 XZHAO_O. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include <QSqlDatabase>
@@ -12,45 +15,49 @@
 #include <memory>
 #include <atomic>
 
-class DatabaseExecutor : public QObject
-{
-	Q_OBJECT
+namespace nexusdl::database {
 
-public:
-	explicit DatabaseExecutor(const QString& databasePath, QObject* parent = nullptr);
-	~DatabaseExecutor();
+	class DatabaseExecutor : public QObject
+	{
+		Q_OBJECT
 
-	DatabaseExecutor(const DatabaseExecutor&) = delete;
-	DatabaseExecutor& operator=(const DatabaseExecutor&) = delete;
-	DatabaseExecutor(DatabaseExecutor&&) = delete;
-	DatabaseExecutor& operator=(DatabaseExecutor&&) = delete;
+	public:
+		explicit DatabaseExecutor(QObject* parent = nullptr);
+		~DatabaseExecutor();
 
-	// 初始化数据库（每个线程需要单独调用）
-	bool initialize();
+		DatabaseExecutor(const DatabaseExecutor&) = delete;
+		DatabaseExecutor& operator=(const DatabaseExecutor&) = delete;
+		DatabaseExecutor(DatabaseExecutor&&) = delete;
+		DatabaseExecutor& operator=(DatabaseExecutor&&) = delete;
 
-	// SQL执行（通用方法）
-	bool executeQuery(const QString& queryStr, const QVariantMap& params);
-	bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
-	QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
-	QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
+		// 初始化数据库（每个线程需要单独调用）
+		bool initialize();
 
-	// 实用方法
-	QString lastError() const;
-	QString databasePath() const;
-	qint64 databaseSize() const;
+		// SQL执行（通用方法）
+		bool executeQuery(const QString& queryStr, const QVariantMap& params);
+		bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
+		QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
+		QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
 
-	// 事务支持
-	bool beginTransaction();
-	bool commitTransaction();
-	bool rollbackTransaction();
-	void endTransaction();  // 释放写锁
+		// 实用方法
+		QString lastError() const;
+		QString databasePath() const;
+		qint64 databaseSize() const;
 
-private:
-	bool initConnection();
+		// 事务支持
+		bool beginTransaction();
+		bool commitTransaction();
+		bool rollbackTransaction();
+		void endTransaction();  // 释放写锁
 
-private:
-	static thread_local QSqlDatabase m_database;
-	const QString m_databasePath;
-	mutable QReadWriteLock m_rwLock;
-	static thread_local bool m_isInitialized;
-};
+	private:
+		bool initConnection();
+
+	private:
+		static thread_local QSqlDatabase m_database;
+		const QString m_databasePath;
+		mutable QReadWriteLock m_rwLock;
+		static thread_local bool m_isInitialized;
+	};
+
+}

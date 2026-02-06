@@ -9,12 +9,12 @@
 
 namespace
 {
-	constexpr int kDefaultFlushIntervalMs = 60000;        // 60s
-	constexpr qint64 kDefaultMaxFileSize = 100 * 1024 * 1024; // 100MB
-	constexpr qint64 kDefaultMaxFiles = 1000;
-	constexpr qint64 kMaxLogsPerFlush = 1000;
-	constexpr qint64 kBufferUsageThreshold = 4; // 1/4缓冲区使用时触发刷新
-	constexpr const char* kLogBaseName = "NexusDL";
+	constexpr int kDefaultFlushIntervalMs{ 60000 };        // 60s
+	constexpr qint64 kDefaultMaxFileSize{ 100 * 1024 * 1024 }; // 100MB
+	constexpr qint64 kDefaultMaxFiles{ 1000 };
+	constexpr qint64 kMaxLogsPerFlush{ 1000 };
+	constexpr qint64 kBufferUsageThreshold{ 4 }; // 1/4缓冲区使用时触发刷新
+	const QString kLogBaseName = QStringLiteral("NexusDL");
 }
 
 namespace nexusdl::log {
@@ -26,22 +26,22 @@ namespace nexusdl::log {
 	}
 
 	Logger::Logger(QObject* parent)
-		: QObject(parent)
-		, m_logLevel(LogLevel::Info)
-		, m_initialized(false)
-		, m_logDir(QCoreApplication::applicationDirPath() + "/logs")
-		, m_logFile()
-		, m_currentLogPath()
-		, m_currentFileSize(0)
-		, m_maxFileSize(kDefaultMaxFileSize)
-		, m_maxFiles(kDefaultMaxFiles)
-		, m_currentBuffer(nullptr)
-		, m_nextBuffer(nullptr)
-		, m_mutex()
-		, m_flushTimer(QTimer(this))
-		, m_flushInterval(kDefaultFlushIntervalMs)
-		, m_lastFlushTime(0)
-		, m_logsSinceLastFlush(0)
+		: QObject{ parent }
+		, m_logLevel{ LogLevel::Info }
+		, m_initialized{ false }
+		, m_logDir{ QCoreApplication::applicationDirPath() + "/logs" }
+		, m_logFile{}
+		, m_currentLogPath{}
+		, m_currentFileSize{ 0 }
+		, m_maxFileSize{ kDefaultMaxFileSize }
+		, m_maxFiles{ kDefaultMaxFiles }
+		, m_currentBuffer{ nullptr }
+		, m_nextBuffer{ nullptr }
+		, m_mutex{}
+		, m_flushTimer{ QTimer{this} }
+		, m_flushInterval{ kDefaultFlushIntervalMs }
+		, m_lastFlushTime{ 0 }
+		, m_logsSinceLastFlush{ 0 }
 	{
 		initialize();
 	}
@@ -132,7 +132,7 @@ namespace nexusdl::log {
 		{
 			// 如果缓冲区有数据，且距离上次写入时间较长，或者有足够多的日志，则刷新
 			qint64 now = QDateTime::currentMSecsSinceEpoch();
-			bool shouldFlush = false;
+			bool shouldFlush{ false };
 
 			// 条件1: 距离上次写入超过刷新间隔
 			if (now - m_lastFlushTime > m_flushInterval)
@@ -315,7 +315,7 @@ namespace nexusdl::log {
 		localtime_r(&time, &tm);
 		#endif // Q_OS_WIN
 
-		char buffer[64];
+		char buffer[64]{};
 		std::strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M-%S", &tm);
 		return QString(buffer);
 	}
@@ -344,6 +344,43 @@ namespace nexusdl::log {
 		default:
 			return "";
 		}
+	}
+
+	void Logger::getLogBasicInfo(const std::source_location& location,
+		std::tm& tm, int& milliseconds,
+		const char*& file, const char*& shortFile,
+		int& line, QString& threadName, bool& hasThreadName)
+	{
+		auto now = std::chrono::system_clock::now();
+		auto since_epoch = now.time_since_epoch();
+		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
+		milliseconds = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+			since_epoch - seconds).count());
+
+		auto time = std::chrono::system_clock::to_time_t(
+			std::chrono::system_clock::time_point(seconds));
+
+		#ifdef Q_OS_WIN
+		localtime_s(&tm, &time);
+		#else
+		localtime_r(&time, &tm);
+		#endif
+
+		// 获取文件名和行号
+		file = location.file_name();
+		line = location.line();
+
+		// 获取短文件名
+		shortFile = file;
+		const char* lastSlash = std::max(std::strrchr(file, '/'), std::strrchr(file, '\\'));
+		if (lastSlash != nullptr)
+		{
+			shortFile = lastSlash + 1;
+		}
+
+		// 获取线程名称
+		threadName = QThread::currentThread()->objectName();
+		hasThreadName = !threadName.isEmpty();
 	}
 
 	void Logger::initialize()
@@ -388,4 +425,5 @@ namespace nexusdl::log {
 
 		m_initialized = false;
 	}
+
 }

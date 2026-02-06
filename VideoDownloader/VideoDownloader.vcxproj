@@ -394,6 +394,7 @@
     <QtMoc Include="LanguageManager.h" />
     <ClInclude Include="log_buffer.h" />
     <ClInclude Include="log_level.h" />
+    <ClInclude Include="macros.h" />
     <ClInclude Include="MediaInfo.h" />
     <QtMoc Include="PlatformAggregatorService.h" />
     <QtMoc Include="ModCardModel.h" />

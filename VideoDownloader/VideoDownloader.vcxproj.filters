@@ -96,6 +96,9 @@
     <Filter Include="docs">
       <UniqueIdentifier>{68af69bc-0356-42e8-971e-78fef44c6222}</UniqueIdentifier>
     </Filter>
+    <Filter Include="macros">
+      <UniqueIdentifier>{4185391e-d076-4c93-942d-7e44197e03c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -832,6 +835,9 @@
     </ClInclude>
     <ClInclude Include="log_buffer.h">
       <Filter>Core\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="macros.h">
+      <Filter>macros</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
