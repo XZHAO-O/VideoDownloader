@@ -3,6 +3,11 @@
 
 #include "log_buffer.h"
 
+namespace {
+	constexpr qint64 kBufferSize{ 4 * 1024 * 1024 };
+	constexpr qint64 kBufferUsageThreshold{ 4 }; // 1/4缓冲区使用后可触发刷新
+}
+
 namespace nexusdl::log {
 
 	LogBuffer::LogBuffer()
@@ -33,6 +38,11 @@ namespace nexusdl::log {
 	qint64 LogBuffer::size() const
 	{
 		return m_data.size();
+	}
+
+	bool LogBuffer::shouldFlush() const
+	{
+		return m_data.size() > kBufferSize / kBufferUsageThreshold;
 	}
 
 	qint64 LogBuffer::writableBytes() const

@@ -10,8 +10,6 @@ namespace nexusdl::log {
 	class LogBuffer
 	{
 	public:
-		static constexpr qint64 kBufferSize = 4 * 1024 * 1024;
-
 		explicit LogBuffer();
 		~LogBuffer() = default;
 
@@ -29,6 +27,8 @@ namespace nexusdl::log {
 		void clear();
 
 		qint64 size() const;
+
+		bool shouldFlush() const;
 
 		qint64 writableBytes() const;
 

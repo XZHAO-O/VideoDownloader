@@ -269,164 +269,127 @@ namespace nexusdl::log {
 		qDebug().noquote() << consoleOutput;
 	}
 
+	// 辅助函数：将整数转换为字符串并更新指针
+	template<typename T>
+	inline char* writeNumber(char* ptr, T value) {
+		auto [end, ec] = std::to_chars(ptr, ptr + 32, value);
+		return end;
+	}
+
+	// 辅助函数：复制字符串并更新指针
+	inline char* writeString(char* ptr, const char* str) {
+		size_t len = strlen(str);
+		memcpy(ptr, str, len);
+		return ptr + len;
+	}
+
+	// 辅助函数：补零格式化两位数字
+	inline char* writeTwoDigits(char* ptr, int value) {
+		if (value < 10) {
+			*ptr++ = '0';
+		}
+		return writeNumber(ptr, value);
+	}
+
+	// 辅助函数：补零格式化三位毫秒
+	inline char* writeThreeDigits(char* ptr, int value) {
+		if (value < 100) *ptr++ = '0';
+		if (value < 10) *ptr++ = '0';
+		return writeNumber(ptr, value);
+	}
+
 	template<typename StringType>
 	void Logger::writeToFile(LogLevel level, StringType&& message,
 		const std::tm& tm, int milliseconds,
 		const char* shortFile, int line,
 		const QString& threadName, bool hasThreadName)
 	{
-		// thread_local 缓冲区
-		static thread_local QByteArray logData;
-		logData.clear();  // 清除之前的内容
+		static thread_local char buffer[1024];  // 足够大的缓冲区
 
-		if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
+		char* ptr = buffer;
+
+		// 开始构建日志行
+		*ptr++ = '[';
+
+		// 年份 (4位)
+		ptr = writeNumber(ptr, tm.tm_year + 1900);
+		*ptr++ = '-';
+
+		// 月份 (补零)
+		ptr = writeTwoDigits(ptr, tm.tm_mon + 1);
+		*ptr++ = '-';
+
+		// 日期 (补零)
+		ptr = writeTwoDigits(ptr, tm.tm_mday);
+		*ptr++ = ' ';
+
+		// 小时 (补零)
+		ptr = writeTwoDigits(ptr, tm.tm_hour);
+		*ptr++ = ':';
+
+		// 分钟 (补零)
+		ptr = writeTwoDigits(ptr, tm.tm_min);
+		*ptr++ = ':';
+
+		// 秒 (补零)
+		ptr = writeTwoDigits(ptr, tm.tm_sec);
+		*ptr++ = '.';
+
+		// 毫秒 (补零到3位)
+		ptr = writeThreeDigits(ptr, milliseconds);
+
+		// 日志等级
+		ptr = writeString(ptr, "] [");
+		ptr = writeString(ptr, levelToString(level));
+		ptr = writeString(ptr, "] [");
+
+		if (hasThreadName)
 		{
-			// QString版本 - 保持原来的多次追加方式
-			static thread_local char basePart[256];
-
-			if (hasThreadName)
-			{
-				// 使用线程名
-				QByteArray threadIdentifier = threadName.toUtf8();
-				auto result = std::format_to_n(
-					basePart, sizeof(basePart) - 1,
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					threadIdentifier.constData(),
-					shortFile,
-					line
-				);
-				*(result.out) = '\0';
-
-				// 预分配空间
-				if (logData.capacity() < 1024)
-				{
-					logData.reserve(1024);
-				}
-
-				logData.append(basePart, result.out - basePart);
-				logData.append(std::forward<StringType>(message).toUtf8());
-				logData.append('\n');
-			}
-			else
-			{
-				// 使用进程ID - 直接格式化为整数
-				uint32_t pid = getCurrentProcessId();
-				auto result = std::format_to_n(
-					basePart, sizeof(basePart) - 1,
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): ",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					pid,
-					shortFile,
-					line
-				);
-				*(result.out) = '\0';
-
-				// 预分配空间
-				if (logData.capacity() < 1024)
-				{
-					logData.reserve(1024);
-				}
-
-				logData.append(basePart, result.out - basePart);
-				logData.append(std::forward<StringType>(message).toUtf8());
-				logData.append('\n');
-			}
+			// 使用线程名
+			QByteArray utf8ThreadName = threadName.toUtf8();
+			const char* threadNameStr = utf8ThreadName.constData();
+			size_t threadNameLen = utf8ThreadName.size();
+			memcpy(ptr, threadNameStr, threadNameLen);
+			ptr += threadNameLen;
 		}
 		else
 		{
-			// 字符串字面量版本
-			const char* messagePtr = std::forward<StringType>(message);
-
-			if (hasThreadName)
-			{
-				// 使用线程名
-				QByteArray threadIdentifier = threadName.toUtf8();
-
-				// 使用std::formatted_size计算确切长度
-				size_t totalLength = std::formatted_size(
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					threadIdentifier.constData(),
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				if (logData.capacity() < static_cast<int>(totalLength + 1))
-				{
-					logData.reserve(totalLength + 1);
-				}
-
-				// 直接格式化到QByteArray的缓冲区
-				char* dataPtr = logData.data();
-				auto result = std::format_to_n(
-					dataPtr, totalLength + 1,
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					threadIdentifier.constData(),
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				// 设置QByteArray的实际大小
-				logData.resize(result.out - dataPtr);
-			}
-			else
-			{
-				// 使用进程ID - 直接格式化为整数
-				uint32_t pid = getCurrentProcessId();
-
-				// 使用std::formatted_size计算确切长度
-				size_t totalLength = std::formatted_size(
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					pid,
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				if (logData.capacity() < static_cast<int>(totalLength + 1))
-				{
-					logData.reserve(totalLength + 1);
-				}
-
-				// 直接格式化到QByteArray的缓冲区
-				char* dataPtr = logData.data();
-				auto result = std::format_to_n(
-					dataPtr, totalLength + 1,
-					"[{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}] [{}] [{}] {}({}): {}\n",
-					tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-					tm.tm_hour, tm.tm_min, tm.tm_sec,
-					milliseconds,
-					levelToString(level),
-					pid,
-					shortFile,
-					line,
-					messagePtr
-				);
-
-				// 设置QByteArray的实际大小
-				logData.resize(result.out - dataPtr);
-			}
+			// 使用进程ID - 直接格式化为整数
+			ptr = writeNumber(ptr, getCurrentProcessId());
 		}
+
+		// 进程ID
+		ptr = writeString(ptr, "] ");
+
+		// 文件名
+		ptr = writeString(ptr, shortFile);
+		*ptr++ = '(';
+
+		// 行号
+		ptr = writeNumber(ptr, line);
+		ptr = writeString(ptr, "): ");
+		if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
+		{
+			// 预转换消息为UTF-8（如果消息固定可移出循环）
+			QByteArray utf8Message = message.toUtf8();
+			const char* messageStr = utf8Message.constData();
+			size_t messageLen = utf8Message.size();
+			// 消息内容
+			memcpy(ptr, messageStr, messageLen);
+			ptr += messageLen;
+		}
+		else
+		{
+			size_t messageLen = std::strlen(message);
+			memcpy(ptr, message, messageLen);
+			ptr += messageLen;
+		}
+		// 换行
+		*ptr++ = '\n';
+
+		// 现在buffer[0]到ptr-1包含了完整的日志行
+		// 可以直接使用或转换为QString/QByteArray
+		QByteArray logData = QByteArray(buffer, static_cast<int>(ptr - buffer));
 
 		// 写入缓冲区
 		writeToBuffer(std::move(logData));

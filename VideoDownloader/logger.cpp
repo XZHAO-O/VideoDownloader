@@ -13,7 +13,6 @@ namespace
 	constexpr qint64 kDefaultMaxFileSize{ 100 * 1024 * 1024 }; // 100MB
 	constexpr qint64 kDefaultMaxFiles{ 1000 };
 	constexpr qint64 kMaxLogsPerFlush{ 1000 };
-	constexpr qint64 kBufferUsageThreshold{ 4 }; // 1/4缓冲区使用时触发刷新
 	const QString kLogBaseName = QStringLiteral("NexusDL");
 }
 
@@ -140,7 +139,7 @@ namespace nexusdl::log {
 				shouldFlush = true;
 			}
 			// 条件2: 缓冲区使用率超过一定比例
-			else if (m_currentBuffer->size() > LogBuffer::kBufferSize / kBufferUsageThreshold)
+			else if (m_currentBuffer->shouldFlush())
 			{
 				shouldFlush = true;
 			}
