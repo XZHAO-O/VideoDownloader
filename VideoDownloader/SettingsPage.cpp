@@ -487,7 +487,7 @@ void SettingsPage::setupConnections()
 	connect(m_proxyEnabledToggle, &AntToggleButton::toggled, this, &SettingsPage::onProxySettingsChanged);
 
 	connect(m_viewLogsButton, &AntButton::clicked, this, [this]() {
-		QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
+		QString logDir = m_configManager->getValue("log/path").toString();
 		QDesktopServices::openUrl(QUrl::fromLocalFile(logDir));
 		});
 

@@ -9,11 +9,11 @@
 
 namespace
 {
-	constexpr int kDefaultFlushIntervalMs{ 60000 };        // 60s
+	constexpr int kFlushInterval{ 60000 };        // 60s
 	constexpr qint64 kDefaultMaxFileSize{ 100 * 1024 * 1024 }; // 100MB
 	constexpr qint64 kDefaultMaxFiles{ 1000 };
 	constexpr qint64 kMaxLogsPerFlush{ 1000 };
-	const QString kLogBaseName = QStringLiteral("NexusDL");
+	const QString kLogBaseName{ QStringLiteral("NexusDL") };
 }
 
 namespace nexusdl::log {
@@ -28,17 +28,16 @@ namespace nexusdl::log {
 		: QObject{ parent }
 		, m_logLevel{ LogLevel::Info }
 		, m_initialized{ false }
-		, m_logDir{ QCoreApplication::applicationDirPath() + "/logs" }
+		, m_logDir{ QCoreApplication::applicationDirPath() % "/logs" }
 		, m_logFile{}
 		, m_currentLogPath{}
 		, m_currentFileSize{ 0 }
 		, m_maxFileSize{ kDefaultMaxFileSize }
-		, m_maxFiles{ kDefaultMaxFiles }
+		, m_maxFileCount{ kDefaultMaxFiles }
 		, m_currentBuffer{ nullptr }
 		, m_nextBuffer{ nullptr }
 		, m_mutex{}
 		, m_flushTimer{ QTimer{this} }
-		, m_flushInterval{ kDefaultFlushIntervalMs }
 		, m_lastFlushTime{ 0 }
 		, m_logsSinceLastFlush{ 0 }
 	{
@@ -48,7 +47,7 @@ namespace nexusdl::log {
 	Logger::~Logger()
 	{
 		// 强制刷新当前缓冲区
-		QMutexLocker locker(&m_mutex);
+		QMutexLocker locker{ &m_mutex };
 		if (!m_initialized)
 		{
 			return;
@@ -65,7 +64,7 @@ namespace nexusdl::log {
 			return false;
 		}
 
-		QMutexLocker locker(&m_mutex);
+		QMutexLocker locker{ &m_mutex };
 
 		initialize();
 
@@ -79,7 +78,7 @@ namespace nexusdl::log {
 			return false;
 		}
 
-		QMutexLocker locker(&m_mutex);
+		QMutexLocker locker{ &m_mutex };
 
 		if (!m_initialized)
 		{
@@ -92,36 +91,62 @@ namespace nexusdl::log {
 		return true;
 	}
 
-	void Logger::setLogLevel(LogLevel level)
+	void Logger::setLogLevel(LogLevel level) noexcept
 	{
-		m_logLevel = level;
+		m_logLevel.store(level, std::memory_order_relaxed);
 	}
 
-	bool Logger::shouldLog(LogLevel level) const
+	// =============== shouldLog 函数模式 ===============
+	#ifdef LOG_VSOUTPUT_MODE
+	// 模式1: VSOUTPUT_MODE - 仅输出到VS调试控制台，不需要检查初始化
+	bool Logger::shouldLog(LogLevel level) const noexcept
+	{
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed));
+	}
+	#elif defined(LOG_CONSOLEOUTPUT_MODE)
+	// 模式2: CONSOLEOUTPUT_MODE - 仅输出到彩色控制台，不需要检查初始化
+	bool Logger::shouldLog(LogLevel level) const noexcept
+	{
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed));
+	}
+	#elif defined(LOG_DEBUG_MODE)
+	// 模式3: DEBUG_MODE - 同时输出到控制台和文件
+	bool Logger::shouldLog(LogLevel level) const noexcept
+	{
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed));
+	}
+	#elif defined(LOG_RELEASE_MODE)
+	// 模式4: RELEASE_MODE - 只输出到文件，需要检查初始化
+	bool Logger::shouldLog(LogLevel level) const noexcept
+	{
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed)) && m_initialized;
+	}
+	#else
+	// 默认模式 - 根据QT_DEBUG决定
+	bool Logger::shouldLog(LogLevel level) const noexcept
 	{
 		#ifdef QT_DEBUG
-		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load());
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed));
 		#else
-		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load()) && m_initialized;
+		return static_cast<int>(level) >= static_cast<int>(m_logLevel.load(std::memory_order_relaxed)) && m_initialized;
 		#endif // QT_DEBUG
 	}
+	#endif // 模式选择
 
-	void Logger::setRotation(qint64 maxSize, qint64 maxFiles)
+	void Logger::setMaxRotationFileSize(qint64 maxFileSize) noexcept
 	{
-		m_maxFileSize = maxSize;
-		m_maxFiles = maxFiles;
+		m_maxFileSize.store(maxFileSize, std::memory_order_relaxed);
 	}
 
-	void Logger::setFlushInterval(int milliseconds)
+	void Logger::setMaxRotationFileCount(qint64 maxFileCount) noexcept
 	{
-		m_flushInterval = milliseconds;
-		m_flushTimer.setInterval(milliseconds);
+		m_maxFileCount.store(maxFileCount, std::memory_order_relaxed);
 	}
 
 	void Logger::onFlushTimer()
 	{
 		// 检查是否需要定时刷新
-		QMutexLocker locker(&m_mutex);
+		QMutexLocker locker{ &m_mutex };
 		if (!m_initialized)
 		{
 			return;
@@ -130,26 +155,7 @@ namespace nexusdl::log {
 		if (!m_currentBuffer->isEmpty())
 		{
 			// 如果缓冲区有数据，且距离上次写入时间较长，或者有足够多的日志，则刷新
-			qint64 now = QDateTime::currentMSecsSinceEpoch();
-			bool shouldFlush{ false };
-
-			// 条件1: 距离上次写入超过刷新间隔
-			if (now - m_lastFlushTime > m_flushInterval)
-			{
-				shouldFlush = true;
-			}
-			// 条件2: 缓冲区使用率超过一定比例
-			else if (m_currentBuffer->shouldFlush())
-			{
-				shouldFlush = true;
-			}
-			// 条件3: 有足够多的日志条目
-			else if (m_logsSinceLastFlush > kMaxLogsPerFlush)
-			{
-				shouldFlush = true;
-			}
-
-			if (shouldFlush)
+			if (QDateTime::currentMSecsSinceEpoch() - m_lastFlushTime > kFlushInterval || m_currentBuffer->shouldFlush() || m_logsSinceLastFlush > kMaxLogsPerFlush)
 			{
 				writeBufferToFile();
 			}
@@ -159,7 +165,7 @@ namespace nexusdl::log {
 	bool Logger::openLogFile()
 	{
 		// 确保日志目录存在
-		QDir dir(m_logDir);
+		QDir dir{ m_logDir };
 		if (!dir.exists())
 		{
 			if (!dir.mkpath("."))
@@ -169,16 +175,13 @@ namespace nexusdl::log {
 			}
 		}
 
-		QString timeStamp = getTimeStamp();
-		QString logFileName = QString("%1-%2.log").arg(kLogBaseName).arg(timeStamp);
-		m_currentLogPath = QDir(m_logDir).absoluteFilePath(logFileName);
+		m_currentLogPath = dir.absoluteFilePath(kLogBaseName % "-" % getTimeStamp() % ".log");
 
 		m_logFile.setFileName(m_currentLogPath);
 
 		if (!m_logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
 		{
-			qCritical() << "Failed to open log file:" << m_currentLogPath
-				<< "Error:" << m_logFile.errorString();
+			qCritical() << "Failed to open log file:" << m_currentLogPath << "Error:" << m_logFile.errorString();
 			return false;
 		}
 
@@ -189,7 +192,7 @@ namespace nexusdl::log {
 
 	bool Logger::rotateIfNeeded()
 	{
-		if (m_currentFileSize >= m_maxFileSize)
+		if (m_currentFileSize >= m_maxFileSize.load(std::memory_order_relaxed))
 		{
 			// 关闭当前文件
 			m_logFile.flush();
@@ -210,31 +213,27 @@ namespace nexusdl::log {
 
 	void Logger::cleanupOldFiles()
 	{
-		QDir logDir(m_logDir);
+		QDir logDir{ m_logDir };
 
 		// 获取所有日志文件
-		QStringList filters;
-		filters << QString("%1-*.log").arg(kLogBaseName);
-
-		QStringList logFiles = logDir.entryList(filters, QDir::Files, QDir::Time | QDir::Reversed);
+		QStringList logFiles = logDir.entryList({ kLogBaseName % "-*.log" }, QDir::Files, QDir::Time | QDir::Reversed);
 
 		// 删除超过最大文件数量的旧文件
-		while (logFiles.size() > m_maxFiles)
+		while (logFiles.size() > m_maxFileCount.load(std::memory_order_relaxed))
 		{
-			QString oldestFile = logDir.absoluteFilePath(logFiles.takeFirst());
-			QFile::remove(oldestFile);
+			QFile::remove(logDir.absoluteFilePath(logFiles.takeFirst()));
 		}
 	}
 
-	bool Logger::writeToBuffer(QByteArray&& message)
+	bool Logger::writeToBuffer(const char* message, qint64 size)
 	{
-		QMutexLocker locker(&m_mutex);
+		QMutexLocker locker{ &m_mutex };
 		if (!m_initialized)
 		{
 			return false;
 		}
 		// 检查缓冲区是否已满
-		if (m_currentBuffer->writableBytes() < message.size())
+		if (m_currentBuffer->writableBytes() < size)
 		{
 			// 当前缓冲区满，写入文件
 			if (!writeBufferToFile())
@@ -244,7 +243,7 @@ namespace nexusdl::log {
 		}
 
 		// 写入
-		m_currentBuffer->append(std::move(message));
+		m_currentBuffer->append(message, size);
 		++m_logsSinceLastFlush;
 		return true;
 	}
@@ -256,31 +255,28 @@ namespace nexusdl::log {
 
 		// 获取缓冲区数据的常量引用
 		const QByteArray& logData = m_nextBuffer->data();
-		qint64 dataSize = logData.size();
 
 		// 如果没有数据，直接返回
-		if (dataSize == 0)
+		if (const qint64 dataSize = logData.size(); dataSize == 0)
 		{
 			return true;
 		}
-
-		qint64 bytesWritten = m_logFile.write(logData);
-
-		// 检查写入是否成功
-		if (bytesWritten != dataSize)
+		else
 		{
-			// todo：弹出错误提示
-			qWarning() << "QFile write failed, written: " << bytesWritten
-				<< " expected: " << dataSize
-				<< " error: " << m_logFile.errorString();
+			// 检查写入是否成功
+			if (const qint64 bytesWritten = m_logFile.write(logData); bytesWritten != dataSize)
+			{
+				// todo：弹出错误提示
+				qWarning() << "QFile write failed, written: " << bytesWritten << " expected: " << dataSize << " error: " << m_logFile.errorString();
 
-			// 暂时：出错情况下清空缓冲区确保两个缓冲区都是空的,如果后续需要添加恢复日志系统的功能则需更改
-			m_nextBuffer->clear();
-			shutdown();
-			return false;
+				shutdown();
+				return false;
+			}
+			else
+			{
+				m_currentFileSize += bytesWritten;
+			}
 		}
-
-		m_currentFileSize += bytesWritten;
 
 		// 刷新文件流到磁盘
 		m_logFile.flush();
@@ -307,42 +303,21 @@ namespace nexusdl::log {
 	{
 		auto now = std::chrono::system_clock::now();
 		auto time = std::chrono::system_clock::to_time_t(now);
-		std::tm tm;
+		std::tm tm{};
 		#ifdef Q_OS_WIN
 		localtime_s(&tm, &time);
 		#else
 		localtime_r(&time, &tm);
 		#endif // Q_OS_WIN
 
-		char buffer[64]{};
+		char buffer[20]{};
 		std::strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M-%S", &tm);
 		return QString(buffer);
 	}
 
-	uint32_t Logger::getCurrentProcessId() const
+	uint32_t Logger::getCurrentThreadId() const
 	{
 		return static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-	}
-
-	QString Logger::levelToColor(LogLevel level) const
-	{
-		switch (level)
-		{
-		case LogLevel::Trace:
-			return "\033[36m";
-		case LogLevel::Debug:
-			return "\033[34m";
-		case LogLevel::Info:
-			return "\033[32m";
-		case LogLevel::Warn:
-			return "\033[33m";
-		case LogLevel::Error:
-			return "\033[31m";
-		case LogLevel::Fatal:
-			return "\033[35m";
-		default:
-			return "";
-		}
 	}
 
 	void Logger::getLogBasicInfo(const std::source_location& location,
@@ -353,11 +328,9 @@ namespace nexusdl::log {
 		auto now = std::chrono::system_clock::now();
 		auto since_epoch = now.time_since_epoch();
 		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
-		milliseconds = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
-			since_epoch - seconds).count());
+		milliseconds = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(since_epoch - seconds).count());
 
-		auto time = std::chrono::system_clock::to_time_t(
-			std::chrono::system_clock::time_point(seconds));
+		auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(seconds));
 
 		#ifdef Q_OS_WIN
 		localtime_s(&tm, &time);
@@ -371,8 +344,8 @@ namespace nexusdl::log {
 
 		// 获取短文件名
 		shortFile = file;
-		const char* lastSlash = std::max(std::strrchr(file, '/'), std::strrchr(file, '\\'));
-		if (lastSlash != nullptr)
+
+		if (const char* lastSlash = std::max(std::strrchr(file, '/'), std::strrchr(file, '\\')); lastSlash != nullptr)
 		{
 			shortFile = lastSlash + 1;
 		}
@@ -380,6 +353,29 @@ namespace nexusdl::log {
 		// 获取线程名称
 		threadName = QThread::currentThread()->objectName();
 		hasThreadName = !threadName.isEmpty();
+	}
+
+	char* Logger::writeString(char* ptr, const char* str)
+	{
+		const size_t len = std::strlen(str);
+		memcpy(ptr, str, len);
+		return ptr + len;
+	}
+
+	char* Logger::writeTwoDigits(char* ptr, int value)
+	{
+		if (value < 10)
+		{
+			*ptr++ = '0';
+		}
+		return writeNumber(ptr, value);
+	}
+
+	char* Logger::writeThreeDigits(char* ptr, int value)
+	{
+		if (value < 100) *ptr++ = '0';
+		if (value < 10) *ptr++ = '0';
+		return writeNumber(ptr, value);
 	}
 
 	void Logger::initialize()
@@ -400,12 +396,13 @@ namespace nexusdl::log {
 
 		// 创建定时器
 		connect(&m_flushTimer, &QTimer::timeout, this, &Logger::onFlushTimer);
-		m_flushTimer.start(m_flushInterval);
+		m_flushTimer.start(kFlushInterval);
 
 		m_initialized = true;
 
 		// 记录初始化信息
-		info("LogSystem start successfully");
+		if (shouldLog(LogLevel::Info))
+			info("LogSystem start successfully");
 	}
 
 	void Logger::shutdown()
@@ -425,4 +422,4 @@ namespace nexusdl::log {
 		m_initialized = false;
 	}
 
-}
+} // namespace nexusdl::log

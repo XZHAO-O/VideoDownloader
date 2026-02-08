@@ -3,17 +3,11 @@
 
 #pragma once
 
+// Qt Core
 #include <QSqlDatabase>
-#include <QDateTime>
-#include <QSqlError>
 #include <QSqlQuery>
-#include <QMutex>
 #include <QReadWriteLock>
-#include <QQueue>
-#include <QHash>
-#include <functional>
-#include <memory>
-#include <atomic>
+#include <QObject>
 
 namespace nexusdl::database {
 
@@ -52,6 +46,7 @@ namespace nexusdl::database {
 
 	private:
 		bool initConnection();
+		bool ensureConnection();
 
 	private:
 		static thread_local QSqlDatabase m_database;
@@ -60,4 +55,4 @@ namespace nexusdl::database {
 		static thread_local bool m_isInitialized;
 	};
 
-}
+} // namespace nexusdl::database

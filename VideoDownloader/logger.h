@@ -42,9 +42,13 @@ namespace nexusdl::log {
 
 		bool stop();
 
-		void setLogLevel(LogLevel level);
+		void setLogLevel(LogLevel level) noexcept;
 
-		bool shouldLog(LogLevel level) const;
+		bool shouldLog(LogLevel level) const noexcept;
+
+		void setMaxRotationFileSize(qint64 maxFileSize) noexcept;
+
+		void setMaxRotationFileCount(qint64 maxFileCount) noexcept;
 
 		// 核心日志方法 - 声明
 		template<typename StringType>
@@ -95,12 +99,6 @@ namespace nexusdl::log {
 			log(LogLevel::Fatal, std::forward<StringType>(message), location);
 		}
 
-		// 日志旋转和归档
-		void setRotation(qint64 maxSize, qint64 maxFiles);
-
-		// 设置定时写入间隔（毫秒）
-		void setFlushInterval(int milliseconds);
-
 	private slots:
 		void onFlushTimer();
 
@@ -119,17 +117,31 @@ namespace nexusdl::log {
 		bool rotateIfNeeded();
 		void cleanupOldFiles();
 
-		bool writeToBuffer(QByteArray&& message);
+		bool writeToBuffer(const char* message, qint64 size);
 		bool writeBufferToFile();
 
 		// 工具函数
 		QString getTimeStamp() const;
-		uint32_t getCurrentProcessId() const;
-		QString levelToColor(LogLevel level) const;
+		uint32_t getCurrentThreadId() const;
 		void getLogBasicInfo(const std::source_location& location,
 			std::tm& tm, int& milliseconds,
 			const char*& file, const char*& shortFile,
 			int& line, QString& threadName, bool& hasThreadName);
+
+		// 辅助函数：将整数转换为字符串并更新指针
+		template<typename T>
+		char* writeNumber(char* ptr, T value)
+		{
+			auto [end, ec] = std::to_chars(ptr, ptr + 32, value);
+			return end;
+		}
+
+		// 复制字符串并更新指针
+		char* writeString(char* ptr, const char* str);
+		// 补零格式化两位数字
+		char* writeTwoDigits(char* ptr, int value);
+		// 补零格式化三位毫秒
+		char* writeThreeDigits(char* ptr, int value);
 
 		// 输出模式函数
 		template<typename StringType>
@@ -166,7 +178,7 @@ namespace nexusdl::log {
 
 		// 日志轮转配置
 		std::atomic<qint64> m_maxFileSize;
-		std::atomic<qint64> m_maxFiles;
+		std::atomic<qint64> m_maxFileCount;
 
 		// 缓冲区管理
 		std::unique_ptr<LogBuffer> m_currentBuffer;
@@ -175,7 +187,6 @@ namespace nexusdl::log {
 
 		// 定时刷新
 		QTimer m_flushTimer;
-		int m_flushInterval;
 
 		// 统计信息
 		qint64 m_lastFlushTime;
@@ -190,38 +201,24 @@ namespace nexusdl::log {
 		const char* file, int line,
 		const QString& threadName, bool hasThreadName)
 	{
-		QString consoleOutput;
+		// 高效的时间字符串构建
+		auto makeTimeString = [&] {
+			char buffer[25]{};
+			const size_t len = std::strftime(buffer, sizeof(buffer) - 4, "%Y-%m-%d %H:%M:%S", &tm);
+			std::snprintf(buffer + len, 5, ".%03d", milliseconds);
+			return QString::fromLatin1(buffer);
+			};
 
-		char timeBuffer[68];
-		size_t len = std::strftime(timeBuffer, sizeof(timeBuffer) - 4,
-			"%Y-%m-%d %H:%M:%S", &tm);
-		std::snprintf(timeBuffer + len, 5, ".%03d", milliseconds);
+		QString timeStr = makeTimeString();
+		QString levelStr = levelToString(level);
+		QString tid = hasThreadName ? threadName : QString::number(getCurrentThreadId());
+		QString filePath = QDir::toNativeSeparators(QString::fromUtf8(file));
+		QString lineStr = QString::number(line);
 
-		QString debugBasePart;
-		if (hasThreadName)
-		{
-			debugBasePart = QString("[%1] [%2] [%3]")
-				.arg(timeBuffer)
-				.arg(levelToString(level))
-				.arg(threadName);
-		}
-		else
-		{
-			uint32_t pid = getCurrentProcessId();
-			debugBasePart = QString("[%1] [%2] [%3]")
-				.arg(timeBuffer)
-				.arg(levelToString(level))
-				.arg(pid);
-		}
+		// 单次QStringBuilder表达式构建所有内容
+		const QString output{ "[" % timeStr % "] [" % levelStr % "] [" % tid % "]\n" % filePath % "(" % lineStr % "): " % message % "\n" };
 
-		// 使用VS格式，双击跳转
-		consoleOutput = QString("%1\n%2(%3): %4\n")
-			.arg(debugBasePart)
-			.arg(QDir::toNativeSeparators(QString::fromUtf8(file)))
-			.arg(line)
-			.arg(std::forward<StringType>(message));
-
-		qDebug().noquote() << consoleOutput;
+		qDebug().noquote() << output;
 	}
 
 	template<typename StringType>
@@ -230,72 +227,22 @@ namespace nexusdl::log {
 		const char* shortFile, int line,
 		const QString& threadName, bool hasThreadName)
 	{
-		QString consoleOutput;
+		auto makeTimeString = [&] {
+			char buffer[25]{};
+			const size_t len = std::strftime(buffer, sizeof(buffer) - 4, "%Y-%m-%d %H:%M:%S", &tm);
+			std::snprintf(buffer + len, 5, ".%03d", milliseconds);
+			return QString::fromLatin1(buffer);
+			};
 
-		char timeBuffer[68];
-		size_t len = std::strftime(timeBuffer, sizeof(timeBuffer) - 4,
-			"%Y-%m-%d %H:%M:%S", &tm);
-		std::snprintf(timeBuffer + len, 5, ".%03d", milliseconds);
-
-		QString debugBasePart;
-		if (hasThreadName)
-		{
-			debugBasePart = QString("[%1] [%2] [%3]")
-				.arg(timeBuffer)
-				.arg(levelToString(level))
-				.arg(threadName);
-		}
-		else
-		{
-			uint32_t pid = getCurrentProcessId();
-			debugBasePart = QString("[%1] [%2] [%3]")
-				.arg(timeBuffer)
-				.arg(levelToString(level))
-				.arg(pid);
-		}
+		QString timeStr = makeTimeString();
+		QString coloredLevelStr = levelToColoredString(level);
+		QString tid = hasThreadName ? threadName : QString::number(getCurrentThreadId());
+		QString lineStr = QString::number(line);
 
 		// 带颜色的控制台输出
-		QString color = levelToColor(level);
-		QString resetColor = "\033[0m";
+		const QString output{ "[" % timeStr % "] [" % coloredLevelStr % "] [" % tid % "] " % shortFile % "(" % lineStr % "): " % message };
 
-		consoleOutput = QString("%1%2 %3(%4): %5%6")
-			.arg(color)
-			.arg(debugBasePart)
-			.arg(shortFile)
-			.arg(line)
-			.arg(std::forward<StringType>(message))
-			.arg(resetColor);
-
-		qDebug().noquote() << consoleOutput;
-	}
-
-	// 辅助函数：将整数转换为字符串并更新指针
-	template<typename T>
-	inline char* writeNumber(char* ptr, T value) {
-		auto [end, ec] = std::to_chars(ptr, ptr + 32, value);
-		return end;
-	}
-
-	// 辅助函数：复制字符串并更新指针
-	inline char* writeString(char* ptr, const char* str) {
-		size_t len = strlen(str);
-		memcpy(ptr, str, len);
-		return ptr + len;
-	}
-
-	// 辅助函数：补零格式化两位数字
-	inline char* writeTwoDigits(char* ptr, int value) {
-		if (value < 10) {
-			*ptr++ = '0';
-		}
-		return writeNumber(ptr, value);
-	}
-
-	// 辅助函数：补零格式化三位毫秒
-	inline char* writeThreeDigits(char* ptr, int value) {
-		if (value < 100) *ptr++ = '0';
-		if (value < 10) *ptr++ = '0';
-		return writeNumber(ptr, value);
+		qDebug().noquote() << output;
 	}
 
 	template<typename StringType>
@@ -304,7 +251,7 @@ namespace nexusdl::log {
 		const char* shortFile, int line,
 		const QString& threadName, bool hasThreadName)
 	{
-		static thread_local char buffer[1024];  // 足够大的缓冲区
+		static thread_local char buffer[1024]{};  // 足够大的缓冲区
 
 		char* ptr = buffer;
 
@@ -346,16 +293,16 @@ namespace nexusdl::log {
 		if (hasThreadName)
 		{
 			// 使用线程名
-			QByteArray utf8ThreadName = threadName.toUtf8();
+			const QByteArray utf8ThreadName = threadName.toUtf8();
 			const char* threadNameStr = utf8ThreadName.constData();
-			size_t threadNameLen = utf8ThreadName.size();
+			const size_t threadNameLen = utf8ThreadName.size();
 			memcpy(ptr, threadNameStr, threadNameLen);
 			ptr += threadNameLen;
 		}
 		else
 		{
 			// 使用进程ID - 直接格式化为整数
-			ptr = writeNumber(ptr, getCurrentProcessId());
+			ptr = writeNumber(ptr, getCurrentThreadId());
 		}
 
 		// 进程ID
@@ -370,17 +317,16 @@ namespace nexusdl::log {
 		ptr = writeString(ptr, "): ");
 		if constexpr (std::is_same_v<std::decay_t<StringType>, QString>)
 		{
-			// 预转换消息为UTF-8（如果消息固定可移出循环）
-			QByteArray utf8Message = message.toUtf8();
+			// 转换消息
+			const QByteArray utf8Message = message.toUtf8();
 			const char* messageStr = utf8Message.constData();
-			size_t messageLen = utf8Message.size();
-			// 消息内容
+			const size_t messageLen = utf8Message.size();
 			memcpy(ptr, messageStr, messageLen);
 			ptr += messageLen;
 		}
 		else
 		{
-			size_t messageLen = std::strlen(message);
+			const size_t messageLen = std::strlen(message);
 			memcpy(ptr, message, messageLen);
 			ptr += messageLen;
 		}
@@ -389,10 +335,9 @@ namespace nexusdl::log {
 
 		// 现在buffer[0]到ptr-1包含了完整的日志行
 		// 可以直接使用或转换为QString/QByteArray
-		QByteArray logData = QByteArray(buffer, static_cast<int>(ptr - buffer));
 
 		// 写入缓冲区
-		writeToBuffer(std::move(logData));
+		writeToBuffer(buffer, static_cast<qint64>(ptr - buffer));
 	}
 
 	// =============== 模式1: VSOUTPUT_MODE ===============
@@ -404,21 +349,19 @@ namespace nexusdl::log {
 	void Logger::log(LogLevel level, StringType&& message,
 		const std::source_location& location)
 	{
-		std::tm tm;
-		int milliseconds;
-		const char* file;
-		const char* shortFile;
-		int line;
-		QString threadName;
-		bool hasThreadName;
+		std::tm tm{};
+		int milliseconds{};
+		const char* file{};
+		const char* shortFile{};
+		int line{};
+		QString threadName{};
+		bool hasThreadName{};
 
 		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
 
 		#ifdef QT_DEBUG
 		// 调试模式：输出到VS控制台
-		writeToVSDebug(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			file, line, threadName, hasThreadName);
+		writeToVSDebug(level, std::forward<StringType>(message), tm, milliseconds, file, line, threadName, hasThreadName);
 		#endif // QT_DEBUG
 	}
 
@@ -431,21 +374,19 @@ namespace nexusdl::log {
 	void Logger::log(LogLevel level, StringType&& message,
 		const std::source_location& location)
 	{
-		std::tm tm;
-		int milliseconds;
-		const char* file;
-		const char* shortFile;
-		int line;
-		QString threadName;
-		bool hasThreadName;
+		std::tm tm{};
+		int milliseconds{};
+		const char* file{};
+		const char* shortFile{};
+		int line{};
+		QString threadName{};
+		bool hasThreadName{};
 
 		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
 
 		#ifdef QT_DEBUG
 		// 调试模式：输出到控制台
-		writeToConsole(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			shortFile, line, threadName, hasThreadName);
+		writeToConsole(level, std::forward<StringType>(message), tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		#endif // QT_DEBUG
 	}
 
@@ -458,33 +399,27 @@ namespace nexusdl::log {
 	void Logger::log(LogLevel level, StringType&& message,
 		const std::source_location& location)
 	{
-		std::tm tm;
-		int milliseconds;
-		const char* file;
-		const char* shortFile;
-		int line;
-		QString threadName;
-		bool hasThreadName;
+		std::tm tm{};
+		int milliseconds{};
+		const char* file{};
+		const char* shortFile{};
+		int line{};
+		QString threadName{};
+		bool hasThreadName{};
 
 		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
 
 		// 调试模式：同时输出到控制台和文件
 		#ifdef Q_OS_WIN
-		writeToVSDebug(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			file, line, threadName, hasThreadName);
+		writeToVSDebug(level, message, tm, milliseconds, file, line, threadName, hasThreadName);
 		#else
-		writeToConsole(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			shortFile, line, threadName, hasThreadName);
+		writeToConsole(level, message, tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		#endif // Q_OS_WIN
 
 		// 写入文件（如果已初始化）
 		if (m_initialized)
 		{
-			writeToFile(level, std::forward<StringType>(message),
-				tm, milliseconds,
-				shortFile, line, threadName, hasThreadName);
+			writeToFile(level, std::forward<StringType>(message), tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		}
 	}
 
@@ -497,20 +432,18 @@ namespace nexusdl::log {
 	void Logger::log(LogLevel level, StringType&& message,
 		const std::source_location& location)
 	{
-		std::tm tm;
-		int milliseconds;
-		const char* file;
-		const char* shortFile;
-		int line;
-		QString threadName;
-		bool hasThreadName;
+		std::tm tm{};
+		int milliseconds{};
+		const char* file{};
+		const char* shortFile{};
+		int line{};
+		QString threadName{};
+		bool hasThreadName{};
 
 		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
 
 		// 发布模式：只写入文件
-		writeToFile(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			shortFile, line, threadName, hasThreadName);
+		writeToFile(level, std::forward<StringType>(message), tm, milliseconds, shortFile, line, threadName, hasThreadName);
 	}
 
 	// =============== 模式5: 默认模式 ===============
@@ -522,46 +455,38 @@ namespace nexusdl::log {
 	void Logger::log(LogLevel level, StringType&& message,
 		const std::source_location& location)
 	{
-		std::tm tm;
-		int milliseconds;
-		const char* file;
-		const char* shortFile;
-		int line;
-		QString threadName;
-		bool hasThreadName;
+		std::tm tm{};
+		int milliseconds{};
+		const char* file{};
+		const char* shortFile{};
+		int line{};
+		QString threadName{};
+		bool hasThreadName{};
 
 		getLogBasicInfo(location, tm, milliseconds, file, shortFile, line, threadName, hasThreadName);
 
 		#ifdef QT_DEBUG
 		// 调试模式：输出到控制台和文件
 		#ifdef Q_OS_WIN
-		writeToVSDebug(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			file, line, threadName, hasThreadName);
+		writeToVSDebug(level, message, tm, milliseconds, file, line, threadName, hasThreadName);
 		#else
-		writeToConsole(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			shortFile, line, threadName, hasThreadName);
+		writeToConsole(level, message, tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		#endif // Q_OS_WIN
 
 		// 写入文件（如果已初始化）
 		if (m_initialized)
 		{
-			writeToFile(level, std::forward<StringType>(message),
-				tm, milliseconds,
-				shortFile, line, threadName, hasThreadName);
+			writeToFile(level, std::forward<StringType>(message), tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		}
 		#else
 		// 发布模式：只写入文件（如果已初始化）
-		writeToFile(level, std::forward<StringType>(message),
-			tm, milliseconds,
-			shortFile, line, threadName, hasThreadName);
+		writeToFile(level, std::forward<StringType>(message), tm, milliseconds, shortFile, line, threadName, hasThreadName);
 		#endif // QT_DEBUG
 	}
 
 	#endif // 模式选择
 
-}
+} // namespace nexusdl::log
 
 // 便捷宏
 #define LOG_TRACE(msg) do \

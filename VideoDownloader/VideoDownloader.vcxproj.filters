@@ -424,7 +424,7 @@
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="DatabaseExecutor.cpp">
+    <ClCompile Include="database_executor.cpp">
       <Filter>database</Filter>
     </ClCompile>
     <ClCompile Include="DownloadRecordDAO.cpp">
@@ -756,7 +756,7 @@
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
     </QtMoc>
-    <QtMoc Include="DatabaseExecutor.h">
+    <QtMoc Include="database_executor.h">
       <Filter>database</Filter>
     </QtMoc>
     <QtMoc Include="SvgButton.h">

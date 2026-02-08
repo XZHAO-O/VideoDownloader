@@ -39,7 +39,7 @@ DownloadCardContainerWidget::DownloadCardContainerWidget(QSharedPointer<Download
 {
 	BENCHMARKING_FUNCTION();
 
-	DownloadCardState cardState;
+	DownloadCardState cardState{};
 
 	switch (m_containerState)
 	{

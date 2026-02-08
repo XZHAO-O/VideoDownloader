@@ -11,41 +11,51 @@ namespace {
 namespace nexusdl::log {
 
 	LogBuffer::LogBuffer()
+		: m_data{}
 	{
 		m_data.reserve(kBufferSize);
 	}
 
-	void LogBuffer::append(QByteArray&& message) noexcept
+	void LogBuffer::append(const char* data, qint64 size)
 	{
-		m_data.append(std::move(message));
+		const qint64 currentSize = m_data.size();
+		const qint64 newSize = currentSize + size;
+
+		if (m_data.capacity() < newSize)
+		{
+			m_data.reserve(newSize);
+		}
+
+		std::memcpy(m_data.data() + currentSize, data, size);
+		m_data.resize(newSize);
 	}
 
-	bool LogBuffer::isEmpty() const
+	bool LogBuffer::isEmpty() const noexcept
 	{
 		return m_data.isEmpty();
 	}
 
-	const QByteArray& LogBuffer::data() const
+	const QByteArray& LogBuffer::data() const noexcept
 	{
 		return m_data;
 	}
 
 	void LogBuffer::clear()
 	{
-		m_data.clear();
+		m_data.resize(0);
 	}
 
-	qint64 LogBuffer::size() const
+	qint64 LogBuffer::size() const noexcept
 	{
 		return m_data.size();
 	}
 
-	bool LogBuffer::shouldFlush() const
+	bool LogBuffer::shouldFlush() const noexcept
 	{
 		return m_data.size() > kBufferSize / kBufferUsageThreshold;
 	}
 
-	qint64 LogBuffer::writableBytes() const
+	qint64 LogBuffer::writableBytes() const noexcept
 	{
 		return m_data.capacity() - m_data.size();
 	}

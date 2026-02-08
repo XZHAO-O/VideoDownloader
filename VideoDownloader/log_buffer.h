@@ -18,19 +18,19 @@ namespace nexusdl::log {
 		LogBuffer(LogBuffer&&) = delete;
 		LogBuffer& operator=(LogBuffer&&) = delete;
 
-		void append(QByteArray&& message) noexcept;
+		void append(const char* data, qint64 size);
 
-		bool isEmpty() const;
+		bool isEmpty() const noexcept;
 
-		const QByteArray& data() const;
+		const QByteArray& data() const noexcept;
 
 		void clear();
 
-		qint64 size() const;
+		qint64 size() const noexcept;
 
-		bool shouldFlush() const;
+		bool shouldFlush() const noexcept;
 
-		qint64 writableBytes() const;
+		qint64 writableBytes() const noexcept;
 
 	private:
 		QByteArray m_data;
