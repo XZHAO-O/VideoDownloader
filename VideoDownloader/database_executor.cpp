@@ -22,8 +22,7 @@ namespace {
 namespace nexusdl::database {
 
 	// 静态thread_local成员初始化
-	thread_local QSqlDatabase DatabaseExecutor::m_database{};
-	thread_local bool DatabaseExecutor::m_isInitialized{ false };
+	thread_local std::unordered_map<std::string, DatabaseExecutor::ThreadLocalData> DatabaseExecutor::s_threadLocalDatabases;
 
 	DatabaseExecutor::DatabaseExecutor(QObject* parent)
 		: QObject{ parent }
@@ -32,17 +31,28 @@ namespace nexusdl::database {
 		initialize();
 	}
 
+	DatabaseExecutor::DatabaseExecutor(const QString& databasePath, QObject* parent)
+		: QObject{ parent }
+		, m_databasePath{ databasePath }
+	{
+		initialize();
+	}
+
 	DatabaseExecutor::~DatabaseExecutor()
 	{
-		if (m_database.isOpen())
+		QWriteLocker locker(&m_dataLock);
+		auto& threadData = getThreadLocalData();
+		if (threadData.database.isOpen())
 		{
-			m_database.close();
+			threadData.database.close();
 		}
 	}
 
 	bool DatabaseExecutor::initialize()
 	{
-		if (m_isInitialized)
+		auto& threadData = getThreadLocalData();
+
+		if (threadData.isInitialized)
 		{
 			return true;
 		}
@@ -63,37 +73,45 @@ namespace nexusdl::database {
 			return false;
 		}
 
-		m_isInitialized = true;
+		threadData.isInitialized = true;
 		LOG_INFO(QString{ "Database initialized successfully at: " % m_databasePath });
 		return true;
 	}
 
 	bool DatabaseExecutor::initConnection()
 	{
+		QWriteLocker locker(&m_dataLock);
+		auto& threadData = getThreadLocalData();
+
 		const QString fullDatabaseName{ m_databasePath % "/" % kDatabaseName };
 		const bool exists = QFile::exists(fullDatabaseName);
 
-		// 使用线程ID作为连接名，确保每个线程有独立的连接
-		const QString connectionName{ "NexusDLDBConnection_" % QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()))) };
+		// 使用数据库路径和线程ID作为连接名，确保每个线程每个数据库有独立的连接
+		QString connectionName{
+			"NexusDLDBConnection_" %
+			QString::fromStdString(std::to_string(std::hash<std::string>{}(m_databasePath.toStdString()))) % "_" %
+			QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id())))
+		};
 
 		// 如果连接已存在，先移除
 		if (QSqlDatabase::contains(connectionName))
 		{
 			QSqlDatabase::removeDatabase(connectionName);
 		}
-		m_database = QSqlDatabase::addDatabase("QSQLITE", connectionName);
-		m_database.setDatabaseName(fullDatabaseName);
 
-		if (!m_database.open())
+		threadData.database = QSqlDatabase::addDatabase("QSQLITE", connectionName);
+		threadData.database.setDatabaseName(fullDatabaseName);
+
+		if (!threadData.database.open())
 		{
-			LOG_ERROR(QString{ "Failed to open database: " % m_database.lastError().text() });
+			LOG_ERROR(QString{ "Failed to open database: " % threadData.database.lastError().text() });
 			return false;
 		}
 
 		// 如果是新创建的数据库，设置SQLite参数
 		if (!exists)
 		{
-			QSqlQuery query{ m_database };
+			QSqlQuery query{ threadData.database };
 			query.exec("PRAGMA foreign_keys = ON");
 			query.exec("PRAGMA journal_mode = WAL");
 			query.exec("PRAGMA synchronous = NORMAL");
@@ -112,20 +130,33 @@ namespace nexusdl::database {
 
 	bool DatabaseExecutor::ensureConnection()
 	{
-		initialize();
+		return initialize();
+	}
+
+	DatabaseExecutor::ThreadLocalData& DatabaseExecutor::getThreadLocalData()
+	{
+		std::string key = m_databasePath.toStdString();
+		return s_threadLocalDatabases[key];
+	}
+
+	const DatabaseExecutor::ThreadLocalData& DatabaseExecutor::getThreadLocalData() const
+	{
+		std::string key = m_databasePath.toStdString();
+		return s_threadLocalDatabases[key];
 	}
 
 	bool DatabaseExecutor::executeQuery(const QString& queryStr, const QVariantMap& params)
 	{
-		QWriteLocker locker{ &m_rwLock };
+		QWriteLocker locker{ &m_dataLock };
+		auto& threadData = getThreadLocalData();
 
-		if (!m_database.isOpen())
+		if (!threadData.database.isOpen())
 		{
 			LOG_ERROR("Database is not open");
 			return false;
 		}
 
-		QSqlQuery query{ m_database };
+		QSqlQuery query{ threadData.database };
 		query.prepare(queryStr);
 
 		for (auto it = params.constBegin(); it != params.constEnd(); ++it)
@@ -145,15 +176,16 @@ namespace nexusdl::database {
 
 	bool DatabaseExecutor::executeQuery(const QString& queryStr, const QVariantList& params)
 	{
-		QWriteLocker locker{ &m_rwLock };
+		QWriteLocker locker{ &m_dataLock };
+		auto& threadData = getThreadLocalData();
 
-		if (!m_database.isOpen())
+		if (!threadData.database.isOpen())
 		{
 			LOG_ERROR("Database is not open");
 			return false;
 		}
 
-		QSqlQuery query{ m_database };
+		QSqlQuery query{ threadData.database };
 		query.prepare(queryStr);
 
 		for (int i = 0; i < params.size(); ++i)
@@ -173,17 +205,18 @@ namespace nexusdl::database {
 
 	QList<QVariantMap> DatabaseExecutor::executeQueryToMap(const QString& queryStr, const QVariantMap& params)
 	{
-		QReadLocker locker{ &m_rwLock };
+		QReadLocker locker{ &m_dataLock };
+		auto& threadData = getThreadLocalData();
 
 		QList<QVariantMap> result{};
 
-		if (!m_database.isOpen())
+		if (!threadData.database.isOpen())
 		{
 			LOG_ERROR("Database is not open");
 			return result;
 		}
 
-		QSqlQuery query{ m_database };
+		QSqlQuery query{ threadData.database };
 		query.prepare(queryStr);
 
 		for (auto it = params.constBegin(); it != params.constEnd(); ++it)
@@ -217,17 +250,18 @@ namespace nexusdl::database {
 
 	QList<QVariantMap> DatabaseExecutor::executeQueryToMap(const QString& queryStr, const QVariantList& params)
 	{
-		QReadLocker locker{ &m_rwLock };
+		QReadLocker locker{ &m_dataLock };
+		auto& threadData = getThreadLocalData();
 
 		QList<QVariantMap> result{};
 
-		if (!m_database.isOpen())
+		if (!threadData.database.isOpen())
 		{
 			LOG_ERROR("Database is not open");
 			return result;
 		}
 
-		QSqlQuery query{ m_database };
+		QSqlQuery query{ threadData.database };
 		query.prepare(queryStr);
 
 		for (int i = 0; i < params.size(); ++i)
@@ -261,8 +295,9 @@ namespace nexusdl::database {
 
 	QString DatabaseExecutor::lastError() const
 	{
-		QReadLocker locker{ &m_rwLock };
-		return m_database.lastError().text();
+		QReadLocker locker{ &m_dataLock };
+		auto& threadData = getThreadLocalData();
+		return threadData.database.lastError().text();
 	}
 
 	QString DatabaseExecutor::databasePath() const
@@ -284,12 +319,13 @@ namespace nexusdl::database {
 
 	bool DatabaseExecutor::beginTransaction()
 	{
-		m_rwLock.lockForWrite();
-		bool result = m_database.transaction();
+		m_dataLock.lockForWrite();
+		auto& threadData = getThreadLocalData();
+		bool result = threadData.database.transaction();
 		if (!result)
 		{
-			LOG_ERROR(QString{ "Failed to begin transaction: " % m_database.lastError().text() });
-			m_rwLock.unlock();
+			LOG_ERROR(QString{ "Failed to begin transaction: " % threadData.database.lastError().text() });
+			m_dataLock.unlock();
 		}
 		else
 		{
@@ -300,38 +336,61 @@ namespace nexusdl::database {
 
 	bool DatabaseExecutor::commitTransaction()
 	{
-		bool result = m_database.commit();
+		auto& threadData = getThreadLocalData();
+		bool result = threadData.database.commit();
 		if (result)
 		{
 			LOG_DEBUG("Database transaction committed");
 		}
 		else
 		{
-			LOG_ERROR(QString{ "Failed to commit transaction: " % m_database.lastError().text() });
+			LOG_ERROR(QString{ "Failed to commit transaction: " % threadData.database.lastError().text() });
 		}
-		m_rwLock.unlock();
+		m_dataLock.unlock();
 		return result;
 	}
 
 	bool DatabaseExecutor::rollbackTransaction()
 	{
-		bool result = m_database.rollback();
+		auto& threadData = getThreadLocalData();
+		bool result = threadData.database.rollback();
 		if (result)
 		{
 			LOG_WARN("Database transaction rolled back");
 		}
 		else
 		{
-			LOG_ERROR(QString{ "Failed to rollback transaction: " % m_database.lastError().text() });
+			LOG_ERROR(QString{ "Failed to rollback transaction: " % threadData.database.lastError().text() });
 		}
-		m_rwLock.unlock();
+		m_dataLock.unlock();
 		return result;
 	}
 
 	void DatabaseExecutor::endTransaction()
 	{
-		m_rwLock.unlock();
+		m_dataLock.unlock();
 		LOG_DEBUG("Database transaction ended (lock released)");
+	}
+
+	void DatabaseExecutor::setDatabasePath(const QString& path)
+	{
+		QWriteLocker locker(&m_dataLock);
+		auto& threadData = getThreadLocalData();
+
+		// 关闭现有连接
+		if (threadData.database.isOpen())
+		{
+			threadData.database.close();
+		}
+
+		// 重置初始化状态
+		threadData.isInitialized = false;
+
+		// 设置新路径
+		m_databasePath = path;
+
+		// 重新初始化
+		initialize();
 	}
 
 } // namespace nexusdl::database

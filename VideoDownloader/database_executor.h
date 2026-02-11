@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QReadWriteLock>
 #include <QObject>
+#include <QSharedPointer>
 
 namespace nexusdl::database {
 
@@ -17,6 +18,7 @@ namespace nexusdl::database {
 
 	public:
 		explicit DatabaseExecutor(QObject* parent = nullptr);
+		explicit DatabaseExecutor(const QString& databasePath, QObject* parent = nullptr);
 		~DatabaseExecutor();
 
 		DatabaseExecutor(const DatabaseExecutor&) = delete;
@@ -44,15 +46,26 @@ namespace nexusdl::database {
 		bool rollbackTransaction();
 		void endTransaction();  // 释放写锁
 
+		// 设置数据库路径
+		void setDatabasePath(const QString& path);
+
 	private:
 		bool initConnection();
 		bool ensureConnection();
 
-	private:
-		static thread_local QSqlDatabase m_database;
-		const QString m_databasePath;
-		mutable QReadWriteLock m_rwLock;
-		static thread_local bool m_isInitialized;
+		// 每个实例都有自己的数据库连接和初始化状态
+		struct ThreadLocalData {
+			QSqlDatabase database;
+			bool isInitialized{ false };
+		};
+
+		mutable QReadWriteLock m_dataLock;
+		QString m_databasePath;
+		static thread_local std::unordered_map<std::string, ThreadLocalData> s_threadLocalDatabases;
+
+		// 获取当前实例的线程本地数据
+		ThreadLocalData& getThreadLocalData();
+		const ThreadLocalData& getThreadLocalData() const;
 	};
 
 } // namespace nexusdl::database
