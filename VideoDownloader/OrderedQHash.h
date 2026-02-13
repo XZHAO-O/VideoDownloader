@@ -372,8 +372,7 @@ public:
 		{
 			// 使用构造+交换，提供强异常安全保证
 			T new_value(std::forward<Args>(args)...);
-			using std::swap;
-			swap(hashIt.value()->second, new_value);
+			std::swap(hashIt.value()->second, new_value);
 			return iterator(hashIt.value());
 		}
 
@@ -596,7 +595,7 @@ public:
 		return m_hash.contains(key);
 	}
 
-	size_type count(const Key& key) const
+	size_type count(const Key& key) const noexcept
 	{
 		return contains(key) ? 1 : 0;
 	}
@@ -699,12 +698,12 @@ public:
 	}
 
 	// 比较操作
-	bool operator==(const OrderedQHash& other) const
+	bool operator==(const OrderedQHash& other) const noexcept
 	{
 		return m_list == other.m_list;
 	}
 
-	bool operator!=(const OrderedQHash& other) const
+	bool operator!=(const OrderedQHash& other) const noexcept
 	{
 		return m_list != other.m_list;
 	}

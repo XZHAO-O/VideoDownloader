@@ -68,13 +68,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\QR-Code-generator-master;$(ProjectDir)ThirdParty\FastGaussianBlur-main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\QR-Code-generator-master;$(ProjectDir)ThirdParty\FastGaussianBlur-main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <OmitFramePointers>
@@ -120,8 +120,11 @@
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
+    <ClCompile Include="connection_context.cpp" />
+    <ClCompile Include="connection_manager.cpp" />
     <ClCompile Include="CookieManageUtil.cpp" />
-    <ClCompile Include="database_executor.cpp" />
+    <ClCompile Include="database_error.cpp" />
+    <ClCompile Include="sqlite_database.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
     <ClCompile Include="DownloadEngine.cpp" />
@@ -374,11 +377,14 @@
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <QtMoc Include="CancelManager.h" />
+    <ClInclude Include="connection_context.h" />
+    <ClInclude Include="connection_manager.h" />
     <ClInclude Include="CookieManageUtil.h" />
+    <ClInclude Include="database_error.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
-    <QtMoc Include="database_executor.h" />
+    <QtMoc Include="sqlite_database.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadContext.h" />
     <ClInclude Include="DownloadRecord.h" />

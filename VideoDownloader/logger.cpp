@@ -20,7 +20,7 @@ namespace nexusdl::log {
 
 	Logger& Logger::instance()
 	{
-		static Logger instance;
+		static Logger instance{};
 		return instance;
 	}
 
@@ -301,6 +301,8 @@ namespace nexusdl::log {
 
 	QString Logger::getTimeStamp() const
 	{
+		thread_local std::array<char, 20> buffer;
+
 		auto now = std::chrono::system_clock::now();
 		auto time = std::chrono::system_clock::to_time_t(now);
 		std::tm tm{};
@@ -310,9 +312,8 @@ namespace nexusdl::log {
 		localtime_r(&time, &tm);
 		#endif // Q_OS_WIN
 
-		char buffer[20]{};
-		std::strftime(buffer, sizeof(buffer), "%Y-%m-%d-%H-%M-%S", &tm);
-		return QString(buffer);
+		std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d-%H-%M-%S", &tm);
+		return QString::fromLatin1(buffer.data());
 	}
 
 	uint32_t Logger::getCurrentThreadId() const

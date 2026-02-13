@@ -424,7 +424,7 @@
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="database_executor.cpp">
+    <ClCompile Include="sqlite_database.cpp">
       <Filter>database</Filter>
     </ClCompile>
     <ClCompile Include="DownloadRecordDAO.cpp">
@@ -450,6 +450,15 @@
     </ClCompile>
     <ClCompile Include="log_buffer.cpp">
       <Filter>Core\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="connection_manager.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="connection_context.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database_error.cpp">
+      <Filter>database</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -756,7 +765,7 @@
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
     </QtMoc>
-    <QtMoc Include="database_executor.h">
+    <QtMoc Include="sqlite_database.h">
       <Filter>database</Filter>
     </QtMoc>
     <QtMoc Include="SvgButton.h">
@@ -838,6 +847,15 @@
     </ClInclude>
     <ClInclude Include="macros.h">
       <Filter>macros</Filter>
+    </ClInclude>
+    <ClInclude Include="connection_manager.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="connection_context.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database_error.h">
+      <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -203,10 +203,10 @@ namespace nexusdl::log {
 	{
 		// 高效的时间字符串构建
 		auto makeTimeString = [&] {
-			char buffer[25]{};
-			const size_t len = std::strftime(buffer, sizeof(buffer) - 4, "%Y-%m-%d %H:%M:%S", &tm);
-			std::snprintf(buffer + len, 5, ".%03d", milliseconds);
-			return QString::fromLatin1(buffer);
+			std::array<char, 24> buffer{};  // 使用 std::array
+			const size_t len = std::strftime(buffer.data(), buffer.size() - 4, "%Y-%m-%d %H:%M:%S", &tm);
+			std::snprintf(buffer.data() + len, 5, ".%03d", milliseconds);
+			return QString::fromLatin1(buffer.data());
 			};
 
 		QString timeStr = makeTimeString();
@@ -228,10 +228,10 @@ namespace nexusdl::log {
 		const QString& threadName, bool hasThreadName)
 	{
 		auto makeTimeString = [&] {
-			char buffer[25]{};
-			const size_t len = std::strftime(buffer, sizeof(buffer) - 4, "%Y-%m-%d %H:%M:%S", &tm);
-			std::snprintf(buffer + len, 5, ".%03d", milliseconds);
-			return QString::fromLatin1(buffer);
+			std::array<char, 24> buffer{};  // 使用 std::array
+			const size_t len = std::strftime(buffer.data(), buffer.size() - 4, "%Y-%m-%d %H:%M:%S", &tm);
+			std::snprintf(buffer.data() + len, 5, ".%03d", milliseconds);
+			return QString::fromLatin1(buffer.data());
 			};
 
 		QString timeStr = makeTimeString();
@@ -251,9 +251,10 @@ namespace nexusdl::log {
 		const char* shortFile, int line,
 		const QString& threadName, bool hasThreadName)
 	{
-		static thread_local char buffer[1024]{};  // 足够大的缓冲区
+		thread_local std::array<char, 1024> buffer{};
 
-		char* ptr = buffer;
+		char* ptr = buffer.data();
+		char* start = ptr;
 
 		// 开始构建日志行
 		*ptr++ = '[';
@@ -337,7 +338,7 @@ namespace nexusdl::log {
 		// 可以直接使用或转换为QString/QByteArray
 
 		// 写入缓冲区
-		writeToBuffer(buffer, static_cast<qint64>(ptr - buffer));
+		writeToBuffer(start, static_cast<qint64>(ptr - start));
 	}
 
 	// =============== 模式1: VSOUTPUT_MODE ===============
