@@ -3,7 +3,7 @@
 
 #pragma once
 
-// Qt Core
+// Qt headers
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QHash>
@@ -28,31 +28,28 @@ namespace nexusdl::database {
 
 		// 连接管理
 		bool isConnectionInitialized(const QString& databaseName) const;
-		std::expected<void, DatabaseError> initializeConnection(const QString& databaseName, const QString& databasePath);
-		QSqlDatabase& getConnection(const QString& databaseName);
-		const QSqlDatabase& getConnection(const QString& databaseName) const;
-		QString getConnectionName(const QString& databaseName) const;
-		ConnectionContext& getConnectionContext(const QString& databaseName);
-		const ConnectionContext& getConnectionContext(const QString& databaseName) const;
+		std::expected<void, DatabaseError> initializeConnection(const QString& databaseName, const QString& databaseDirPath, const QString& fullPath);
 
-		QString getLastError(const QString& databaseName) const;
+		QString getConnectionName(const QString& connectionNamePrefix) const;
+		ConnectionContext& getConnectionContext(const QString& connectionNamePrefix);
+		const ConnectionContext& getConnectionContext(const QString& connectionNamePrefix) const;
+		QSqlDatabase& getConnection(const QString& connectionNamePrefix);
+		const QSqlDatabase& getConnection(const QString& connectionNamePrefix) const;
 
-		// 查询执行
-		QSqlQuery createQuery(const QString& databaseName);
-		bool executeQuery(const QString& databaseName, QSqlQuery& query);
-		QList<QVariantMap> executeQueryToMap(const QString& databaseName, QSqlQuery& query);
+		QString lastError(const QString& connectionNamePrefix) const;
 
-		// 事务管理
-		bool beginTransaction(const QString& databaseName);
-		bool commitTransaction(const QString& databaseName);
-		bool rollbackTransaction(const QString& databaseName);
+		// 事务基础操作
+		bool beginTransaction(const QString& connectionNamePrefix);
+		bool commitTransaction(const QString& connectionNamePrefix);
+		bool rollbackTransaction(const QString& connectionNamePrefix);
 
 	private:
 		explicit ConnectionManager();
 		~ConnectionManager() = default;
 
 		// 线程本地连接存储
-		static thread_local QHash<QString, ConnectionContext> m_threadConnections;
+		static thread_local QHash<QString, ConnectionContext> s_threadConnections;
+		static thread_local QString s_threadId;
 	};
 
 } // namespace nexusdl::database

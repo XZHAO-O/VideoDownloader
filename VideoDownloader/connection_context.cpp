@@ -3,11 +3,13 @@
 
 #include "connection_context.h"
 
+// Qt headers
 #include <QDir>
 #include <QFile>
 #include <QSqlError>
 #include <QSqlQuery>
 
+// Project internal headers
 #include "logger.h"
 
 namespace nexusdl::database {
@@ -31,7 +33,7 @@ namespace nexusdl::database {
 		}
 	}
 
-	std::expected<void, DatabaseError> ConnectionContext::initialize(const QString& databasePath, const QString& fullPath, const QString& connectionName)
+	std::expected<void, DatabaseError> ConnectionContext::initialize(const QString& databaseDirPath, const QString& fullPath, const QString& connectionName)
 	{
 		if (m_isInitialized)
 		{
@@ -54,9 +56,9 @@ namespace nexusdl::database {
 			QMutexLocker locker{ &fileMutex };
 
 			// 1. 创建数据库目录（若不存在）
-			if (QDir dir{ databasePath }; !dir.exists() && !dir.mkpath("."))
+			if (QDir dir{ databaseDirPath }; !dir.exists() && !dir.mkpath("."))
 			{
-				LOG_ERROR(QString{ "Failed to create database directory: " % databasePath });
+				LOG_ERROR(QString{ "Failed to create database directory: " % databaseDirPath });
 				QSqlDatabase::removeDatabase(connectionName);
 				return std::unexpected(DatabaseError::CreateDirectoryError);
 			}

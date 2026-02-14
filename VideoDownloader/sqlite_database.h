@@ -10,6 +10,9 @@
 #include <QObject>
 #include <QHash>
 
+// Project internal headers
+#include "connection_manager.h"
+
 namespace nexusdl::database {
 
 	class SQLiteDatabase : public QObject
@@ -36,47 +39,27 @@ namespace nexusdl::database {
 
 		// 实用方法
 		QString lastError() const;
-		QString databasePath() const;
+		QString databaseDirPath() const;
 		QString databaseName() const;
-		QString fullDatabasePath() const;
+		QString fullPath() const;
 		qint64 databaseSize() const;
 
 		// 事务支持
 		bool beginTransaction();
 		bool commitTransaction();
 		bool rollbackTransaction();
-		void endTransaction();
 
 	private:
-		struct ConnectionContext
-		{
-			QSqlDatabase connection{};
-			bool isInitialized{ false };
-
-			~ConnectionContext()
-			{
-				if (connection.isOpen())
-				{
-					connection.close();
-				}
-			}
-		};
-
-		bool initConnection();
+		std::expected<void, DatabaseError> initConnection();
 		bool ensureConnection();
 
-		// 获取连接名称
-		QString getConnectionName() const;
-
-		// 获取当前实例的线程本地数据
-		ConnectionContext& getConnectionContext();
-		const ConnectionContext& getConnectionContext() const;
-
 	private:
-		static thread_local QHash<QString, ConnectionContext> m_threadConnections;
 		mutable QReadWriteLock m_dataLock;
-		const QString m_databasePath;
+		static thread_local bool s_inTransaction;
+		const QString m_databaseDirPath;
 		const QString m_databaseName;
+		const QString m_fullDatabasePath;
+		const QString m_connectionNamePrefix;
 	};
 
 } // namespace nexusdl::database

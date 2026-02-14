@@ -3,11 +3,15 @@
 
 #pragma once
 
-#include <QSqlDatabase>
-#include <QString>
+// C++ standard library
 #include <expected>
 
-#include "database_error.h"   // 引入独立错误枚举
+// Qt headers
+#include <QSqlDatabase>
+#include <QString>
+
+// Project internal headers
+#include "database_error.h"
 
 namespace nexusdl::database {
 
@@ -18,7 +22,7 @@ namespace nexusdl::database {
 		~ConnectionContext();
 
 		// 初始化连接：创建目录、添加数据库、打开并设置PRAGMA
-		std::expected<void, DatabaseError> initialize(const QString& databasePath, const QString& fullPath, const QString& connectionName);
+		std::expected<void, DatabaseError> initialize(const QString& databaseDirPath, const QString& fullPath, const QString& connectionName);
 
 		QSqlDatabase& connection() noexcept;
 		const QSqlDatabase& connection() const noexcept;

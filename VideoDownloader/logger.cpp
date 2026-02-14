@@ -3,7 +3,7 @@
 
 #include "logger.h"
 
-// Qt Core
+// Qt headers
 #include <QCoreApplication>
 #include <QtConcurrent>
 

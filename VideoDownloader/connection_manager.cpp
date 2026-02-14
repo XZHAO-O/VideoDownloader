@@ -3,7 +3,7 @@
 
 #include "connection_manager.h"
 
-// Qt Core
+// Qt headers
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QDir>
@@ -17,7 +17,8 @@
 namespace nexusdl::database {
 
 	// 静态成员初始化
-	thread_local QHash<QString, ConnectionContext> ConnectionManager::m_threadConnections{};
+	thread_local QHash<QString, ConnectionContext> ConnectionManager::s_threadConnections{};
+	thread_local QString ConnectionManager::s_threadId{};
 
 	ConnectionManager& ConnectionManager::instance()
 	{
@@ -29,32 +30,36 @@ namespace nexusdl::database {
 	{
 	}
 
-	QString ConnectionManager::getConnectionName(const QString& databaseName) const
+	QString ConnectionManager::getConnectionName(const QString& connectionNamePrefix) const
 	{
-		return QString{ "SQLiteDatabaseConnection_" % databaseName % "_" % QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()))) };
+		if (s_threadId.isEmpty())
+		{
+			s_threadId = QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id())));
+		}
+		return QString{ connectionNamePrefix % s_threadId };
 	}
 
-	ConnectionContext& ConnectionManager::getConnectionContext(const QString& databaseName)
+	ConnectionContext& ConnectionManager::getConnectionContext(const QString& connectionNamePrefix)
 	{
-		return m_threadConnections[getConnectionName(databaseName)];
+		return s_threadConnections[getConnectionName(connectionNamePrefix)];
 	}
 
-	const ConnectionContext& ConnectionManager::getConnectionContext(const QString& databaseName) const
+	const ConnectionContext& ConnectionManager::getConnectionContext(const QString& connectionNamePrefix) const
 	{
-		return m_threadConnections[getConnectionName(databaseName)];
+		return s_threadConnections[getConnectionName(connectionNamePrefix)];
 	}
 
-	QString ConnectionManager::getLastError(const QString& databaseName) const
+	QString ConnectionManager::lastError(const QString& connectionNamePrefix) const
 	{
-		return getConnectionContext(databaseName).lastError();
+		return getConnectionContext(connectionNamePrefix).lastError();
 	}
 
-	bool ConnectionManager::isConnectionInitialized(const QString& databaseName) const
+	bool ConnectionManager::isConnectionInitialized(const QString& connectionNamePrefix) const
 	{
-		return getConnectionContext(databaseName).isInitialized();
+		return getConnectionContext(connectionNamePrefix).isInitialized();
 	}
 
-	std::expected<void, DatabaseError> ConnectionManager::initializeConnection(const QString& databaseName, const QString& databasePath)
+	std::expected<void, DatabaseError> ConnectionManager::initializeConnection(const QString& databaseName, const QString& databaseDirPath, const QString& fullPath)
 	{
 		auto& context = getConnectionContext(databaseName);
 		if (context.isInitialized())
@@ -62,63 +67,25 @@ namespace nexusdl::database {
 			return {};
 		}
 
-		const QString fullPath = databasePath % "/" % databaseName;
 		const QString connectionName = getConnectionName(databaseName);
 
 		// 委托给上下文完成实际初始化
-		return context.initialize(databasePath, fullPath, connectionName);
+		return context.initialize(databaseDirPath, fullPath, connectionName);
 	}
 
-	QSqlDatabase& ConnectionManager::getConnection(const QString& databaseName)
+	QSqlDatabase& ConnectionManager::getConnection(const QString& connectionNamePrefix)
 	{
-		return getConnectionContext(databaseName).connection();
+		return getConnectionContext(connectionNamePrefix).connection();
 	}
 
-	const QSqlDatabase& ConnectionManager::getConnection(const QString& databaseName) const
+	const QSqlDatabase& ConnectionManager::getConnection(const QString& connectionNamePrefix) const
 	{
-		return getConnectionContext(databaseName).connection();
+		return getConnectionContext(connectionNamePrefix).connection();
 	}
 
-	QSqlQuery ConnectionManager::createQuery(const QString& databaseName)
+	bool ConnectionManager::beginTransaction(const QString& connectionNamePrefix)
 	{
-		return QSqlQuery{ getConnection(databaseName) };
-	}
-
-	bool ConnectionManager::executeQuery(const QString& databaseName, QSqlQuery& query)
-	{
-		if (!query.exec())
-		{
-			LOG_ERROR(QString{ "Failed to execute query: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % query.lastQuery() });
-			return false;
-		}
-		return true;
-	}
-
-	QList<QVariantMap> ConnectionManager::executeQueryToMap(const QString& databaseName, QSqlQuery& query)
-	{
-		QList<QVariantMap> result{};
-
-		while (query.next())
-		{
-			QVariantMap row{};
-			QSqlRecord record = query.record();
-
-			for (int i = 0; i < record.count(); ++i)
-			{
-				row[record.fieldName(i)] = query.value(i);
-			}
-
-			result.append(row);
-		}
-
-		LOG_DEBUG(QString{ "Query returned " % QString::number(result.size()) % " rows" });
-		return result;
-	}
-
-	bool ConnectionManager::beginTransaction(const QString& databaseName)
-	{
-		auto& context = getConnectionContext(databaseName);
+		auto& context = getConnectionContext(connectionNamePrefix);
 		bool result = context.connection().transaction();
 		if (!result)
 		{
@@ -131,9 +98,9 @@ namespace nexusdl::database {
 		return result;
 	}
 
-	bool ConnectionManager::commitTransaction(const QString& databaseName)
+	bool ConnectionManager::commitTransaction(const QString& connectionNamePrefix)
 	{
-		auto& context = getConnectionContext(databaseName);
+		auto& context = getConnectionContext(connectionNamePrefix);
 		bool result = context.connection().commit();
 		if (result)
 		{
@@ -146,9 +113,9 @@ namespace nexusdl::database {
 		return result;
 	}
 
-	bool ConnectionManager::rollbackTransaction(const QString& databaseName)
+	bool ConnectionManager::rollbackTransaction(const QString& connectionNamePrefix)
 	{
-		auto& context = getConnectionContext(databaseName);
+		auto& context = getConnectionContext(connectionNamePrefix);
 		bool result = context.connection().rollback();
 		if (result)
 		{

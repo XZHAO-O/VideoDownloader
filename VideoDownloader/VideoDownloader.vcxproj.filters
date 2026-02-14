@@ -460,6 +460,12 @@
     <ClCompile Include="database_error.cpp">
       <Filter>database</Filter>
     </ClCompile>
+    <ClCompile Include="conditional_lock.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database_executor.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -855,6 +861,12 @@
       <Filter>database</Filter>
     </ClInclude>
     <ClInclude Include="database_error.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="conditional_lock.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database_executor.h">
       <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>

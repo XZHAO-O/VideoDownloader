@@ -8,7 +8,7 @@
 #include <chrono>
 #include <source_location>
 
-// Qt Core
+// Qt headers
 #include <QDir>
 #include <QTimer>
 #include <QMutex>

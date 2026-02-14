@@ -117,6 +117,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CancelManager.cpp" />
+    <ClCompile Include="conditional_lock.cpp" />
     <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="ConfigModManager.cpp" />
     <ClCompile Include="ConfigVideoPlatform.cpp" />
@@ -124,6 +125,7 @@
     <ClCompile Include="connection_manager.cpp" />
     <ClCompile Include="CookieManageUtil.cpp" />
     <ClCompile Include="database_error.cpp" />
+    <ClCompile Include="database_executor.cpp" />
     <ClCompile Include="sqlite_database.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
@@ -377,10 +379,12 @@
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <QtMoc Include="CancelManager.h" />
+    <ClInclude Include="conditional_lock.h" />
     <ClInclude Include="connection_context.h" />
     <ClInclude Include="connection_manager.h" />
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="database_error.h" />
+    <ClInclude Include="database_executor.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
