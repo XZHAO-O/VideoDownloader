@@ -61,16 +61,15 @@ namespace nexusdl::database {
 
 	std::expected<void, DatabaseError> ConnectionManager::initializeConnection(const QString& databaseName, const QString& databaseDirPath, const QString& fullPath)
 	{
-		auto& context = getConnectionContext(databaseName);
-		if (context.isInitialized())
+		if (auto& context = getConnectionContext(databaseName); context.isInitialized())
 		{
 			return {};
 		}
-
-		const QString connectionName = getConnectionName(databaseName);
-
-		// 委托给上下文完成实际初始化
-		return context.initialize(databaseDirPath, fullPath, connectionName);
+		else
+		{
+			// 委托给上下文完成实际初始化
+			return context.initialize(databaseDirPath, fullPath, getConnectionName(databaseName));
+		}
 	}
 
 	QSqlDatabase& ConnectionManager::getConnection(const QString& connectionNamePrefix)

@@ -460,9 +460,6 @@
     <ClCompile Include="database_error.cpp">
       <Filter>database</Filter>
     </ClCompile>
-    <ClCompile Include="conditional_lock.cpp">
-      <Filter>database</Filter>
-    </ClCompile>
     <ClCompile Include="database_executor.cpp">
       <Filter>database</Filter>
     </ClCompile>
@@ -771,9 +768,6 @@
     <QtMoc Include="CancelManager.h">
       <Filter>Core</Filter>
     </QtMoc>
-    <QtMoc Include="sqlite_database.h">
-      <Filter>database</Filter>
-    </QtMoc>
     <QtMoc Include="SvgButton.h">
       <Filter>Ui\Components</Filter>
     </QtMoc>
@@ -863,10 +857,10 @@
     <ClInclude Include="database_error.h">
       <Filter>database</Filter>
     </ClInclude>
-    <ClInclude Include="conditional_lock.h">
+    <ClInclude Include="database_executor.h">
       <Filter>database</Filter>
     </ClInclude>
-    <ClInclude Include="database_executor.h">
+    <ClInclude Include="sqlite_database.h">
       <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>

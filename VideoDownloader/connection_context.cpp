@@ -60,14 +60,14 @@ namespace nexusdl::database {
 			{
 				LOG_ERROR(QString{ "Failed to create database directory: " % databaseDirPath });
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::CreateDirectoryError);
+				return std::unexpected{ DatabaseError::CreateDirectoryError };
 			}
 
 			if (!m_connection.open())
 			{
 				LOG_ERROR(QString{ "Failed to open SQLite database: " % m_connection.lastError().text() });
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::DatabaseOpenError);
+				return std::unexpected{ DatabaseError::DatabaseOpenError };
 			}
 
 			QSqlQuery query{ m_connection };
@@ -78,7 +78,7 @@ namespace nexusdl::database {
 				LOG_ERROR(QString{ "Failed to set WAL journal mode: " % query.lastError().text() });
 				m_connection.close();
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::PragmaSetError);
+				return std::unexpected{ DatabaseError::PragmaSetError };
 			}
 
 			// 每次连接都必须启用外键约束
@@ -87,7 +87,7 @@ namespace nexusdl::database {
 				LOG_ERROR(QString{ "Failed to enable foreign keys: " % query.lastError().text() });
 				m_connection.close();
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::PragmaSetError);
+				return std::unexpected{ DatabaseError::PragmaSetError };
 			}
 
 			if (!query.exec("PRAGMA foreign_keys"))
@@ -95,7 +95,7 @@ namespace nexusdl::database {
 				LOG_ERROR("Failed to query PRAGMA foreign_keys");
 				m_connection.close();
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::PragmaSetError);
+				return std::unexpected{ DatabaseError::PragmaSetError };
 			}
 
 			if (query.next() && query.value(0).toInt() != 1)
@@ -103,7 +103,7 @@ namespace nexusdl::database {
 				LOG_ERROR("Foreign keys are not enabled");
 				m_connection.close();
 				QSqlDatabase::removeDatabase(connectionName);
-				return std::unexpected(DatabaseError::PragmaSetError);
+				return std::unexpected{ DatabaseError::PragmaSetError };
 			}
 
 			// 以下为“可容忍失败”的优化配置（仅警告，不阻止初始化）

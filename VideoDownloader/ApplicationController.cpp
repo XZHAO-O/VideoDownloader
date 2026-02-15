@@ -14,6 +14,7 @@
 #include "EventBus.h"
 #include "NetworkManager.h"
 #include "PlatformAggregatorService.h"
+#include "sqlite_database.h"
 
 ApplicationController::ApplicationController(QObject* parent)
 	: QObject(parent)
@@ -96,6 +97,8 @@ void ApplicationController::initializeCoreSystems()
 
 	m_downloadRecordService = QSharedPointer<DownloadRecordService>::create(m_databaseManager);
 	m_downloadVideoCoverService = QSharedPointer<DownloadVideoCoverService>::create(m_databaseManager);*/
+
+	nexusdl::database::SQLiteDatabase database{ "download.db" };
 
 	LOG_INFO("Core systems initialized");
 }

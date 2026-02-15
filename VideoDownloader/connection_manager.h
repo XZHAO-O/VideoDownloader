@@ -7,8 +7,6 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QHash>
-#include <QMutex>
-#include <QObject>
 
 // Project internal headers
 #include "connection_context.h"
@@ -32,6 +30,7 @@ namespace nexusdl::database {
 
 		QString getConnectionName(const QString& connectionNamePrefix) const;
 		ConnectionContext& getConnectionContext(const QString& connectionNamePrefix);
+		// 当连接不存在时会自动创建一个默认的连接上下文
 		const ConnectionContext& getConnectionContext(const QString& connectionNamePrefix) const;
 		QSqlDatabase& getConnection(const QString& connectionNamePrefix);
 		const QSqlDatabase& getConnection(const QString& connectionNamePrefix) const;

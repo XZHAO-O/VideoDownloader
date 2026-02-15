@@ -14,15 +14,12 @@
 
 // Project internal headers
 #include "logger.h"
-#include "conditional_lock.h"
+#include "connection_manager.h"
 
 namespace nexusdl::database {
 
-	thread_local bool SQLiteDatabase::s_inTransaction{ false };
-
-	SQLiteDatabase::SQLiteDatabase(const QString& databaseName, QObject* parent)
-		: QObject{ parent }
-		, m_dataLock{}
+	SQLiteDatabase::SQLiteDatabase(const QString& databaseName)
+		: m_executor{}
 		, m_databaseDirPath{ QCoreApplication::applicationDirPath() % "/database" }
 		, m_databaseName{ databaseName }
 		, m_fullDatabasePath{ m_databaseDirPath % "/" % m_databaseName }
@@ -48,169 +45,44 @@ namespace nexusdl::database {
 		return ConnectionManager::instance().initializeConnection(m_databaseName, m_databaseDirPath, m_fullDatabasePath);
 	}
 
-	bool SQLiteDatabase::ensureConnection()
+	std::expected<void, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantMap& params)
 	{
-		return initialize();
+		if (auto result = initConnection(); !result.has_value())
+		{
+			return std::unexpected{ result.error() };
+		}
+
+		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
 
-	bool SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantMap& params)
+	std::expected<void, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantList& params)
 	{
-		if (!ensureConnection())
+		if (auto result = initConnection(); !result.has_value())
 		{
-			return false;
-		}
-		ConditionalWriteLock lock(&m_dataLock, s_inTransaction);
-
-		if (!ConnectionManager::instance().isConnectionInitialized(m_connectionNamePrefix))
-		{
-			LOG_ERROR("SQLite database is not open");
-			return false;
+			return std::unexpected{ result.error() };
 		}
 
-		QSqlQuery query{ ConnectionManager::instance().getConnection(m_connectionNamePrefix) };
-		query.prepare(queryStr);
-
-		for (auto it = params.constBegin(); it != params.constEnd(); ++it)
-		{
-			query.bindValue(it.key(), it.value());
-		}
-
-		if (!query.exec())
-		{
-			LOG_ERROR(QString{ "Failed to execute query: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
-			return false;
-		}
-
-		return true;
+		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
 
-	bool SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantList& params)
+	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantMap& params)
 	{
-		if (!ensureConnection())
+		if (auto result = initConnection(); !result.has_value())
 		{
-			return false;
-		}
-		ConditionalWriteLock lock(&m_dataLock, s_inTransaction);
-
-		if (!ConnectionManager::instance().isConnectionInitialized(m_connectionNamePrefix))
-		{
-			LOG_ERROR("SQLite database is not open");
-			return false;
+			return std::unexpected{ result.error() };
 		}
 
-		QSqlQuery query{ ConnectionManager::instance().getConnection(m_connectionNamePrefix) };
-		query.prepare(queryStr);
-
-		for (int i = 0; i < params.size(); ++i)
-		{
-			query.bindValue(i, params[i]);
-		}
-
-		if (!query.exec())
-		{
-			LOG_ERROR(QString{ "Failed to execute query: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
-			return false;
-		}
-
-		return true;
+		return m_executor.executeQueryToMap(m_connectionNamePrefix, queryStr, params);
 	}
 
-	QList<QVariantMap> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantMap& params)
+	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantList& params)
 	{
-		if (!ensureConnection())
+		if (auto result = initConnection(); !result.has_value())
 		{
-			return {};
-		}
-		ConditionalReadLock lock(&m_dataLock, s_inTransaction);
-
-		if (!ConnectionManager::instance().isConnectionInitialized(m_connectionNamePrefix))
-		{
-			LOG_ERROR("SQLite database is not open");
-			return {};
+			return std::unexpected{ result.error() };
 		}
 
-		QList<QVariantMap> result{};
-
-		QSqlQuery query{ ConnectionManager::instance().getConnection(m_connectionNamePrefix) };
-		query.prepare(queryStr);
-
-		for (auto it = params.constBegin(); it != params.constEnd(); ++it)
-		{
-			query.bindValue(it.key(), it.value());
-		}
-
-		if (!query.exec())
-		{
-			LOG_ERROR(QString{ "Failed to execute select query: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
-			return result;
-		}
-
-		while (query.next())
-		{
-			QVariantMap row{};
-			QSqlRecord record = query.record();
-
-			for (int i = 0; i < record.count(); ++i)
-			{
-				row[record.fieldName(i)] = query.value(i);
-			}
-
-			result.append(row);
-		}
-
-		LOG_DEBUG(QString{ "Query returned " % QString::number(result.size()) % " rows" });
-		return result;
-	}
-
-	QList<QVariantMap> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantList& params)
-	{
-		if (!ensureConnection())
-		{
-			return {};
-		}
-		ConditionalReadLock lock(&m_dataLock, s_inTransaction);
-
-		if (!ConnectionManager::instance().isConnectionInitialized(m_connectionNamePrefix))
-		{
-			LOG_ERROR("SQLite database is not open");
-			return {};
-		}
-
-		QList<QVariantMap> result{};
-
-		QSqlQuery query{ ConnectionManager::instance().getConnection(m_connectionNamePrefix) };
-		query.prepare(queryStr);
-
-		for (int i = 0; i < params.size(); ++i)
-		{
-			query.bindValue(i, params[i]);
-		}
-
-		if (!query.exec())
-		{
-			LOG_ERROR(QString{ "Failed to execute select query: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
-			return result;
-		}
-
-		while (query.next())
-		{
-			QVariantMap row{};
-			QSqlRecord record = query.record();
-
-			for (int i = 0; i < record.count(); ++i)
-			{
-				row[record.fieldName(i)] = query.value(i);
-			}
-
-			result.append(row);
-		}
-
-		LOG_DEBUG(QString{ "Query returned " % QString::number(result.size()) % " rows" });
-		return result;
+		return m_executor.executeQueryToMap(m_connectionNamePrefix, queryStr, params);
 	}
 
 	QString SQLiteDatabase::lastError() const
@@ -235,51 +107,27 @@ namespace nexusdl::database {
 
 	qint64 SQLiteDatabase::databaseSize() const
 	{
-		if (QFileInfo fileInfo(m_fullDatabasePath); fileInfo.exists())
+		if (QFileInfo fileInfo{ m_fullDatabasePath }; fileInfo.exists())
 		{
 			return fileInfo.size();
 		}
-		else
-		{
-			return -1;
-		}
+
+		return -1;
 	}
 
 	bool SQLiteDatabase::beginTransaction()
 	{
-		m_dataLock.lockForWrite();
-		bool result = ConnectionManager::instance().beginTransaction(m_connectionNamePrefix);
-		if (result)
-		{
-			s_inTransaction = true;  // 设置线程局部标志
-		}
-		else
-		{
-			m_dataLock.unlock();  // 失败则释放锁
-		}
-		return result;
+		return ConnectionManager::instance().beginTransaction(m_connectionNamePrefix);
 	}
 
 	bool SQLiteDatabase::commitTransaction()
 	{
-		bool result = ConnectionManager::instance().commitTransaction(m_connectionNamePrefix);
-		if (s_inTransaction)
-		{
-			s_inTransaction = false;
-			m_dataLock.unlock();
-		}
-		return result;
+		return ConnectionManager::instance().commitTransaction(m_connectionNamePrefix);
 	}
 
 	bool SQLiteDatabase::rollbackTransaction()
 	{
-		bool result = ConnectionManager::instance().rollbackTransaction(m_connectionNamePrefix);
-		if (s_inTransaction)
-		{
-			s_inTransaction = false;
-			m_dataLock.unlock();
-		}
-		return result;
+		return ConnectionManager::instance().rollbackTransaction(m_connectionNamePrefix);
 	}
 
 } // namespace nexusdl::database

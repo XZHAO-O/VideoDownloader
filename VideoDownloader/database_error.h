@@ -9,9 +9,14 @@ namespace nexusdl::database {
 
 	enum class DatabaseError
 	{
-		CreateDirectoryError,
+		// connection error
+		CreateDirectoryError = 0,
 		DatabaseOpenError,
 		PragmaSetError,
+
+		// query error
+		ExecuteQueryError,
+		TransactionError
 	};
 
 	QString databaseErrorToString(DatabaseError error) noexcept;

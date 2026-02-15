@@ -4,23 +4,18 @@
 #pragma once
 
 // Qt Core
-#include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QReadWriteLock>
-#include <QObject>
-#include <QHash>
+#include <QString>
 
 // Project internal headers
-#include "connection_manager.h"
+#include "database_executor.h"
 
 namespace nexusdl::database {
 
-	class SQLiteDatabase : public QObject
+	class SQLiteDatabase
 	{
-		Q_OBJECT
-
 	public:
-		explicit SQLiteDatabase(const QString& databaseName, QObject* parent = nullptr);
+		explicit SQLiteDatabase(const QString& databaseName);
 		~SQLiteDatabase() = default;
 
 		SQLiteDatabase(const SQLiteDatabase&) = delete;
@@ -31,11 +26,13 @@ namespace nexusdl::database {
 		// 初始化数据库
 		bool initialize();
 
-		// SQL执行（通用方法）
-		bool executeQuery(const QString& queryStr, const QVariantMap& params);
-		bool executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
-		QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
-		QList<QVariantMap> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
+		// SQL执行（写操作）
+		std::expected<void, DatabaseError> executeQuery(const QString& queryStr, const QVariantMap& params);
+		std::expected<void, DatabaseError> executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
+
+		// SQL查询（读操作）
+		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
+		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
 
 		// 实用方法
 		QString lastError() const;
@@ -51,11 +48,9 @@ namespace nexusdl::database {
 
 	private:
 		std::expected<void, DatabaseError> initConnection();
-		bool ensureConnection();
 
 	private:
-		mutable QReadWriteLock m_dataLock;
-		static thread_local bool s_inTransaction;
+		DatabaseExecutor m_executor;
 		const QString m_databaseDirPath;
 		const QString m_databaseName;
 		const QString m_fullDatabasePath;
