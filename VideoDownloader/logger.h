@@ -492,8 +492,7 @@ namespace nexusdl::log {
 // 便捷宏
 #define LOG_TRACE(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Trace)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Trace)) \
 	{ \
 		logInstance.trace(msg); \
 	} \
@@ -501,8 +500,7 @@ namespace nexusdl::log {
 
 #define LOG_DEBUG(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Debug)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Debug)) \
 	{ \
 		logInstance.debug(msg); \
 	} \
@@ -510,8 +508,7 @@ namespace nexusdl::log {
 
 #define LOG_INFO(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Info)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Info)) \
 	{ \
 		logInstance.info(msg); \
 	} \
@@ -519,8 +516,7 @@ namespace nexusdl::log {
 
 #define LOG_WARN(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Warn)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Warn)) \
 	{ \
 		logInstance.warn(msg); \
 	} \
@@ -528,8 +524,7 @@ namespace nexusdl::log {
 
 #define LOG_ERROR(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Error)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Error)) \
 	{ \
 		logInstance.error(msg); \
 	} \
@@ -537,8 +532,7 @@ namespace nexusdl::log {
 
 #define LOG_FATAL(msg) do \
 { \
-	auto& logInstance = nexusdl::log::Logger::instance(); \
-	if (logInstance.shouldLog(nexusdl::log::LogLevel::Fatal)) \
+	if (auto& logInstance = nexusdl::log::Logger::instance();logInstance.shouldLog(nexusdl::log::LogLevel::Fatal)) \
 	{ \
 		logInstance.fatal(msg); \
 	} \

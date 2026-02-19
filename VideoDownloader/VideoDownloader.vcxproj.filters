@@ -863,6 +863,12 @@
     <ClInclude Include="sqlite_database.h">
       <Filter>database</Filter>
     </ClInclude>
+    <ClInclude Include="retry_strategy.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="sql_query_retry_strategy.h">
+      <Filter>database</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="all.sql">

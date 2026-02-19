@@ -31,12 +31,20 @@ namespace nexusdl::database {
 		DatabaseExecutor& operator=(DatabaseExecutor&&) = delete;
 
 		// SQL 执行（写操作）
-		std::expected<void, DatabaseError> executeQuery(const QString& connectionNamePrefix, const QString& queryStr, const QVariantMap& params);
-		std::expected<void, DatabaseError> executeQuery(const QString& connectionNamePrefix, const QString& queryStr, const QVariantList& params = QVariantList());
+		std::expected<void, DatabaseError> executeWrite(const QString& connectionNamePrefix, const QString& queryStr, const QVariantMap& params);
+		std::expected<void, DatabaseError> executeWrite(const QString& connectionNamePrefix, const QString& queryStr, const QVariantList& params = QVariantList());
 
 		// SQL 查询并返回 QSqlQuery（读操作）
-		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& connectionNamePrefix, const QString& queryStr, const QVariantMap& params);
-		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& connectionNamePrefix, const QString& queryStr, const QVariantList& params = QVariantList());
+		std::expected<QSqlQuery, DatabaseError> executeQuery(const QString& connectionNamePrefix, const QString& queryStr, const QVariantMap& params);
+		std::expected<QSqlQuery, DatabaseError> executeQuery(const QString& connectionNamePrefix, const QString& queryStr, const QVariantList& params = QVariantList());
+
+		// 批量写操作
+		std::expected<void, DatabaseError> executeWriteBatch(const QString& connectionNamePrefix, const QString& queryStr, const QList<QVariantMap>& batchParams);
+		std::expected<void, DatabaseError> executeWriteBatch(const QString& connectionNamePrefix, const QString& queryStr, const QList<QVariantList>& batchParams);
+
+		// 批量查询操作（返回多个结果集）
+		std::expected<QList<QSqlQuery>, DatabaseError> executeQueryBatch(const QString& connectionNamePrefix, const QString& queryStr, const QList<QVariantMap>& batchParams);
+		std::expected<QList<QSqlQuery>, DatabaseError> executeQueryBatch(const QString& connectionNamePrefix, const QString& queryStr, const QList<QVariantList>& batchParams);
 	};
 
 } // namespace nexusdl::database

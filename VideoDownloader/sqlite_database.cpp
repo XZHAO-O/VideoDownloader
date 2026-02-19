@@ -45,7 +45,27 @@ namespace nexusdl::database {
 		return ConnectionManager::instance().initializeConnection(m_databaseName, m_databaseDirPath, m_fullDatabasePath);
 	}
 
-	std::expected<void, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantMap& params)
+	std::expected<void, DatabaseError> SQLiteDatabase::executeWrite(const QString& queryStr, const QVariantMap& params)
+	{
+		if (auto result = initConnection(); !result.has_value())
+		{
+			return std::unexpected{ result.error() };
+		}
+
+		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
+	}
+
+	std::expected<void, DatabaseError> SQLiteDatabase::executeWrite(const QString& queryStr, const QVariantList& params)
+	{
+		if (auto result = initConnection(); !result.has_value())
+		{
+			return std::unexpected{ result.error() };
+		}
+
+		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
+	}
+
+	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantMap& params)
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
@@ -55,7 +75,7 @@ namespace nexusdl::database {
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
 
-	std::expected<void, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantList& params)
+	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQuery(const QString& queryStr, const QVariantList& params)
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
@@ -63,26 +83,6 @@ namespace nexusdl::database {
 		}
 
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
-	}
-
-	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantMap& params)
-	{
-		if (auto result = initConnection(); !result.has_value())
-		{
-			return std::unexpected{ result.error() };
-		}
-
-		return m_executor.executeQueryToMap(m_connectionNamePrefix, queryStr, params);
-	}
-
-	std::expected<QSqlQuery, DatabaseError> SQLiteDatabase::executeQueryToMap(const QString& queryStr, const QVariantList& params)
-	{
-		if (auto result = initConnection(); !result.has_value())
-		{
-			return std::unexpected{ result.error() };
-		}
-
-		return m_executor.executeQueryToMap(m_connectionNamePrefix, queryStr, params);
 	}
 
 	QString SQLiteDatabase::lastError() const
@@ -117,16 +117,28 @@ namespace nexusdl::database {
 
 	bool SQLiteDatabase::beginTransaction()
 	{
+		if (auto result = initConnection(); !result.has_value())
+		{
+			//return std::unexpected{ result.error() };
+		}
 		return ConnectionManager::instance().beginTransaction(m_connectionNamePrefix);
 	}
 
 	bool SQLiteDatabase::commitTransaction()
 	{
+		if (auto result = initConnection(); !result.has_value())
+		{
+			//return std::unexpected{ result.error() };
+		}
 		return ConnectionManager::instance().commitTransaction(m_connectionNamePrefix);
 	}
 
 	bool SQLiteDatabase::rollbackTransaction()
 	{
+		if (auto result = initConnection(); !result.has_value())
+		{
+			//return std::unexpected{ result.error() };
+		}
 		return ConnectionManager::instance().rollbackTransaction(m_connectionNamePrefix);
 	}
 

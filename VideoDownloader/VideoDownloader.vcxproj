@@ -386,6 +386,7 @@
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
+    <ClInclude Include="retry_strategy.h" />
     <ClInclude Include="sqlite_database.h" />
     <QtMoc Include="DownloadEngine.h" />
     <QtMoc Include="DownloadContext.h" />
@@ -416,6 +417,7 @@
     <QtMoc Include="TrayManager.h" />
     <ClInclude Include="OrderedQHash.h" />
     <ClInclude Include="QueryWrapper.h" />
+    <ClInclude Include="sql_query_retry_strategy.h" />
     <ClInclude Include="StringUtil.h" />
     <QtMoc Include="SvgButton.h" />
     <QtMoc Include="SvgToggleButton.h" />

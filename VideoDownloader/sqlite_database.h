@@ -27,12 +27,12 @@ namespace nexusdl::database {
 		bool initialize();
 
 		// SQL执行（写操作）
-		std::expected<void, DatabaseError> executeQuery(const QString& queryStr, const QVariantMap& params);
-		std::expected<void, DatabaseError> executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
+		std::expected<void, DatabaseError> executeWrite(const QString& queryStr, const QVariantMap& params);
+		std::expected<void, DatabaseError> executeWrite(const QString& queryStr, const QVariantList& params = QVariantList());
 
 		// SQL查询（读操作）
-		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& queryStr, const QVariantMap& params);
-		std::expected<QSqlQuery, DatabaseError> executeQueryToMap(const QString& queryStr, const QVariantList& params = QVariantList());
+		std::expected<QSqlQuery, DatabaseError> executeQuery(const QString& queryStr, const QVariantMap& params);
+		std::expected<QSqlQuery, DatabaseError> executeQuery(const QString& queryStr, const QVariantList& params = QVariantList());
 
 		// 实用方法
 		QString lastError() const;
