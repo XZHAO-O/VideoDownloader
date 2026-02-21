@@ -51,7 +51,6 @@ namespace nexusdl::database {
 		{
 			return std::unexpected{ result.error() };
 		}
-
 		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
 	}
 
@@ -61,7 +60,6 @@ namespace nexusdl::database {
 		{
 			return std::unexpected{ result.error() };
 		}
-
 		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
 	}
 
@@ -71,7 +69,6 @@ namespace nexusdl::database {
 		{
 			return std::unexpected{ result.error() };
 		}
-
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
 
@@ -81,7 +78,6 @@ namespace nexusdl::database {
 		{
 			return std::unexpected{ result.error() };
 		}
-
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
 
@@ -111,33 +107,32 @@ namespace nexusdl::database {
 		{
 			return fileInfo.size();
 		}
-
 		return -1;
 	}
 
-	bool SQLiteDatabase::beginTransaction()
+	std::expected<void, DatabaseError>   SQLiteDatabase::beginTransaction()
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			//return std::unexpected{ result.error() };
+			return std::unexpected{ result.error() };
 		}
 		return ConnectionManager::instance().beginTransaction(m_connectionNamePrefix);
 	}
 
-	bool SQLiteDatabase::commitTransaction()
+	std::expected<void, DatabaseError>   SQLiteDatabase::commitTransaction()
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			//return std::unexpected{ result.error() };
+			return std::unexpected{ result.error() };
 		}
 		return ConnectionManager::instance().commitTransaction(m_connectionNamePrefix);
 	}
 
-	bool SQLiteDatabase::rollbackTransaction()
+	std::expected<void, DatabaseError>   SQLiteDatabase::rollbackTransaction()
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			//return std::unexpected{ result.error() };
+			return std::unexpected{ result.error() };
 		}
 		return ConnectionManager::instance().rollbackTransaction(m_connectionNamePrefix);
 	}

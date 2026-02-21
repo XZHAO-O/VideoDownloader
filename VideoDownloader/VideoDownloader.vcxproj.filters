@@ -99,6 +99,15 @@
     <Filter Include="macros">
       <UniqueIdentifier>{4185391e-d076-4c93-942d-7e44197e03c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="database\core">
+      <UniqueIdentifier>{ddfb2820-78fa-4ecc-97e5-51dc1950b3c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\enums">
+      <UniqueIdentifier>{8c6416d3-1b8b-43c7-acdb-64fcfecc20e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="database\utils">
+      <UniqueIdentifier>{52008efa-a213-4fe4-80f7-4926cb904b14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoDownloader.qrc">
@@ -424,17 +433,11 @@
     <ClCompile Include="CancelManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="sqlite_database.cpp">
-      <Filter>database</Filter>
-    </ClCompile>
     <ClCompile Include="DownloadRecordDAO.cpp">
       <Filter>database\dao</Filter>
     </ClCompile>
     <ClCompile Include="DownloadRecordService.cpp">
       <Filter>database\service</Filter>
-    </ClCompile>
-    <ClCompile Include="QueryWrapper.cpp">
-      <Filter>database</Filter>
     </ClCompile>
     <ClCompile Include="DownloadVideoCoverDAO.cpp">
       <Filter>database\dao</Filter>
@@ -451,17 +454,23 @@
     <ClCompile Include="log_buffer.cpp">
       <Filter>Core\Log</Filter>
     </ClCompile>
-    <ClCompile Include="connection_manager.cpp">
-      <Filter>database</Filter>
+    <ClCompile Include="database_error.cpp">
+      <Filter>database\enums</Filter>
     </ClCompile>
     <ClCompile Include="connection_context.cpp">
-      <Filter>database</Filter>
+      <Filter>database\core</Filter>
     </ClCompile>
-    <ClCompile Include="database_error.cpp">
-      <Filter>database</Filter>
+    <ClCompile Include="connection_manager.cpp">
+      <Filter>database\core</Filter>
     </ClCompile>
     <ClCompile Include="database_executor.cpp">
-      <Filter>database</Filter>
+      <Filter>database\core</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite_database.cpp">
+      <Filter>database\core</Filter>
+    </ClCompile>
+    <ClCompile Include="query_wrapper.cpp">
+      <Filter>database\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -824,9 +833,6 @@
     <ClInclude Include="DownloadRecord.h">
       <Filter>database\entity</Filter>
     </ClInclude>
-    <ClInclude Include="QueryWrapper.h">
-      <Filter>database</Filter>
-    </ClInclude>
     <ClInclude Include="DownloadVideoCoverDAO.h">
       <Filter>database\dao</Filter>
     </ClInclude>
@@ -848,26 +854,32 @@
     <ClInclude Include="macros.h">
       <Filter>macros</Filter>
     </ClInclude>
-    <ClInclude Include="connection_manager.h">
-      <Filter>database</Filter>
-    </ClInclude>
-    <ClInclude Include="connection_context.h">
-      <Filter>database</Filter>
-    </ClInclude>
-    <ClInclude Include="database_error.h">
-      <Filter>database</Filter>
-    </ClInclude>
-    <ClInclude Include="database_executor.h">
-      <Filter>database</Filter>
-    </ClInclude>
-    <ClInclude Include="sqlite_database.h">
-      <Filter>database</Filter>
-    </ClInclude>
     <ClInclude Include="retry_strategy.h">
       <Filter>database</Filter>
     </ClInclude>
     <ClInclude Include="sql_query_retry_strategy.h">
       <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database_error.h">
+      <Filter>database\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="connection_context.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="connection_manager.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="database_executor.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite_database.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="query_wrapper.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="base_dao.h">
+      <Filter>database\dao</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

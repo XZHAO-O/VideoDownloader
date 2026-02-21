@@ -149,7 +149,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="AppInstanceManager.cpp" />
-    <ClCompile Include="QueryWrapper.cpp" />
+    <ClCompile Include="query_wrapper.cpp" />
     <ClCompile Include="SearchResultsWidget.cpp" />
     <ClCompile Include="SingleLevelComboBox.cpp" />
     <ClCompile Include="SvgButton.cpp" />
@@ -378,6 +378,7 @@
     <QtMoc Include="ConfigVideoPlatform.h" />
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <QtMoc Include="CancelManager.h" />
+    <ClInclude Include="base_dao.h" />
     <ClInclude Include="connection_context.h" />
     <ClInclude Include="connection_manager.h" />
     <ClInclude Include="CookieManageUtil.h" />
@@ -416,7 +417,7 @@
     <QtMoc Include="SingleLevelComboBox.h" />
     <QtMoc Include="TrayManager.h" />
     <ClInclude Include="OrderedQHash.h" />
-    <ClInclude Include="QueryWrapper.h" />
+    <ClInclude Include="query_wrapper.h" />
     <ClInclude Include="sql_query_retry_strategy.h" />
     <ClInclude Include="StringUtil.h" />
     <QtMoc Include="SvgButton.h" />

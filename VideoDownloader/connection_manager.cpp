@@ -82,49 +82,46 @@ namespace nexusdl::database {
 		return getConnectionContext(connectionNamePrefix).connection();
 	}
 
-	bool ConnectionManager::beginTransaction(const QString& connectionNamePrefix)
+	std::expected<void, DatabaseError>  ConnectionManager::beginTransaction(const QString& connectionNamePrefix)
 	{
-		auto& context = getConnectionContext(connectionNamePrefix);
-		bool result = context.connection().transaction();
-		if (!result)
+		if (auto& context = getConnectionContext(connectionNamePrefix); context.connection().transaction())
 		{
-			LOG_ERROR(QString{ "Failed to begin transaction: " % context.lastError() });
+			LOG_DEBUG("SQLite database transaction started");
+			return {};
 		}
 		else
 		{
-			LOG_DEBUG("SQLite database transaction started");
+			LOG_ERROR(QString{ "Failed to begin transaction: " % context.lastError() });
+			return std::unexpected{ DatabaseError::TransactionError };
 		}
-		return result;
 	}
 
-	bool ConnectionManager::commitTransaction(const QString& connectionNamePrefix)
+	std::expected<void, DatabaseError>  ConnectionManager::commitTransaction(const QString& connectionNamePrefix)
 	{
-		auto& context = getConnectionContext(connectionNamePrefix);
-		bool result = context.connection().commit();
-		if (result)
+		if (auto& context = getConnectionContext(connectionNamePrefix); context.connection().commit())
 		{
 			LOG_DEBUG("SQLite database transaction committed");
+			return {};
 		}
 		else
 		{
 			LOG_ERROR(QString{ "Failed to commit transaction: " % context.lastError() });
+			return std::unexpected{ DatabaseError::TransactionError };
 		}
-		return result;
 	}
 
-	bool ConnectionManager::rollbackTransaction(const QString& connectionNamePrefix)
+	std::expected<void, DatabaseError>  ConnectionManager::rollbackTransaction(const QString& connectionNamePrefix)
 	{
-		auto& context = getConnectionContext(connectionNamePrefix);
-		bool result = context.connection().rollback();
-		if (result)
+		if (auto& context = getConnectionContext(connectionNamePrefix); context.connection().rollback())
 		{
 			LOG_WARN("SQLite database transaction rolled back");
+			return {};
 		}
 		else
 		{
 			LOG_ERROR(QString{ "Failed to rollback transaction: " % context.lastError() });
+			return std::unexpected{ DatabaseError::TransactionError };
 		}
-		return result;
 	}
 
 } // namespace nexusdl::database

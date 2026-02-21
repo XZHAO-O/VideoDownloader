@@ -38,9 +38,9 @@ namespace nexusdl::database {
 		QString lastError(const QString& connectionNamePrefix) const;
 
 		// 事务基础操作
-		bool beginTransaction(const QString& connectionNamePrefix);
-		bool commitTransaction(const QString& connectionNamePrefix);
-		bool rollbackTransaction(const QString& connectionNamePrefix);
+		std::expected<void, DatabaseError>  beginTransaction(const QString& connectionNamePrefix);
+		std::expected<void, DatabaseError>  commitTransaction(const QString& connectionNamePrefix);
+		std::expected<void, DatabaseError>  rollbackTransaction(const QString& connectionNamePrefix);
 
 	private:
 		explicit ConnectionManager();
