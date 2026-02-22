@@ -11,7 +11,6 @@
 
 // Project internal headers
 #include "field.h"
-#include "logger.h"
 
 namespace nexusdl::database {
 

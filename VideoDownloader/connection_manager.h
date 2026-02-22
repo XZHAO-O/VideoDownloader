@@ -46,9 +46,8 @@ namespace nexusdl::database {
 		explicit ConnectionManager();
 		~ConnectionManager() = default;
 
-		// 线程本地连接存储
-		static thread_local QHash<QString, ConnectionContext> s_threadConnections;
-		static thread_local QString s_threadId;
+		static QHash<QString, ConnectionContext>& threadConnections();
+		static QString& threadId();
 	};
 
 } // namespace nexusdl::database

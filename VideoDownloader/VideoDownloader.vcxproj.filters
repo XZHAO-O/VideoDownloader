@@ -472,6 +472,12 @@
     <ClCompile Include="query_wrapper.cpp">
       <Filter>database\core</Filter>
     </ClCompile>
+    <ClCompile Include="database_manager.cpp">
+      <Filter>database\core</Filter>
+    </ClCompile>
+    <ClCompile Include="database_id.cpp">
+      <Filter>database\enums</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="VideoDownloader.h">
@@ -886,6 +892,12 @@
     </ClInclude>
     <ClInclude Include="base_service.h">
       <Filter>database\service</Filter>
+    </ClInclude>
+    <ClInclude Include="database_manager.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="database_id.h">
+      <Filter>database\enums</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

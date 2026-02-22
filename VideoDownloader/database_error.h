@@ -17,9 +17,10 @@ namespace nexusdl::database {
 
 		// query error
 		ExecuteQueryError,
-		TransactionError
+		TransactionError,
+		InvalidArgument
 	};
 
-	QString databaseErrorToString(DatabaseError error) noexcept;
+	[[nodiscard]] const QString& databaseErrorToString(DatabaseError error);
 
 } // namespace nexusdl::database

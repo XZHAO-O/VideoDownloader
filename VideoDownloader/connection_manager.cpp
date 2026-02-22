@@ -16,10 +16,6 @@
 
 namespace nexusdl::database {
 
-	// 静态成员初始化
-	thread_local QHash<QString, ConnectionContext> ConnectionManager::s_threadConnections{};
-	thread_local QString ConnectionManager::s_threadId{};
-
 	ConnectionManager& ConnectionManager::instance()
 	{
 		static ConnectionManager instance{};
@@ -30,23 +26,36 @@ namespace nexusdl::database {
 	{
 	}
 
+	QHash<QString, ConnectionContext>& ConnectionManager::threadConnections()
+	{
+		static thread_local QHash<QString, ConnectionContext> connections;
+		return connections;
+	}
+
+	QString& ConnectionManager::threadId()
+	{
+		static thread_local QString id;
+		return id;
+	}
+
 	QString ConnectionManager::getConnectionName(const QString& connectionNamePrefix) const
 	{
-		if (s_threadId.isEmpty())
+		QString& tid = threadId();
+		if (tid.isEmpty())
 		{
-			s_threadId = QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id())));
+			tid = QString::number(static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id())));
 		}
-		return QString{ connectionNamePrefix % s_threadId };
+		return QString{ connectionNamePrefix % tid };
 	}
 
 	ConnectionContext& ConnectionManager::getConnectionContext(const QString& connectionNamePrefix)
 	{
-		return s_threadConnections[getConnectionName(connectionNamePrefix)];
+		return threadConnections()[getConnectionName(connectionNamePrefix)];
 	}
 
 	const ConnectionContext& ConnectionManager::getConnectionContext(const QString& connectionNamePrefix) const
 	{
-		return s_threadConnections[getConnectionName(connectionNamePrefix)];
+		return threadConnections()[getConnectionName(connectionNamePrefix)];
 	}
 
 	QString ConnectionManager::lastError(const QString& connectionNamePrefix) const

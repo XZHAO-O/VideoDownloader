@@ -125,6 +125,8 @@
     <ClCompile Include="CookieManageUtil.cpp" />
     <ClCompile Include="database_error.cpp" />
     <ClCompile Include="database_executor.cpp" />
+    <ClCompile Include="database_id.cpp" />
+    <ClCompile Include="database_manager.cpp" />
     <ClCompile Include="sqlite_database.cpp" />
     <ClCompile Include="DownloadCard.cpp" />
     <ClCompile Include="DownloadCardContainerWidget.cpp" />
@@ -385,6 +387,8 @@
     <ClInclude Include="CookieManageUtil.h" />
     <ClInclude Include="database_error.h" />
     <ClInclude Include="database_executor.h" />
+    <ClInclude Include="database_id.h" />
+    <ClInclude Include="database_manager.h" />
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />

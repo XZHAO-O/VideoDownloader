@@ -38,6 +38,12 @@ namespace nexusdl::log {
 	public:
 		static Logger& instance();
 
+		// 禁止拷贝和移动
+		Logger(const Logger&) = delete;
+		Logger& operator=(const Logger&) = delete;
+		Logger(Logger&&) = delete;
+		Logger& operator=(Logger&&) = delete;
+
 		bool start();
 
 		bool stop();
@@ -105,12 +111,6 @@ namespace nexusdl::log {
 	private:
 		explicit Logger(QObject* parent = nullptr);
 		~Logger();
-
-		// 禁止拷贝和移动
-		Logger(const Logger&) = delete;
-		Logger& operator=(const Logger&) = delete;
-		Logger(Logger&&) = delete;
-		Logger& operator=(Logger&&) = delete;
 
 		// 文件管理
 		bool openLogFile();
