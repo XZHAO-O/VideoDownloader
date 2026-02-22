@@ -379,6 +379,7 @@
     <QtMoc Include="DownloadCardContainerWidget.h" />
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="base_dao.h" />
+    <ClInclude Include="base_service.h" />
     <ClInclude Include="connection_context.h" />
     <ClInclude Include="connection_manager.h" />
     <ClInclude Include="CookieManageUtil.h" />
@@ -387,6 +388,7 @@
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
+    <ClInclude Include="field.h" />
     <ClInclude Include="retry_strategy.h" />
     <ClInclude Include="sqlite_database.h" />
     <QtMoc Include="DownloadEngine.h" />

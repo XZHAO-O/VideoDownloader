@@ -3,7 +3,7 @@
 
 #include "sqlite_database.h"
 
-// Qt Core
+// Qt headers
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QDir>

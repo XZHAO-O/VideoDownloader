@@ -3,7 +3,7 @@
 
 #pragma once
 
-// Qt Core
+// Qt headers
 #include <QSqlQuery>
 #include <QString>
 

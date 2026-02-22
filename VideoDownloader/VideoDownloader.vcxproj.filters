@@ -881,6 +881,12 @@
     <ClInclude Include="base_dao.h">
       <Filter>database\dao</Filter>
     </ClInclude>
+    <ClInclude Include="field.h">
+      <Filter>database\core</Filter>
+    </ClInclude>
+    <ClInclude Include="base_service.h">
+      <Filter>database\service</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="all.sql">

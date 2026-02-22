@@ -3,6 +3,7 @@
 
 #pragma once
 
+// Qt headers
 #include <QString>
 
 namespace nexusdl::database {
