@@ -13,25 +13,27 @@ namespace
 	constexpr qint64 kDefaultMaxFileSize{ 100 * 1024 * 1024 }; // 100MB
 	constexpr qint64 kDefaultMaxFiles{ 1000 };
 	constexpr qint64 kMaxLogsPerFlush{ 1000 };
-	const QString kLogBaseName{ QStringLiteral("NexusDL") };
 }
 
 namespace nexusdl::log {
 
-	Logger& Logger::instance()
+	Logger& Logger::instance() noexcept
 	{
 		static Logger instance{};
 		return instance;
 	}
 
-	Logger::Logger(QObject* parent)
+	Logger::Logger(QObject* parent) noexcept
 		: QObject{ parent }
 		, m_logLevel{ LogLevel::Info }
 		, m_initialized{ false }
+		, m_taskSemaphore{ 1 }
 		, m_logDir{ QCoreApplication::applicationDirPath() % "/logs" }
+		, m_logBaseName{ "NexusDL" }
 		, m_logFile{}
 		, m_currentLogPath{}
 		, m_currentFileSize{ 0 }
+		, m_fileMutex{}
 		, m_maxFileSize{ kDefaultMaxFileSize }
 		, m_maxFileCount{ kDefaultMaxFiles }
 		, m_currentBuffer{ nullptr }
@@ -175,7 +177,7 @@ namespace nexusdl::log {
 			}
 		}
 
-		m_currentLogPath = dir.absoluteFilePath(kLogBaseName % "-" % getTimeStamp() % ".log");
+		m_currentLogPath = dir.absoluteFilePath(m_logBaseName % "-" % getTimeStamp() % ".log");
 
 		m_logFile.setFileName(m_currentLogPath);
 
@@ -216,7 +218,7 @@ namespace nexusdl::log {
 		QDir logDir{ m_logDir };
 
 		// 获取所有日志文件
-		QStringList logFiles = logDir.entryList({ kLogBaseName % "-*.log" }, QDir::Files, QDir::Time | QDir::Reversed);
+		QStringList logFiles = logDir.entryList({ m_logBaseName % "-*.log" }, QDir::Files, QDir::Time | QDir::Reversed);
 
 		// 删除超过最大文件数量的旧文件
 		while (logFiles.size() > m_maxFileCount.load(std::memory_order_relaxed))
@@ -303,8 +305,8 @@ namespace nexusdl::log {
 	{
 		thread_local std::array<char, 20> buffer;
 
-		auto now = std::chrono::system_clock::now();
-		auto time = std::chrono::system_clock::to_time_t(now);
+		const auto now = std::chrono::system_clock::now();
+		const auto time = std::chrono::system_clock::to_time_t(now);
 		std::tm tm{};
 		#ifdef Q_OS_WIN
 		localtime_s(&tm, &time);
@@ -316,7 +318,7 @@ namespace nexusdl::log {
 		return QString::fromLatin1(buffer.data());
 	}
 
-	uint32_t Logger::getCurrentThreadId() const
+	uint32_t Logger::getCurrentThreadId() const noexcept
 	{
 		return static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 	}
@@ -326,12 +328,12 @@ namespace nexusdl::log {
 		const char*& file, const char*& shortFile,
 		int& line, QString& threadName, bool& hasThreadName)
 	{
-		auto now = std::chrono::system_clock::now();
+		const auto now = std::chrono::system_clock::now();
 		auto since_epoch = now.time_since_epoch();
 		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(since_epoch);
 		milliseconds = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(since_epoch - seconds).count());
 
-		auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(seconds));
+		const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::time_point(seconds));
 
 		#ifdef Q_OS_WIN
 		localtime_s(&tm, &time);
@@ -356,7 +358,7 @@ namespace nexusdl::log {
 		hasThreadName = !threadName.isEmpty();
 	}
 
-	char* Logger::writeString(char* ptr, const char* str)
+	char* Logger::writeString(char* ptr, const char* str) noexcept
 	{
 		const size_t len = std::strlen(str);
 		memcpy(ptr, str, len);

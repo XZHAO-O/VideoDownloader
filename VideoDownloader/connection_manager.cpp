@@ -3,38 +3,40 @@
 
 #include "connection_manager.h"
 
+// C++ standard library
+#include <thread>
+
 // Qt headers
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QDir>
 #include <QFile>
 #include <QCoreApplication>
-#include <QThread>
 
 // Project internal headers
 #include "logger.h"
 
 namespace nexusdl::database {
 
-	ConnectionManager& ConnectionManager::instance()
+	ConnectionManager& ConnectionManager::instance() noexcept
 	{
 		static ConnectionManager instance{};
 		return instance;
 	}
 
-	ConnectionManager::ConnectionManager()
+	ConnectionManager::ConnectionManager() noexcept
 	{
 	}
 
-	QHash<QString, ConnectionContext>& ConnectionManager::threadConnections()
+	std::unordered_map<QString, ConnectionContext>& ConnectionManager::threadConnections() noexcept
 	{
-		static thread_local QHash<QString, ConnectionContext> connections;
+		static thread_local std::unordered_map<QString, ConnectionContext> connections{};
 		return connections;
 	}
 
-	QString& ConnectionManager::threadId()
+	QString& ConnectionManager::threadId() noexcept
 	{
-		static thread_local QString id;
+		static thread_local QString id{};
 		return id;
 	}
 

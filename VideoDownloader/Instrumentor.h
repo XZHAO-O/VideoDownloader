@@ -58,7 +58,7 @@ private:
 
 			{
 				std::unique_lock<std::mutex> lock(m_QueueMutex);
-				m_QueueCondition.wait(lock, [this]() {
+				m_QueueCondition.wait(lock, [this]() noexcept {
 					return !m_Queue.empty() || !m_Running;
 					});
 
@@ -101,7 +101,7 @@ private:
 	}
 
 public:
-	Instrumentor()
+	Instrumentor() noexcept
 		: m_CurrentSession(nullptr), m_ProfileCount(0), m_Running(false)
 	{
 	}
@@ -188,7 +188,7 @@ public:
 		m_OutputStream.flush();
 	}
 
-	static Instrumentor& Get()
+	static Instrumentor& Get() noexcept
 	{
 		static Instrumentor instance;
 		return instance;
@@ -198,7 +198,7 @@ public:
 class InstrumentationTimer
 {
 public:
-	InstrumentationTimer(const char* name)
+	InstrumentationTimer(const char* name) noexcept
 		: m_Name(name), m_Stopped(false)
 	{
 		m_StartTimepoint = std::chrono::high_resolution_clock::now();
@@ -210,14 +210,19 @@ public:
 			Stop();
 	}
 
+	InstrumentationTimer(const InstrumentationTimer& other) = delete;
+	InstrumentationTimer& operator=(const InstrumentationTimer& other) = delete;
+	InstrumentationTimer(InstrumentationTimer&& other) = delete;
+	InstrumentationTimer& operator=(InstrumentationTimer&& other) = delete;
+
 	void Stop()
 	{
 		auto endTimepoint = std::chrono::high_resolution_clock::now();
 
-		long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-		long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
+		const long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
+		const long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
-		uint32_t threadID = static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+		const uint32_t threadID = static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 		Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
 
 		m_Stopped = true;

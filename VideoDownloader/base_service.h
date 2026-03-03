@@ -4,99 +4,90 @@
 #pragma once
 
 // c++ standard library
-#include <expected>
-#include <memory>
-#include <optional>
-#include <vector>
 #include <type_traits>
 
 // Project internal headers
 #include "base_dao.h"
-#include "database_error.h"
-#include "query_wrapper.h"
 
 namespace nexusdl::database {
 
-	template<typename Entity, typename DAO = BaseDAO<Entity>>
+	template<typename T>
+	concept HasInstance = requires { { T::instance() } -> std::same_as<T&>; };
+
+	template<typename Entity, typename DAO>
 	class BaseService
 	{
-		static_assert(std::is_base_of_v<BaseDAO<Entity>, DAO>,
-			"DAO must derive from BaseDAO<Entity>");
+		// 确保 DAO 是从 BaseDAO<DAO, Entity> 派生的 CRTP 类
+		static_assert(std::is_base_of_v<BaseDAO<DAO, Entity>, DAO>,
+			"DAO must derive from BaseDAO<DAO, Entity>");
+		// 确保 DAO 提供一个静态实例方法
+		static_assert(HasInstance<DAO>,
+			"DAO must provide a static instance() method returning DAO&");
 
 	public:
-		using DAOPtr = std::shared_ptr<DAO>;
-
-		explicit BaseService(DAOPtr dao)
-			: m_dao{ std::move(dao) }
-		{
-		}
-
 		virtual ~BaseService() = default;
 
-		// 禁用拷贝/移动（可根据需要调整）
+		// 禁用拷贝/移动
 		BaseService(const BaseService&) = delete;
 		BaseService& operator=(const BaseService&) = delete;
 		BaseService(BaseService&&) = delete;
 		BaseService& operator=(BaseService&&) = delete;
 
-		// 获取具体的 DAO 实例，用于调用自定义方法
-		DAO* dao() noexcept { return m_dao.get(); }
-		const DAO* dao() const noexcept { return m_dao.get(); }
-
 		// ---------- CRUD 操作：转发给 DAO ----------
 		std::expected<void, DatabaseError> insert(const Entity& entity)
 		{
-			return m_dao->insert(entity);
+			return m_dao.insert(entity);
 		}
 
 		std::expected<void, DatabaseError> updateById(const Entity& entity)
 		{
-			return m_dao->updateById(entity);
+			return m_dao.updateById(entity);
 		}
 
 		std::expected<void, DatabaseError> deleteById(const QVariant& id)
 		{
-			return m_dao->deleteById(id);
+			return m_dao.deleteById(id);
 		}
 
 		std::expected<std::optional<Entity>, DatabaseError> selectById(const QVariant& id)
 		{
-			return m_dao->selectById(id);
+			return m_dao.selectById(id);
 		}
 
 		std::expected<std::vector<Entity>, DatabaseError> selectList(const QueryWrapper<Entity>& wrapper)
 		{
-			return m_dao->selectList(wrapper);
+			return m_dao.selectList(wrapper);
 		}
 
 		std::expected<std::optional<Entity>, DatabaseError> selectOne(const QueryWrapper<Entity>& wrapper)
 		{
-			return m_dao->selectOne(wrapper);
+			return m_dao.selectOne(wrapper);
 		}
 
 		std::expected<long, DatabaseError> selectCount(const QueryWrapper<Entity>& wrapper)
 		{
-			return m_dao->selectCount(wrapper);
+			return m_dao.selectCount(wrapper);
 		}
 
-		// ---------- 事务支持 ----------
 		std::expected<void, DatabaseError> beginTransaction()
 		{
-			return m_dao->m_db->beginTransaction();
+			return m_dao.beginTransaction();
 		}
 
 		std::expected<void, DatabaseError> commitTransaction()
 		{
-			return m_dao->m_db->commitTransaction();
+			return m_dao.commitTransaction();
 		}
 
 		std::expected<void, DatabaseError> rollbackTransaction()
 		{
-			return m_dao->m_db->rollbackTransaction();
+			return m_dao.rollbackTransaction();
 		}
 
 	protected:
-		DAOPtr m_dao;
+		explicit BaseService() : m_dao{ DAO::instance() } {}
+
+		DAO& m_dao;
 	};
 
 } // namespace nexusdl::database

@@ -60,6 +60,11 @@ void MaterialTabWidget::setCurrentIndex(int index)
 	emit itemIndexChanged(index);
 }
 
+int MaterialTabWidget::currentIndex() const noexcept
+{
+	return m_currentIndex;
+}
+
 void MaterialTabWidget::onTabClicked(int index)
 {
 	if (m_isAnimating || index == m_currentIndex)

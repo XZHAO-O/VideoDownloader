@@ -18,8 +18,13 @@ namespace nexusdl::database {
 	class ConnectionContext
 	{
 	public:
-		explicit ConnectionContext();
+		explicit ConnectionContext() noexcept;
 		~ConnectionContext();
+
+		ConnectionContext(const ConnectionContext&) = delete;
+		ConnectionContext& operator=(const ConnectionContext&) = delete;
+		ConnectionContext(ConnectionContext&&) = default;
+		ConnectionContext& operator=(ConnectionContext&&) = default;
 
 		// 初始化连接：创建目录、添加数据库、打开并设置PRAGMA
 		std::expected<void, DatabaseError> initialize(const QString& databaseDirPath, const QString& fullPath, const QString& connectionName);

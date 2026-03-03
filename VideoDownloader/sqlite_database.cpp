@@ -31,7 +31,7 @@ namespace nexusdl::database {
 	bool SQLiteDatabase::initialize()
 	{
 		// 初始化数据库连接
-		if (auto result = initConnection(); !result.has_value())
+		if (const auto result = initConnection(); !result.has_value())
 		{
 			return false;
 		}
@@ -49,7 +49,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return result;
 		}
 		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
 	}
@@ -58,7 +58,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return result;
 		}
 		return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
 	}
@@ -67,7 +67,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return std::unexpected{ std::move(result).error() };
 		}
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
@@ -76,7 +76,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return std::unexpected{ std::move(result).error() };
 		}
 		return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 	}
@@ -86,17 +86,17 @@ namespace nexusdl::database {
 		return ConnectionManager::instance().lastError(m_connectionNamePrefix);
 	}
 
-	QString SQLiteDatabase::databaseDirPath() const
+	QString SQLiteDatabase::databaseDirPath() const noexcept
 	{
 		return m_databaseDirPath;
 	}
 
-	QString SQLiteDatabase::databaseName() const
+	QString SQLiteDatabase::databaseName() const noexcept
 	{
 		return m_databaseName;
 	}
 
-	QString SQLiteDatabase::fullPath() const
+	QString SQLiteDatabase::fullDatabasePath() const noexcept
 	{
 		return m_fullDatabasePath;
 	}
@@ -114,7 +114,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return result;
 		}
 		return ConnectionManager::instance().beginTransaction(m_connectionNamePrefix);
 	}
@@ -123,7 +123,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return result;
 		}
 		return ConnectionManager::instance().commitTransaction(m_connectionNamePrefix);
 	}
@@ -132,7 +132,7 @@ namespace nexusdl::database {
 	{
 		if (auto result = initConnection(); !result.has_value())
 		{
-			return std::unexpected{ result.error() };
+			return result;
 		}
 		return ConnectionManager::instance().rollbackTransaction(m_connectionNamePrefix);
 	}

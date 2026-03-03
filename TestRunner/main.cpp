@@ -1,17 +1,22 @@
 #include <QtCore/QCoreApplication>
 
-#include "CodeGenerator.h"
+#include "code_generator.h"
 
-int main(int argc, char* argv[])
+void generateCode()
 {
-	//QCoreApplication app(argc, argv);
-
+	using namespace nexusdl::database;
 	bool result = CodeGenerator::generateFromSql(
 		"../VideoDownloader/all.sql",
 		CodeGenerator::GenerateAll,
 		"../VideoDownloader/",
-		true
+		true,
+		DatabaseId::Download
 	);
+}
 
+int main(int argc, char* argv[])
+{
+	//QCoreApplication app(argc, argv);
 	//return app.exec();
+	generateCode();
 }

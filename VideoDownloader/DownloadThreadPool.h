@@ -8,11 +8,14 @@ template<typename T>
 class DownloadThreadPool
 {
 public:
-	explicit DownloadThreadPool(QObject* parent = nullptr)
+	explicit DownloadThreadPool()
+		: m_downloadThreadPool{}
+		, MAX_POOL_SIZE{ 5 }
 	{
 		for (int i = 0; i < MAX_POOL_SIZE; ++i)
 		{
-			QThread* thread = new QThread();
+			QThread* thread = new QThread{};
+			thread->setObjectName("DownloadThread_" % QString::number(i));
 			m_downloadThreadPool.insert(getNullValue(), thread);
 		}
 	}
@@ -39,13 +42,15 @@ public:
 				getPointer(downloadWorker)->moveToThread(thread);
 
 				if (!thread->isRunning())
+				{
 					thread->start();
+				}
 				return true;
 			}
 		}
 		if (m_downloadThreadPool.size() < MAX_POOL_SIZE)
 		{
-			QThread* thread = new QThread();
+			QThread* thread = new QThread{};
 			m_downloadThreadPool.insert(downloadWorker, thread);
 			getPointer(downloadWorker)->moveToThread(thread);
 			thread->start();
@@ -56,8 +61,7 @@ public:
 
 	void releaseThread(T downloadWorker, QThread* targetThread = QThread::currentThread(), bool quitThread = false)
 	{
-		auto it = m_downloadThreadPool.find(downloadWorker);
-		if (it != m_downloadThreadPool.end())
+		if (auto it = m_downloadThreadPool.find(downloadWorker); it != m_downloadThreadPool.end())
 		{
 			QThread* thread = it.value();
 
@@ -142,7 +146,7 @@ private:
 		if constexpr (std::is_pointer<T>::value)
 			return nullptr;
 		else
-			return T();
+			return T{};
 	}
 
 private:

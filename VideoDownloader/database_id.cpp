@@ -3,16 +3,14 @@
 
 #include "database_id.h"
 
-namespace {
-	const QString kDownloadDb = QStringLiteral("download.db");
-	const QString kUserDb = QStringLiteral("user.db");
-	const QString kUnknownDb = QStringLiteral("unknown databaseId");
-}
-
 namespace nexusdl::database {
 
 	[[nodiscard]] const QString& databaseIdToString(DatabaseId id)
 	{
+		static const QString kDownloadDb = QStringLiteral("download.db");
+		static const QString kUserDb = QStringLiteral("user.db");
+		static const QString kUnknownDb = QStringLiteral("unknown databaseId");
+
 		switch (id)
 		{
 		case DatabaseId::Download: return kDownloadDb;

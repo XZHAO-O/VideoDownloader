@@ -60,10 +60,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <LinkIncremental>
     </LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -75,10 +77,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)ThirdParty;$(ProjectDir)ThirdParty\QR-Code-generator-master;$(ProjectDir)ThirdParty\FastGaussianBlur-main;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <OmitFramePointers>
-      </OmitFramePointers>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
@@ -90,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -102,7 +103,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -382,6 +383,7 @@
     <QtMoc Include="CancelManager.h" />
     <ClInclude Include="base_dao.h" />
     <ClInclude Include="base_service.h" />
+    <ClInclude Include="code_generator.h" />
     <ClInclude Include="connection_context.h" />
     <ClInclude Include="connection_manager.h" />
     <ClInclude Include="CookieManageUtil.h" />
@@ -392,6 +394,7 @@
     <ClInclude Include="DownloadRecordDAO.h" />
     <ClInclude Include="DownloadRecordService.h" />
     <ClInclude Include="DownloadThreadPool.h" />
+    <ClInclude Include="base_entity.h" />
     <ClInclude Include="field.h" />
     <ClInclude Include="retry_strategy.h" />
     <ClInclude Include="sqlite_database.h" />

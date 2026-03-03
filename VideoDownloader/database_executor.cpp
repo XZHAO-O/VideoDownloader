@@ -8,7 +8,7 @@
 
 namespace nexusdl::database {
 
-	DatabaseExecutor::DatabaseExecutor()
+	DatabaseExecutor::DatabaseExecutor() noexcept
 	{
 	}
 
@@ -23,7 +23,7 @@ namespace nexusdl::database {
 
 		if (!execWithLock(query))
 		{
-			LOG_ERROR(QString{ "executeWrite Failed: " % query.lastError().text() });
+			LOG_ERROR(QString{ "executeWrite(QVariantMap) Failed: " % query.lastError().text() });
 			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
 			return std::unexpected{ DatabaseError::ExecuteQueryError };
 		}
@@ -42,7 +42,7 @@ namespace nexusdl::database {
 
 		if (!query.exec())
 		{
-			LOG_ERROR(QString{ "executeQuery Failed: " % query.lastError().text() });
+			LOG_ERROR(QString{ "executeQuery(QVariantMap) Failed: " % query.lastError().text() });
 			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
 			return std::unexpected{ DatabaseError::ExecuteQueryError };
 		}
@@ -53,6 +53,8 @@ namespace nexusdl::database {
 	QSqlQuery DatabaseExecutor::prepareQuery(const QString& connectionNamePrefix, const QString& queryStr)
 	{
 		QSqlQuery query{ ConnectionManager::instance().getConnection(connectionNamePrefix) };
+		query.setForwardOnly(true);
+		// if prepare error, it will be handled in the caller
 		query.prepare(queryStr);
 		return query;
 	}

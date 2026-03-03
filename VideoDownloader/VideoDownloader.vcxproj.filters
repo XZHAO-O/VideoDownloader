@@ -899,6 +899,12 @@
     <ClInclude Include="database_id.h">
       <Filter>database\enums</Filter>
     </ClInclude>
+    <ClInclude Include="base_entity.h">
+      <Filter>database\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="code_generator.h">
+      <Filter>database\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="all.sql">

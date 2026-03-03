@@ -21,6 +21,6 @@ namespace nexusdl::database {
 		InvalidArgument
 	};
 
-	[[nodiscard]] const QString& databaseErrorToString(DatabaseError error);
+	[[nodiscard]] const QString& databaseErrorToString(DatabaseError error) noexcept;
 
 } // namespace nexusdl::database

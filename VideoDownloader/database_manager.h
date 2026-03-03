@@ -15,17 +15,24 @@ namespace nexusdl::database {
 	class DatabaseManager
 	{
 	public:
-		static DatabaseManager& instance();
+		static DatabaseManager& instance() noexcept;
 
 		DatabaseManager(const DatabaseManager&) = delete;
 		DatabaseManager& operator=(const DatabaseManager&) = delete;
 		DatabaseManager(DatabaseManager&&) = delete;
 		DatabaseManager& operator=(DatabaseManager&&) = delete;
 
-		SQLiteDatabase& database(DatabaseId id);
+		SQLiteDatabase& database(DatabaseId id) noexcept;
+		const SQLiteDatabase& database(DatabaseId id) const noexcept;
+
+		QString lastError(DatabaseId id) const;
+		QString databaseDirPath(DatabaseId id) const noexcept;
+		QString databaseName(DatabaseId id) const noexcept;
+		QString fullDatabasePath(DatabaseId id) const noexcept;
+		qint64 databaseSize(DatabaseId id) const;
 
 	private:
-		DatabaseManager();
+		DatabaseManager() noexcept;
 		~DatabaseManager() = default;
 
 	private:

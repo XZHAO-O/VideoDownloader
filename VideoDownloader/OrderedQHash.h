@@ -233,8 +233,7 @@ public:
 	// 元素访问
 	T& operator[](const Key& key)
 	{
-		auto it = find(key);
-		if (it != end())
+		if (auto it = find(key); it != end())
 		{
 			return it.value();
 		}
@@ -248,8 +247,7 @@ public:
 
 	T value(const Key& key) const noexcept
 	{
-		auto it = find(key);
-		if (it != end())
+		if (auto it = find(key); it != end())
 		{
 			return it.value();
 		}
@@ -273,8 +271,7 @@ public:
 	{
 		if (isEmpty()) return false;
 
-		auto hashIt = m_hash.find(key);
-		if (hashIt != m_hash.end())
+		if (auto hashIt = m_hash.find(key); hashIt != m_hash.end())
 		{
 			m_list.erase(hashIt.value());
 			m_hash.erase(hashIt);
@@ -287,8 +284,7 @@ public:
 	{
 		if (isEmpty()) return T{};
 
-		auto hashIt = m_hash.find(key);
-		if (hashIt != m_hash.end())
+		if (auto hashIt = m_hash.find(key); hashIt != m_hash.end())
 		{
 			T value = std::move(hashIt.value()->second);
 			m_list.erase(hashIt.value());
@@ -367,8 +363,7 @@ public:
 		requires CompatibleKey<K, Key>&& std::constructible_from<T, Args...>
 	iterator emplace(K&& key, Args&&... args)
 	{
-		auto hashIt = m_hash.find(key);
-		if (hashIt != m_hash.end())
+		if (auto hashIt = m_hash.find(key); hashIt != m_hash.end())
 		{
 			// 使用构造+交换，提供强异常安全保证
 			T new_value(std::forward<Args>(args)...);
@@ -662,13 +657,11 @@ public:
 		requires CompatibleKey<K, Key>&& CompatibleValue<V, T>
 	iterator pushFront(K&& key, V&& value)
 	{
-		auto hashIt = m_hash.find(key);
-
 		// 先插入到列表头部
 		m_list.emplace_front(std::forward<K>(key), std::forward<V>(value));
 		auto listIt = m_list.begin();
 
-		if (hashIt != m_hash.end())
+		if (auto hashIt = m_hash.find(key); hashIt != m_hash.end())
 		{
 			// 如果键已存在，更新迭代器并删除旧位置
 			m_list.erase(hashIt.value());

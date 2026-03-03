@@ -16,7 +16,7 @@ public:
 	~MaterialTabWidget();
 
 	void setCurrentIndex(int index);
-	int currentIndex() const { return m_currentIndex; }
+	int currentIndex() const noexcept;
 
 	int count() const;
 	void removeTab(int index);

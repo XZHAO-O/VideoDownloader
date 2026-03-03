@@ -330,13 +330,47 @@ namespace nexusdl::database {
 		QueryWrapper<Entity>& distinct();
 
 		// 构建 SQL 语句
-		QString buildSelectSql(const QString& tableName) const;
-		QString buildDeleteSql(const QString& tableName) const;
-		QString buildCountSql(const QString& tableName) const;
-		QString buildUpdateSql(const QString& tableName, const QVariantMap& updateFields) const;
+		QString buildSelectSql() const;
+		QString buildDeleteSql() const;
+		QString buildCountSql() const;
+		template<size_t N>
+		inline QString QueryWrapper<Entity>::buildUpdateSql(std::array<std::pair<QString, QVariant>, N>& updateFields) const
+		{
+			QString sql = "UPDATE " % Entity::tableName() % " SET ";
+
+			// 清空绑定值，准备重新构建（SET部分在前，WHERE部分在后）
+			m_bindValues.clear();
+
+			// 构建SET子句，同时收集绑定值
+			for (auto it = updateFields.constBegin(); it != updateFields.constEnd(); ++it)
+			{
+				if (it != updateFields.constBegin())
+					sql = sql % ", ";
+				sql = sql % it->first % " = ?";
+				m_bindValues.append(it->second);
+			}
+
+			// 构建WHERE子句
+			QString whereSql = buildWhereSql();
+			if (!whereSql.isEmpty())
+			{
+				sql = sql % " WHERE " % whereSql;
+				// 将WHERE条件的绑定值追加到m_bindValues（保持顺序：SET值在前，WHERE值在后）
+				for (const auto& group : m_conditionGroups)
+				{
+					for (const auto& cond : group.conditions)
+					{
+						m_bindValues.append(cond.second);
+					}
+				}
+			}
+
+			m_lastSql = sql;
+			return sql;
+		}
 
 		// 获取绑定的参数
-		QList<QVariant> getBindValues() const;
+		const QList<QVariant>& getBindValues() const;
 
 		// 获取最后构建的SQL
 		QString getLastSql() const { return m_lastSql; }
@@ -843,18 +877,13 @@ namespace nexusdl::database {
 
 	// SQL 构建
 	template<typename Entity>
-	inline QString QueryWrapper<Entity>::buildSelectSql(const QString& tableName) const
+	inline QString QueryWrapper<Entity>::buildSelectSql() const
 	{
-		if (tableName.isEmpty())
-		{
-			m_lastSql = QString{};
-			return QString{};
-		}
+		const QString& tableName tableName = Entity::tableName();
 
-		QString sql{};
+		QString sql{ "SELECT " };
 
 		// SELECT
-		sql = "SELECT ";
 		if (m_distinct)
 		{
 			sql = sql % "DISTINCT ";
@@ -904,15 +933,11 @@ namespace nexusdl::database {
 	}
 
 	template<typename Entity>
-	inline QString QueryWrapper<Entity>::buildDeleteSql(const QString& tableName) const
+	inline QString QueryWrapper<Entity>::buildDeleteSql() const
 	{
-		if (tableName.isEmpty())
-		{
-			m_lastSql = QString{};
-			return QString{};
-		}
+		const QString& tableName = Entity::tableName();
 
-		QString sql = "DELETE FROM " % tableName;
+		QString sql{ "DELETE FROM " % tableName };
 
 		QString whereSql = buildWhereSql();
 		if (!whereSql.isEmpty())
@@ -925,15 +950,11 @@ namespace nexusdl::database {
 	}
 
 	template<typename Entity>
-	inline QString QueryWrapper<Entity>::buildCountSql(const QString& tableName) const
+	inline QString QueryWrapper<Entity>::buildCountSql() const
 	{
-		if (tableName.isEmpty())
-		{
-			m_lastSql = QString{};
-			return QString{};
-		}
+		const QString& tableName = Entity::tableName();
 
-		QString sql = "SELECT COUNT(*) FROM " % tableName;
+		QString sql{ "SELECT COUNT(*) FROM " % tableName };
 
 		QString whereSql = buildWhereSql();
 		if (!whereSql.isEmpty())
@@ -946,52 +967,7 @@ namespace nexusdl::database {
 	}
 
 	template<typename Entity>
-	inline QString QueryWrapper<Entity>::buildUpdateSql(const QString& tableName, const QVariantMap& updateFields) const
-	{
-		if (tableName.isEmpty() || updateFields.isEmpty())
-		{
-			return QString{};
-		}
-
-		QString sql = "UPDATE " % tableName % " SET ";
-
-		QStringList setClauses{};
-		QVariantList bindValues{};
-
-		// 构建SET子句
-		for (auto it = updateFields.constBegin(); it != updateFields.constEnd(); ++it)
-		{
-			setClauses.append(it.key() % " = ?");
-			bindValues.append(it.value());
-		}
-
-		sql = sql % setClauses.join(", ");
-
-		// 重新构造绑定值：SET值在前，WHERE值在后
-		m_bindValues.clear();
-		m_bindValues.append(bindValues);
-
-		// 构建WHERE子句（不会修改m_bindValues，但会从条件组中收集值）
-		QString whereSql = buildWhereSql();
-		if (!whereSql.isEmpty())
-		{
-			sql = sql % " WHERE " % whereSql;
-			// 将WHERE条件的值追加到m_bindValues
-			for (const auto& group : m_conditionGroups)
-			{
-				for (const auto& cond : group.conditions)
-				{
-					m_bindValues.append(cond.second);
-				}
-			}
-		}
-
-		m_lastSql = sql;
-		return sql;
-	}
-
-	template<typename Entity>
-	inline QList<QVariant> QueryWrapper<Entity>::getBindValues() const
+	inline const QList<QVariant>& QueryWrapper<Entity>::getBindValues() const
 	{
 		return m_bindValues;
 	}

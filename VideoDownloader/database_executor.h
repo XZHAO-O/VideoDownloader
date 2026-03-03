@@ -15,7 +15,6 @@
 #include <QString>
 #include <QVariant>
 #include <QList>
-#include <QMutex>
 
 // Project internal headers
 #include "database_error.h"
@@ -32,7 +31,7 @@ namespace nexusdl::database {
 	class DatabaseExecutor
 	{
 	public:
-		explicit DatabaseExecutor();
+		explicit DatabaseExecutor() noexcept;
 		~DatabaseExecutor() = default;
 
 		// 禁用拷贝/移动
@@ -125,57 +124,35 @@ namespace nexusdl::database {
 		requires std::is_same_v<typename BatchContainer::value_type, QVariantMap>
 	std::expected<void, DatabaseError> DatabaseExecutor::executeWriteBatch(const QString& connectionNamePrefix, const QString& queryStr, const BatchContainer& batchParams)
 	{
-		QHash<QString, QVariantList> columnValues{};
-		columnValues.reserve(batchParams.size() * batchParams[0].size());
+		QSqlQuery query = prepareQuery(connectionNamePrefix, queryStr);
 		for (const auto& params : batchParams)
 		{
 			for (auto [key, value] : params.asKeyValueRange())
 			{
-				columnValues[key].append(value);
+				query.bindValue(key, value);
 			}
+
+			if (!execWithLock(query))
+			{
+				LOG_ERROR(QString{ "executeWriteBatch(QVariantMap) Failed: " % query.lastError().text() % "at " });
+				LOG_DEBUG(QString{ "Failed Query: " % queryStr });
+				return std::unexpected{ DatabaseError::ExecuteQueryError };
+			}
+
 		}
 
-		QSqlQuery query = prepareQuery(connectionNamePrefix, queryStr);
-		for (auto [key, value] : columnValues.asKeyValueRange())
-		{
-			query.bindValue(key, value);
-		}
-
-		if (!execBatchWithLock(query))
-		{
-			LOG_ERROR(QString{ "executeWriteBatch Failed: " % query.lastError().text() });
-			LOG_DEBUG(QString{ "Failed Query: " % queryStr });
-			return std::unexpected{ DatabaseError::ExecuteQueryError };
-		}
 		return {};
 	}
 
-	// 内层为顺序容器：按位置绑定
+	// 内层为顺序容器：按位置绑定 需要传入的列表放入元素是一个 QVariantList，这个QVariantList包含了该字段在所有行中的值
 	template<typename BatchContainer>
 		requires IsSequentialContainer<typename BatchContainer::value_type>
 	std::expected<void, DatabaseError> DatabaseExecutor::executeWriteBatch(const QString& connectionNamePrefix, const QString& queryStr, const BatchContainer& batchParams)
 	{
-		int numPlaceholders = batchParams[0].size();
-
-		QList<QVariantList> columnValues{};
-		columnValues.reserve(numPlaceholders);
-		for (int i = 0; i < numPlaceholders; ++i)
-		{
-			columnValues[i].reserve(batchParams.size());
-		}
-
+		QSqlQuery query = prepareQuery(connectionNamePrefix, queryStr);
 		for (const auto& params : batchParams)
 		{
-			for (int i = 0; i < params.size(); ++i)
-			{
-				columnValues[i].append(params[i]);
-			}
-		}
-
-		QSqlQuery query = prepareQuery(connectionNamePrefix, queryStr);
-		for (int i = 0; i < numPlaceholders; ++i)
-		{
-			query.bindValue(i, columnValues[i]);
+			query.addBindValue(params);
 		}
 
 		if (!execBatchWithLock(query))

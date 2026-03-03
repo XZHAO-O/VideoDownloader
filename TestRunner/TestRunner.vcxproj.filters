@@ -30,9 +30,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="CodeGenerator.h">
-      <Filter>test</Filter>
-    </ClInclude>
-  </ItemGroup>
 </Project>

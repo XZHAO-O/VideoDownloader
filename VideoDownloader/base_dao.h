@@ -5,9 +5,7 @@
 
 // C++ standard library
 #include <expected>
-#include <memory>
 #include <optional>
-#include <vector>
 
 // Qt headers
 #include <QSqlQuery>
@@ -17,7 +15,6 @@
 // Project internal headers
 #include "sqlite_database.h"
 #include "query_wrapper.h"
-#include "logger.h"
 
 namespace nexusdl::database {
 
@@ -25,192 +22,237 @@ namespace nexusdl::database {
 	class BaseDAO
 	{
 	public:
-		using Ptr = std::shared_ptr<BaseDAO<Derived, Entity>>;
-
-		explicit BaseDAO(std::shared_ptr<SQLiteDatabase> db)
-			: m_db{ std::move(db) }
-		{
-		}
-
 		virtual ~BaseDAO() = default;
 
-		// 插入实体 (public interface)
 		std::expected<void, DatabaseError> insert(const Entity& entity)
 		{
 			return derived()->insertImpl(entity);
 		}
 
-		// 根据主键更新（主键字段不更新）
+		std::expected<void, DatabaseError> update(const Entity& entity, const QueryWrapper<Entity>& wrapper)
+		{
+			return derived()->updateImpl(entity.fields(), wrapper);
+		}
+
 		std::expected<void, DatabaseError> updateById(const Entity& entity)
 		{
 			return derived()->updateByIdImpl(entity);
 		}
 
-		// 根据主键删除
 		std::expected<void, DatabaseError> deleteById(const QVariant& id)
 		{
 			return derived()->deleteByIdImpl(id);
 		}
 
-		// 根据主键查询单个实体
+		std::expected<void, DatabaseError> deleteByWrapper(const QueryWrapper<Entity>& wrapper)
+		{
+			return derived()->deleteByWrapperImpl(wrapper);
+		}
+
 		std::expected<std::optional<Entity>, DatabaseError> selectById(const QVariant& id)
 		{
 			return derived()->selectByIdImpl(id);
 		}
 
-		// 根据条件查询列表
-		std::expected<std::vector<Entity>, DatabaseError> selectList(const QueryWrapper<Entity>& wrapper)
+		std::expected<QList<Entity>, DatabaseError> selectList(const QueryWrapper<Entity>& wrapper)
 		{
 			return derived()->selectListImpl(wrapper);
 		}
 
-		// 根据条件查询单个（取第一条）
 		std::expected<std::optional<Entity>, DatabaseError> selectOne(const QueryWrapper<Entity>& wrapper)
 		{
 			return derived()->selectOneImpl(wrapper);
 		}
 
-		// 根据条件计数
 		std::expected<long, DatabaseError> selectCount(const QueryWrapper<Entity>& wrapper)
 		{
 			return derived()->selectCountImpl(wrapper);
 		}
 
+		// 批量插入（普通）
+		std::expected<void, DatabaseError> insertBatch(const QList<Entity>& entities)
+		{
+			return derived()->insertBatchImpl(entities);
+		}
+
+		// 批量插入（事务）
+		std::expected<void, DatabaseError> insertBatchWithTransaction(const QList<Entity>& entities)
+		{
+			return derived()->insertBatchWithTransactionImpl(entities);
+		}
+
+		// 批量根据主键删除
+		std::expected<void, DatabaseError> deleteBatchByIds(const QList<QVariant>& ids)
+		{
+			return derived()->deleteBatchByIdsImpl(ids);
+		}
+
+		// ---------- 事务控制 ----------
+		std::expected<void, DatabaseError> beginTransaction()
+		{
+			return m_db.beginTransaction();
+		}
+
+		std::expected<void, DatabaseError> commitTransaction()
+		{
+			return m_db.commitTransaction();
+		}
+
+		std::expected<void, DatabaseError> rollbackTransaction()
+		{
+			return m_db.rollbackTransaction();
+		}
+
 	protected:
-		// 可被子类重写的虚函数（原有，保持不变）
-		virtual std::expected<void, DatabaseError> update(const QVariantMap& updateFields, const QueryWrapper<Entity>& wrapper)
+		explicit BaseDAO(SQLiteDatabase& db) : m_db{ db } {}
+
+		SQLiteDatabase& m_db;
+
+		template<typename BatchContainer>
+		std::expected<void, DatabaseError> executeWriteBatchWithTransaction(const QString& queryStr, const BatchContainer& batchParams)
 		{
-			if (updateFields.isEmpty())
+			if (auto result = beginTransaction(); !result.has_value())
 			{
-				LOG_WARN("Update fields is empty, skipping update");
-				return {};
+				return result;
 			}
-			QString sql = wrapper.buildUpdateSql(Entity::tableName(), updateFields);
-			auto result = m_db->executeWrite(sql, wrapper.getBindValues());
-			return result;
+
+			if (auto result = m_db.executeWriteBatch(queryStr, batchParams); !result.has_value())
+			{
+				if (auto transactionResult = rollbackTransaction(); !transactionResult.has_value())
+				{
+					return transactionResult;
+				}
+				return result;
+			}
+
+			return commitTransaction();
 		}
 
-		virtual std::expected<void, DatabaseError> deleteByWrapper(const QueryWrapper<Entity>& wrapper)
-		{
-			QString sql = wrapper.buildDeleteSql(Entity::tableName());
-			return m_db->executeWrite(sql, wrapper.getBindValues());
-		}
-
-		std::shared_ptr<SQLiteDatabase> m_db;
-
-		// ---------- Impl 函数（可被子类重写，通过 CRTP 静态调用） ----------
 		std::expected<void, DatabaseError> insertImpl(const Entity& entity)
 		{
-			QVariantMap map = entity.toMap();
-			if (map.isEmpty())
-			{
-				LOG_ERROR("Entity toMap returned empty map");
-				return std::unexpected{ DatabaseError::InvalidArgument };
-			}
-			QString sql = buildInsertSql(Entity::tableName(), map.keys());
-			return m_db->executeWrite(sql, map);
+			return m_db.executeWrite(getInsertSql(), entity.toList());
+		}
+
+		template<size_t N>
+		std::expected<void, DatabaseError> updateImpl(std::array<std::pair<QString, QVariant>, N>& updateFields, const QueryWrapper<Entity>& wrapper)
+		{
+			QString sql = wrapper.buildUpdateSql(updateFields);
+			return m_db.executeWrite(sql, wrapper.getBindValues());
 		}
 
 		std::expected<void, DatabaseError> updateByIdImpl(const Entity& entity)
 		{
-			QVariantMap map = entity.toMap();
-			QString idField = Entity::primaryKey();
-			if (!map.contains(idField))
-			{
-				LOG_ERROR("Entity missing primary key field: " + idField);
-				return std::unexpected{ DatabaseError::InvalidArgument };
-			}
-			QVariant id = map.take(idField); // 移除主键
-			if (id.isNull())
-			{
-				LOG_ERROR("Primary key value is null");
-				return std::unexpected{ DatabaseError::InvalidArgument };
-			}
 			QueryWrapper<Entity> wrapper{};
-			wrapper.eq(idField, id);
-			return update(map, wrapper); // 调用虚函数，允许子类定制更新逻辑
+			wrapper.eq(Entity::primaryKeyName(), entity.primaryKey());
+			return updateImpl(entity.fields(), wrapper);
 		}
 
 		std::expected<void, DatabaseError> deleteByIdImpl(const QVariant& id)
 		{
 			QueryWrapper<Entity> wrapper{};
-			wrapper.eq(Entity::primaryKey(), id);
-			return deleteByWrapper(wrapper); // 调用虚函数
+			wrapper.eq(Entity::primaryKeyName(), id);
+			return deleteByWrapperImpl(wrapper);
+		}
+
+		std::expected<void, DatabaseError> deleteByWrapperImpl(const QueryWrapper<Entity>& wrapper)
+		{
+			QString sql = wrapper.buildDeleteSql();
+			return m_db.executeWrite(sql, wrapper.getBindValues());
 		}
 
 		std::expected<std::optional<Entity>, DatabaseError> selectByIdImpl(const QVariant& id)
 		{
 			QueryWrapper<Entity> wrapper{};
-			wrapper.eq(Entity::primaryKey(), id);
-			return selectOne(wrapper);
+			wrapper.eq(Entity::primaryKeyName(), id);
+			return selectOneImpl(wrapper);
 		}
 
-		std::expected<std::vector<Entity>, DatabaseError> selectListImpl(const QueryWrapper<Entity>& wrapper)
+		std::expected<QList<Entity>, DatabaseError> selectListImpl(const QueryWrapper<Entity>& wrapper)
 		{
-			QString sql = wrapper.buildSelectSql(Entity::tableName());
-			auto result = m_db->executeQuery(sql, wrapper.getBindValues());
-			if (!result)
+			QString sql = wrapper.buildSelectSql();
+			auto result = m_db.executeQuery(sql, wrapper.getBindValues());
+			if (!result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return std::unexpected{ std::move(result).error() };
 			}
 			return parseQueryResult(*result);
 		}
 
 		std::expected<std::optional<Entity>, DatabaseError> selectOneImpl(const QueryWrapper<Entity>& wrapper)
 		{
-			auto wrapperCopy = wrapper;
-			wrapperCopy.limit(1);
-			auto result = selectList(wrapperCopy); // 注意：selectList 是 public，会调用 derived()->selectListImpl，不会递归
-			if (!result)
+			wrapper.limit(1);
+			QString sql = wrapper.buildSelectSql();
+			auto result = m_db.executeQuery(sql, wrapper.getBindValues());
+			if (!result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return std::unexpected{ std::move(result).error() };
 			}
-			if (result->empty())
+			if (!(*result).next())
 			{
-				return std::optional<Entity>{};
+				return {};
 			}
-			return std::make_optional((*result)[0]);
+			return std::make_optional(Entity::fromRecord((*result).record()));
 		}
 
-		std::expected<long, DatabaseError> selectCountImpl(const QueryWrapper<Entity>& wrapper)
+		std::expected<qint64, DatabaseError> selectCountImpl(const QueryWrapper<Entity>& wrapper)
 		{
-			QString sql = wrapper.buildCountSql(Entity::tableName());
-			auto result = m_db->executeQuery(sql, wrapper.getBindValues());
-			if (!result)
+			QString sql = wrapper.buildCountSql();
+			auto result = m_db.executeQuery(sql, wrapper.getBindValues());
+			if (!result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return std::unexpected{ std::move(result).error() };
 			}
-			QSqlQuery query = *result;
-			if (query.next())
+			if (QSqlQuery& query = *result; query.next())
 			{
 				return query.value(0).toLongLong();
 			}
 			return -1;
 		}
 
+		// 批量插入（普通）
+		std::expected<void, DatabaseError> insertBatchImpl(const QList<Entity>& entities)
+		{
+			return m_db.executeWriteBatch(getInsertSql(), Entity::toVariantList(entities));
+		}
+
+		// 批量插入（事务）
+		std::expected<void, DatabaseError> insertBatchWithTransactionImpl(const QList<Entity>& entities)
+		{
+			return executeWriteBatchWithTransaction(getInsertSql(), Entity::toVariantList(entities));
+		}
+
+		// 批量根据主键删除
+		std::expected<void, DatabaseError> deleteBatchByIdsImpl(const QList<QVariant>& ids)
+		{
+			QueryWrapper<Entity> wrapper{};
+			wrapper.in(Entity::primaryKeyName(), ids);
+			return deleteByWrapperImpl(wrapper);
+		}
+
 	private:
-		// 辅助函数：获取派生类指针（CRTP）
 		Derived* derived() { return static_cast<Derived*>(this); }
 		const Derived* derived() const { return static_cast<const Derived*>(this); }
 
-		QString buildInsertSql(const QString& tableName, const QStringList& fields) const
+		QString buildInsertSql(const QStringList& fields) const
 		{
-			QString sql{ "INSERT INTO " + tableName + " (" };
-			sql += fields.join(", ");
-			sql += ") VALUES (";
+			QString sql{ "INSERT INTO " % Entity::tableName() % " (" };
+			sql = sql % fields.join(", ");
+			sql = sql % ") VALUES (";
 			QStringList placeholders{};
 			placeholders.fill("?", fields.size());
-			sql += placeholders.join(", ");
-			sql += ")";
+			sql = sql % placeholders.join(", ");
+			sql = sql % ")";
 			return sql;
 		}
 
-		std::vector<Entity> parseQueryResult(const QSqlQuery& query) const
+		QList<Entity> parseQueryResult(QSqlQuery& query) const
 		{
-			std::vector<Entity> entities{};
+			QList<Entity> entities{};
+			// optimization for small result sets
+			entities.reserve(100);
 			while (query.next())
 			{
-				entities.push_back(Entity::fromRecord(query.record()));
+				entities.emplace_back(query.record());
 			}
 			return entities;
 		}

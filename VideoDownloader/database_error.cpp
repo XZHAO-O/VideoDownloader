@@ -3,23 +3,18 @@
 
 #include "database_error.h"
 
-namespace {
-	// connection error
-	const QString kCreateDirectoryError = QStringLiteral("CreateDirectoryError");
-	const QString kDatabaseOpenError = QStringLiteral("DatabaseOpenError");
-	const QString kPragmaSetError = QStringLiteral("PragmaSetError");
-	// query error
-	const QString kExecuteQueryError = QStringLiteral("ExecuteQueryError");
-	const QString kTransactionError = QStringLiteral("TransactionError");
-	const QString kInvalidArgument = QStringLiteral("InvalidArgument");
-
-	const QString kUnknownDatabaseError = QStringLiteral("UnknownDatabaseError");
-}
-
 namespace nexusdl::database {
 
-	[[nodiscard]] const QString& databaseErrorToString(DatabaseError error)
+	[[nodiscard]] const QString& databaseErrorToString(DatabaseError error) noexcept
 	{
+		static const QString kCreateDirectoryError = QStringLiteral("CreateDirectoryError");
+		static const QString kDatabaseOpenError = QStringLiteral("DatabaseOpenError");
+		static const QString kPragmaSetError = QStringLiteral("PragmaSetError");
+		static const QString kExecuteQueryError = QStringLiteral("ExecuteQueryError");
+		static const QString kTransactionError = QStringLiteral("TransactionError");
+		static const QString kInvalidArgument = QStringLiteral("InvalidArgument");
+		static const QString kUnknownDatabaseError = QStringLiteral("UnknownDatabaseError");
+
 		switch (error)
 		{
 			// connection error

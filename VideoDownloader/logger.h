@@ -7,6 +7,7 @@
 #include <atomic>
 #include <chrono>
 #include <source_location>
+#include <semaphore>
 
 // Qt headers
 #include <QDir>
@@ -31,12 +32,12 @@ namespace nexusdl::log {
 		std::is_same_v<std::remove_cvref_t<T>, QString>;
 	};
 
-	class Logger : public QObject
+	class Logger final : public QObject
 	{
 		Q_OBJECT
 
 	public:
-		static Logger& instance();
+		static Logger& instance() noexcept;
 
 		// 禁止拷贝和移动
 		Logger(const Logger&) = delete;
@@ -109,7 +110,7 @@ namespace nexusdl::log {
 		void onFlushTimer();
 
 	private:
-		explicit Logger(QObject* parent = nullptr);
+		explicit Logger(QObject* parent = nullptr) noexcept;
 		~Logger();
 
 		// 文件管理
@@ -122,7 +123,7 @@ namespace nexusdl::log {
 
 		// 工具函数
 		QString getTimeStamp() const;
-		uint32_t getCurrentThreadId() const;
+		uint32_t getCurrentThreadId() const noexcept;
 		void getLogBasicInfo(const std::source_location& location,
 			std::tm& tm, int& milliseconds,
 			const char*& file, const char*& shortFile,
@@ -130,14 +131,14 @@ namespace nexusdl::log {
 
 		// 辅助函数：将整数转换为字符串并更新指针
 		template<typename T>
-		char* writeNumber(char* ptr, T value)
+		char* writeNumber(char* ptr, T value) noexcept
 		{
 			auto [end, ec] = std::to_chars(ptr, ptr + 32, value);
 			return end;
 		}
 
 		// 复制字符串并更新指针
-		char* writeString(char* ptr, const char* str);
+		char* writeString(char* ptr, const char* str) noexcept;
 		// 补零格式化两位数字
 		char* writeTwoDigits(char* ptr, int value);
 		// 补零格式化三位毫秒
@@ -170,11 +171,16 @@ namespace nexusdl::log {
 		std::atomic<LogLevel> m_logLevel;
 		std::atomic<bool> m_initialized;
 
+		// 任务管理
+		std::binary_semaphore m_taskSemaphore;
+
 		// 文件相关
 		const QString m_logDir;
+		const QString m_logBaseName;
 		QFile m_logFile;
 		QString m_currentLogPath;
-		qint64 m_currentFileSize;
+		std::atomic<qint64> m_currentFileSize;
+		QMutex m_fileMutex;
 
 		// 日志轮转配置
 		std::atomic<qint64> m_maxFileSize;
@@ -189,8 +195,8 @@ namespace nexusdl::log {
 		QTimer m_flushTimer;
 
 		// 统计信息
-		qint64 m_lastFlushTime;
-		qint64 m_logsSinceLastFlush;
+		std::atomic<qint64> m_lastFlushTime;
+		std::atomic<qint64> m_logsSinceLastFlush;
 	};
 
 	// =============== 私有输出函数的实现 ===============
@@ -254,7 +260,7 @@ namespace nexusdl::log {
 		thread_local std::array<char, 1024> buffer{};
 
 		char* ptr = buffer.data();
-		char* start = ptr;
+		const char* start = ptr;
 
 		// 开始构建日志行
 		*ptr++ = '[';

@@ -3,10 +3,12 @@
 
 #pragma once
 
+// C++ standard library
+#include <unordered_map>
+
 // Qt headers
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QHash>
 
 // Project internal headers
 #include "connection_context.h"
@@ -16,7 +18,7 @@ namespace nexusdl::database {
 	class ConnectionManager
 	{
 	public:
-		static ConnectionManager& instance();
+		static ConnectionManager& instance() noexcept;
 
 		// 禁用拷贝/移动
 		ConnectionManager(const ConnectionManager&) = delete;
@@ -43,11 +45,11 @@ namespace nexusdl::database {
 		std::expected<void, DatabaseError>  rollbackTransaction(const QString& connectionNamePrefix);
 
 	private:
-		explicit ConnectionManager();
+		explicit ConnectionManager() noexcept;
 		~ConnectionManager() = default;
 
-		static QHash<QString, ConnectionContext>& threadConnections();
-		static QString& threadId();
+		static std::unordered_map<QString, ConnectionContext>& threadConnections() noexcept;
+		static QString& threadId() noexcept;
 	};
 
 } // namespace nexusdl::database

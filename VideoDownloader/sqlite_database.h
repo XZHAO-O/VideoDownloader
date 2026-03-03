@@ -3,10 +3,6 @@
 
 #pragma once
 
-// Qt headers
-#include <QSqlQuery>
-#include <QString>
-
 // Project internal headers
 #include "database_executor.h"
 
@@ -38,7 +34,7 @@ namespace nexusdl::database {
 		{
 			if (auto result = initConnection(); !result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return result;
 			}
 			return m_executor.executeWrite(m_connectionNamePrefix, queryStr, params);
 		}
@@ -55,7 +51,7 @@ namespace nexusdl::database {
 		{
 			if (auto result = initConnection(); !result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return std::unexpected{ std::move(result).error() };
 			}
 			return m_executor.executeQuery(m_connectionNamePrefix, queryStr, params);
 		}
@@ -67,7 +63,7 @@ namespace nexusdl::database {
 		{
 			if (auto result = initConnection(); !result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return result;
 			}
 			return m_executor.executeWriteBatch(m_connectionNamePrefix, queryStr, batchParams);
 		}
@@ -78,16 +74,16 @@ namespace nexusdl::database {
 		{
 			if (auto result = initConnection(); !result.has_value())
 			{
-				return std::unexpected{ result.error() };
+				return result;
 			}
 			return m_executor.executeWriteBatch(m_connectionNamePrefix, queryStr, batchParams);
 		}
 
 		// 实用方法
 		QString lastError() const;
-		QString databaseDirPath() const;
-		QString databaseName() const;
-		QString fullPath() const;
+		QString databaseDirPath() const noexcept;
+		QString databaseName() const noexcept;
+		QString fullDatabasePath() const noexcept;
 		qint64 databaseSize() const;
 
 		// 事务支持
